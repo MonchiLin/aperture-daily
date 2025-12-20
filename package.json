@@ -7,6 +7,7 @@
     "dev:cf": "astro build && wrangler dev --local --persist-to .wrangler/state",
     "build": "astro build",
     "deploy": "npm run build && wrangler pages deploy dist --project-name luma-words",
+    "deploy:cron": "wrangler deploy --config wrangler.cron.jsonc",
     "preview": "astro preview",
     "check": "astro check",
     "db:generate": "drizzle-kit generate",
