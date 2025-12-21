@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import type { DailyNewsOutput } from '../schemas/dailyNews';
 import { dailyNewsOutputSchema } from '../schemas/dailyNews';
+import { SOURCE_URL_LIMIT, WORD_SELECTION_MAX_WORDS, WORD_SELECTION_MIN_WORDS } from './llmLimits';
 import {
-	appendResponseToHistory,
-	collectHttpUrlsFromUnknown,
-	extractHttpUrlsFromText,
-	normalizeDailyNewsOutput,
+appendResponseToHistory,
+collectHttpUrlsFromUnknown,
+extractHttpUrlsFromText,
+normalizeDailyNewsOutput,
 	normalizeWordSelectionPayload
 } from './openaiHelpers';
 import {
@@ -18,8 +19,7 @@ import {
 
 import { createOpenAiCompatibleClient, type OpenAiCompatibleEnv } from './client';
 
-// Re-export for backward compatibility if needed, or simply use the import.
-// Using factory from client.ts inside generation function.
+// 兼容旧用法时可继续从这里导出；这里直接使用 client.ts 的工厂函数。
 
 
 // ============================================
@@ -38,41 +38,28 @@ export type CandidateWord = {
 // ============================================
 
 const wordSelectionSchema = z.object({
-	selected_words: z.array(z.string()).min(1).max(12),
+	selected_words: z.array(z.string()).min(WORD_SELECTION_MIN_WORDS).max(WORD_SELECTION_MAX_WORDS),
 	selection_reasoning: z.string().optional()
 });
 
-// ============================================
-// 多轮生成主流程
-// ============================================
+type OpenAiClient = ReturnType<typeof createOpenAiCompatibleClient>;
+type ConversationHistory = any[];
 
-export async function generateDailyNewsWithWordSelection(args: {
-	env: OpenAiCompatibleEnv;
+async function runWordSelection(args: {
+	client: OpenAiClient;
+	history: ConversationHistory;
 	model: string;
-	systemPrompt: string;
-	currentDate: string;
-	topicPreference: string;
 	candidateWords: CandidateWord[];
-	temperature: number;
-	maxOutputTokens: number;
-}): Promise<{ output: DailyNewsOutput; selectedWords: string[]; usage: unknown }> {
-	// 多阶段流程：阶段1 选词(JSON)，阶段2 搜索(web_search)，阶段3 生成(JSON)。
-	const client = createOpenAiCompatibleClient(args.env);
-
-	// 多轮对话历史
-	let history: any[] = [];
-
-	// ============================================
-	// 阶段 1：选词
-	// ============================================
-
+	topicPreference: string;
+	currentDate: string;
+}) {
 	const candidateWordsJson = JSON.stringify(args.candidateWords, null, 2);
 
-	history.push({
+	args.history.push({
 		role: 'system',
 		content: WORD_SELECTION_SYSTEM_PROMPT
 	});
-	history.push({
+	args.history.push({
 		role: 'user',
 		content: buildWordSelectionUserPrompt({
 			candidateWordsJson,
@@ -81,7 +68,7 @@ export async function generateDailyNewsWithWordSelection(args: {
 		})
 	});
 
-	const wordSelectionResp = await client.responses.create({
+	const wordSelectionResp = await args.client.responses.create({
 		model: args.model,
 		stream: false,
 		reasoning: {
@@ -89,7 +76,7 @@ export async function generateDailyNewsWithWordSelection(args: {
 			summary: "detailed"
 		},
 		text: { format: { type: 'json_object' } },
-		input: history
+		input: args.history
 	});
 
 	// 调试：输出完整响应结构
@@ -115,22 +102,32 @@ export async function generateDailyNewsWithWordSelection(args: {
 	const selectedWords = wordSelectionParsed.data.selected_words;
 	console.log('[Word Selection] Extracted words:', selectedWords);
 
-	history = appendResponseToHistory(history, wordSelectionResp);
+	const history = appendResponseToHistory(args.history, wordSelectionResp);
+	return {
+		history,
+		selectedWords,
+		usage: wordSelectionResp.usage ?? null
+	};
+}
 
-	// ============================================
-	// 阶段 2：新闻检索（web_search）
-	// ============================================
-
-	history.push({
+async function runResearch(args: {
+	client: OpenAiClient;
+	history: ConversationHistory;
+	model: string;
+	selectedWords: string[];
+	topicPreference: string;
+	currentDate: string;
+}) {
+	args.history.push({
 		role: 'user',
 		content: buildResearchUserPrompt({
-			selectedWords,
+			selectedWords: args.selectedWords,
 			topicPreference: args.topicPreference,
 			currentDate: args.currentDate
 		})
 	});
 
-	const researchResp = await client.responses.create({
+	const researchResp = await args.client.responses.create({
 		model: args.model,
 		stream: false,
 		reasoning: {
@@ -144,7 +141,7 @@ export async function generateDailyNewsWithWordSelection(args: {
 			}
 		],
 		tool_choice: 'auto',
-		input: history,
+		input: args.history,
 		include: ['web_search_call.results', 'web_search_call.action.sources']
 	});
 
@@ -156,62 +153,88 @@ export async function generateDailyNewsWithWordSelection(args: {
 			...extractHttpUrlsFromText(researchText),
 			...collectHttpUrlsFromUnknown(researchResp)
 		])
-	).slice(0, 8);
+	).slice(0, SOURCE_URL_LIMIT);
 
 	if (sourceUrls.length === 0) throw new Error('LLM research produced no source URLs');
 
-	history = appendResponseToHistory(history, researchResp);
+	const history = appendResponseToHistory(args.history, researchResp);
+	return {
+		history,
+		sourceUrls,
+		usage: researchResp.usage ?? null
+	};
+}
 
-	// ============================================
-	// 阶段 3A：文章生成草稿（非 JSON）
-	// ============================================
-
-	history.push({
+async function runDraftGeneration(args: {
+	client: OpenAiClient;
+	history: ConversationHistory;
+	model: string;
+	selectedWords: string[];
+	sourceUrls: string[];
+	systemPrompt: string;
+	currentDate: string;
+	topicPreference: string;
+	temperature: number;
+	maxOutputTokens: number;
+}) {
+	args.history.push({
 		role: 'user',
 		content: buildDraftGenerationUserPrompt({
-			selectedWords,
-			sourceUrls,
+			selectedWords: args.selectedWords,
+			sourceUrls: args.sourceUrls,
 			systemPrompt: args.systemPrompt,
 			currentDate: args.currentDate,
 			topicPreference: args.topicPreference
 		})
 	});
 
-	const draftResp = await client.responses.create({
+	const draftResp = await args.client.responses.create({
 		model: args.model,
 		stream: false,
 		temperature: args.temperature,
 		max_output_tokens: args.maxOutputTokens,
 		reasoning: { effort: 'xhigh' },
-		input: history
+		input: args.history
 	});
 
 	const draftText = draftResp.output_text?.trim();
 	if (!draftText) throw new Error('LLM returned empty draft content');
 
-	history = appendResponseToHistory(history, draftResp);
+	const history = appendResponseToHistory(args.history, draftResp);
+	return {
+		history,
+		draftText,
+		usage: draftResp.usage ?? null
+	};
+}
 
-	// ============================================
-	// 阶段 3B：草稿转 JSON（JSON mode）
-	// ============================================
-
-	history.push({
+async function runJsonConversion(args: {
+	client: OpenAiClient;
+	history: ConversationHistory;
+	model: string;
+	draftText: string;
+	sourceUrls: string[];
+	selectedWords: string[];
+	temperature: number;
+	maxOutputTokens: number;
+}) {
+	args.history.push({
 		role: 'user',
 		content: buildJsonConversionUserPrompt({
-			draftText,
-			sourceUrls,
-			selectedWords
+			draftText: args.draftText,
+			sourceUrls: args.sourceUrls,
+			selectedWords: args.selectedWords
 		})
 	});
 
-	const genResp = await client.responses.create({
+	const genResp = await args.client.responses.create({
 		model: args.model,
 		stream: false,
 		temperature: args.temperature,
 		max_output_tokens: args.maxOutputTokens,
 		reasoning: { effort: 'xhigh' },
 		text: { format: { type: 'json_object' } },
-		input: history
+		input: args.history
 	});
 
 	const content = genResp.output_text;
@@ -223,15 +246,85 @@ export async function generateDailyNewsWithWordSelection(args: {
 	if (!first.success) {
 		throw new Error(`Invalid LLM JSON output: ${first.error.message}`);
 	}
-	const output: DailyNewsOutput = first.data;
+	const history = appendResponseToHistory(args.history, genResp);
+	return {
+		history,
+		output: first.data,
+		usage: genResp.usage ?? null
+	};
+}
+
+// ============================================
+// 多轮生成主流程
+// ============================================
+
+export async function generateDailyNewsWithWordSelection(args: {
+	env: OpenAiCompatibleEnv;
+	model: string;
+	systemPrompt: string;
+	currentDate: string;
+	topicPreference: string;
+	candidateWords: CandidateWord[];
+	temperature: number;
+	maxOutputTokens: number;
+}): Promise<{ output: DailyNewsOutput; selectedWords: string[]; usage: unknown }> {
+	// 多阶段流程：阶段1 选词(JSON)，阶段2 搜索(web_search)，阶段3 生成(JSON)。
+	const client = createOpenAiCompatibleClient(args.env);
+
+	let history: ConversationHistory = [];
+
+	const wordSelection = await runWordSelection({
+		client,
+		history,
+		model: args.model,
+		candidateWords: args.candidateWords,
+		topicPreference: args.topicPreference,
+		currentDate: args.currentDate
+	});
+	history = wordSelection.history;
+
+	const research = await runResearch({
+		client,
+		history,
+		model: args.model,
+		selectedWords: wordSelection.selectedWords,
+		topicPreference: args.topicPreference,
+		currentDate: args.currentDate
+	});
+	history = research.history;
+
+	const draft = await runDraftGeneration({
+		client,
+		history,
+		model: args.model,
+		selectedWords: wordSelection.selectedWords,
+		sourceUrls: research.sourceUrls,
+		systemPrompt: args.systemPrompt,
+		currentDate: args.currentDate,
+		topicPreference: args.topicPreference,
+		temperature: args.temperature,
+		maxOutputTokens: args.maxOutputTokens
+	});
+	history = draft.history;
+
+	const generation = await runJsonConversion({
+		client,
+		history,
+		model: args.model,
+		draftText: draft.draftText,
+		sourceUrls: research.sourceUrls,
+		selectedWords: wordSelection.selectedWords,
+		temperature: args.temperature,
+		maxOutputTokens: args.maxOutputTokens
+	});
 
 	return {
-		output: normalizeDailyNewsOutput(output),
-		selectedWords,
+		output: normalizeDailyNewsOutput(generation.output),
+		selectedWords: wordSelection.selectedWords,
 		usage: {
-			word_selection: wordSelectionResp.usage ?? null,
-			research: researchResp.usage ?? null,
-			generation: genResp.usage ?? null
+			word_selection: wordSelection.usage ?? null,
+			research: research.usage ?? null,
+			generation: generation.usage ?? null
 		}
 	};
 }

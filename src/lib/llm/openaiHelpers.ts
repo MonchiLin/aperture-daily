@@ -1,4 +1,5 @@
 import type { DailyNewsOutput } from '../schemas/dailyNews';
+import { WORD_SELECTION_MAX_WORDS } from './llmLimits';
 
 // openaiCompatible 辅助函数
 function ensureContentParagraphs(content: string, level: number) {
@@ -50,7 +51,7 @@ function normalizeWordList(words: string[]) {
 	const unique = Array.from(
 		new Set(words.map((word) => word.trim()).filter(Boolean))
 	);
-	return unique.slice(0, 12);
+	return unique.slice(0, WORD_SELECTION_MAX_WORDS);
 }
 
 function pickWordList(raw: unknown): string[] | null {

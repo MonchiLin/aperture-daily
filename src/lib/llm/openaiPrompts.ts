@@ -1,5 +1,6 @@
 // 生成流程中使用的 prompts
 import dailyNewsPrompt from '../../../prompts/daily_news.md?raw';
+import { WORD_SELECTION_MAX_WORDS } from './llmLimits';
 
 const SYSTEM_PROMPT_START = '### System Prompt (系统提示词)';
 const SYSTEM_PROMPT_END = '### User Instruction (用户指令)';
@@ -63,7 +64,7 @@ export const WORD_SELECTION_SYSTEM_PROMPT = `你是一位 ESL 内容开发者。
 3. 写出三档难度的英语新闻文章（Easy/Medium/Hard）
 
 【本阶段任务】
-从下面的候选词中，选出最多 12 个「最适合写进当日新闻文章」的词。
+从下面的候选词中，选出最多 ${WORD_SELECTION_MAX_WORDS} 个「最适合写进当日新闻文章」的词。
 
 【选词策略】
 - 优先选「新词 + 到期」（type=new, due=true）
@@ -99,7 +100,7 @@ ${args.candidateWordsJson}
 【主题偏好】${args.topicPreference}
 【日期】${args.currentDate}
 
-请从候选词中选择最多 12 个适合写入当日英文新闻的词。
+请从候选词中选择最多 ${WORD_SELECTION_MAX_WORDS} 个适合写入当日英文新闻的词。
 只输出 JSON 对象，不要代码块，不要解释，不要回显输入字段。`;
 }
 
