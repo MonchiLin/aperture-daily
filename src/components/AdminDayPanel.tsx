@@ -184,125 +184,97 @@ export default function AdminDayPanel(props: { date: string }) {
 	if (!canUse) return null;
 
 	return (
-		<div className="rounded-xl border border-stone-200 bg-white overflow-hidden shadow-sm">
+		<div className="mb-6 rounded-xl overflow-hidden transition-all duration-300">
 			{/* 头部 / 折叠 */}
 			<div
-				className="flex items-center justify-between p-3 cursor-pointer hover:bg-stone-50 transition-colors select-none"
+				className="group flex items-center justify-between py-2 cursor-pointer select-none opacity-60 hover:opacity-100 transition-opacity"
 				onClick={() => setCollapsed(!collapsed)}
 			>
-				<div className="flex items-center gap-2 text-sm font-medium text-stone-700">
-					{collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-					管理员面板
+				<div className="flex items-center gap-2 text-xs font-semibold text-stone-500 uppercase tracking-widest">
+					<span>Admin Controls</span>
+					{loading && <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />}
 				</div>
-				<div className="flex items-center gap-2">
-					{loading && <div className="text-xs text-stone-400 animate-pulse">Loading...</div>}
-					{!collapsed && (
-						<div className="flex gap-1" onClick={e => e.stopPropagation()}>
-							<button
-								onClick={refresh}
-								className="p-1 hover:bg-stone-200 rounded text-stone-500"
-								title="Refresh"
-							>
-								<RotateCw size={14} />
-							</button>
-						</div>
-					)}
+				<div className="flex items-center gap-1">
+					<div className={`transform transition-transform duration-300 text-stone-400 ${!collapsed ? 'rotate-180' : ''}`}>
+						<ChevronDown size={14} />
+					</div>
 				</div>
 			</div>
 
-			{/* 折叠内容 */}
+			{/* 折叠内容 - 更加隐形的设计 */}
 			{!collapsed && (
-				<div className="p-3 pt-0 border-t border-stone-100 bg-stone-50/50 space-y-4">
+				<div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
 
 					{/* 操作栏 */}
 					<div className="flex gap-2">
 						<button
 							onClick={fetchWords}
 							disabled={loading}
-							className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-stone-600 bg-white border border-stone-200 rounded hover:bg-stone-50 disabled:opacity-50"
+							className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-stone-600 bg-white/50 hover:bg-white border border-stone-200/50 hover:border-stone-300 rounded-lg transition-all disabled:opacity-50 shadow-sm"
 						>
 							<FileDown size={12} />
-							抓取单词
+							Fetch Words
 						</button>
 						<button
 							onClick={generate}
 							disabled={loading}
-							className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded hover:bg-orange-100 disabled:opacity-50"
+							className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-stone-700 bg-white/50 hover:bg-white border border-stone-200/50 hover:border-stone-300 rounded-lg transition-all disabled:opacity-50 shadow-sm"
 						>
-							<Play size={12} />
-							生成当前
+							<Play size={12} className="text-orange-500 fill-orange-500" />
+							Generate
 						</button>
 					</div>
 
 					{error && (
-						<div className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 break-all">
+						<div className="text-[10px] sm:text-xs text-red-600 bg-red-50/80 p-3 rounded-lg border border-red-100/50 backdrop-blur-sm">
 							{error}
 						</div>
 					)}
 
 					{/* 任务列表 */}
-					<div className="space-y-3">
+					<div className="space-y-2">
+						<div className="flex items-center justify-between text-[10px] font-semibold text-stone-400 uppercase px-1">
+							<span>Task Queue</span>
+							<button onClick={refresh} className="hover:text-stone-700 transition-colors" title="Refresh"><RotateCw size={10} /></button>
+						</div>
+
 						{tasks.length === 0 ? (
-							<div className="text-xs text-stone-400 text-center py-2">
-								该日暂无任务
+							<div className="text-xs text-stone-400/70 text-center py-4 bg-stone-100/30 rounded-lg border border-dashed border-stone-200/50">
+								No tasks
 							</div>
 						) : (
-							tasks.map(t => {
-
-								return (
-									<div key={t.id} className="bg-white border border-stone-200 rounded-lg p-3 text-xs shadow-sm">
-										<div className="flex justify-between items-start gap-2 mb-2">
-											<div className="font-medium text-stone-700 truncate max-w-[140px]" title={t.profileName || t.profileId}>
-												{t.profileName || 'Unknown Profile'}
-											</div>
-											<div className="font-mono text-[10px] text-stone-400">
-												{formatTime(t.createdAt)}
-											</div>
+							tasks.map(t => (
+								<div key={t.id} className="relative bg-white/60 hover:bg-white border border-stone-100 hover:border-stone-200/60 rounded-lg p-3 text-xs shadow-sm transition-all group">
+									<div className="flex justify-between items-center mb-1.5">
+										<div className="font-semibold text-stone-700 truncate pr-2">
+											{t.profileName || 'Default'}
 										</div>
-
-										<div className="flex flex-wrap gap-1 mb-2">
-											{t.profileTopicPreference && splitTopicTags(t.profileTopicPreference).map(tag => (
-												<span key={tag} className="px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded text-[10px]">
-													{tag}
-												</span>
-											))}
-										</div>
-
-										<div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-100">
-											<div className="flex items-center gap-2">
-												<span className={clsx(
-													"px-1.5 py-0.5 rounded text-[10px] uppercase font-semibold tracking-wider",
-													{
-														'bg-yellow-100 text-yellow-700': t.status === 'queued',
-														'bg-blue-100 text-blue-700': t.status === 'running',
-														'bg-green-100 text-green-700': t.status === 'succeeded',
-														'bg-red-100 text-red-700': t.status === 'failed',
-													}
-												)}>
-													{t.status}
-												</span>
-											</div>
-
-											<div className="flex gap-1" onClick={e => e.stopPropagation()}>
-												<button
-													onClick={() => deleteTask(t.id)}
-													disabled={loading}
-													className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-													title="删除任务"
-												>
-													<Trash2 size={14} />
-												</button>
-											</div>
-										</div>
-
-										{t.errorMessage && (
-											<div className="mt-2 text-[10px] text-red-600 bg-red-50 p-1.5 rounded">
-												{t.errorMessage}
-											</div>
-										)}
+										<span className={clsx(
+											"flex-shrink-0 w-1.5 h-1.5 rounded-full",
+											{
+												'bg-yellow-400': t.status === 'queued',
+												'bg-blue-500 animate-pulse': t.status === 'running',
+												'bg-green-500': t.status === 'succeeded',
+												'bg-red-500': t.status === 'failed',
+											}
+										)} title={t.status} />
 									</div>
-								);
-							})
+
+									<div className="flex items-center justify-between text-stone-500 text-[10px]">
+										<span className="font-mono opacity-70">{formatTime(t.createdAt)}</span>
+										<div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+											<button
+												onClick={() => deleteTask(t.id)}
+												className="text-stone-400 hover:text-red-500 transition-colors"
+												title="Delete"
+											>
+												<Trash2 size={12} />
+											</button>
+										</div>
+									</div>
+									{t.errorMessage && <div className="mt-1 text-red-500 truncate" title={t.errorMessage}>{t.errorMessage}</div>}
+								</div>
+							))
 						)}
 					</div>
 				</div>

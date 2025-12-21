@@ -26,18 +26,25 @@ type ChatMessage = {
 	updateAt: number;
 };
 
-const client = createOpenAiCompatibleClient(
-	{
-		LLM_API_KEY: import.meta.env.PUBLIC_LLM_API_KEY,
-		LLM_BASE_URL: import.meta.env.PUBLIC_LLM_BASE_URL
-	},
-	{ dangerouslyAllowBrowser: true }
-);
 const defaultModel = import.meta.env.PUBLIC_LLM_MODEL_DEFAULT;
 
 function createId(prefix: string) {
 	const rand = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(16).slice(2);
 	return `${prefix}-${Date.now()}-${rand}`;
+}
+
+function getSafeClient() {
+	try {
+		return createOpenAiCompatibleClient(
+			{
+				LLM_API_KEY: import.meta.env.PUBLIC_LLM_API_KEY,
+				LLM_BASE_URL: import.meta.env.PUBLIC_LLM_BASE_URL
+			},
+			{ dangerouslyAllowBrowser: true }
+		);
+	} catch (e) {
+		return null;
+	}
 }
 
 function normalizeInitialMessages(initialMessages: any[]): ChatMessage[] {
@@ -124,6 +131,19 @@ export function AIChatSidebar({
 
 		const history = [...messagesRef.current, userMsg];
 		setMessages([...history, assistantMsg]);
+
+		const client = getSafeClient();
+		if (!client) {
+			setMessages((prev) =>
+				prev.map((m) => (m.id === assistantId ? {
+					...m,
+					content: '⚠️ Configuration Error: Missing `PUBLIC_LLM_API_KEY` in environment variables. Please configure it to use AI Chat.',
+					updateAt: Date.now()
+				} : m))
+			);
+			return;
+		}
+
 		setStreamingId(assistantId);
 		isStreamingRef.current = true;
 		setIsStreaming(true);

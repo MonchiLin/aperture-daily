@@ -14,11 +14,13 @@ export default function HomeWorkspace({ publishedDays }: HomeWorkspaceProps) {
     );
 
     return (
-        <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
+        <div className="relative flex h-[calc(100vh-64px)] w-full overflow-hidden transition-all duration-700">
+            {/* Immersive Background moved to Global Layout */}
+
             <div className="flex-1 p-4 lg:p-8 overflow-hidden flex flex-col items-center justify-center">
                 <div className="max-w-4xl w-full h-full max-h-[800px]">
                     <MacOSCalendar
-                        className="h-full"
+                        className="h-full shadow-2xl ring-1 ring-black/5"
                         publishedDays={publishedDays}
                         selectedDate={selectedDate}
                         onSelectDate={setSelectedDate}
@@ -29,7 +31,7 @@ export default function HomeWorkspace({ publishedDays }: HomeWorkspaceProps) {
 
             <DayDetailsSidebar
                 date={selectedDate}
-                className="w-[340px] flex-shrink-0 shadow-xl z-10"
+                className="w-[340px] flex-shrink-0 shadow-2xl z-10 border-l border-white/40"
             />
         </div>
     );

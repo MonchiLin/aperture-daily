@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Modal, Tabs, Tooltip, Divider, Popconfirm, message } from 'antd';
+import { Drawer, Tabs, Tooltip, Popconfirm, message } from 'antd';
 import { BookOpen, Trash2 } from 'lucide-react';
 import AdminDayPanel from './AdminDayPanel';
 
@@ -45,7 +45,6 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
             .then((json: any) => {
                 if (canceled) return;
                 if (json.error) {
-                    // 错误处理：静默还是提示 toast？
                     console.error(json.error);
                     setData({ publishedTaskGroups: [] });
                 } else {
@@ -123,28 +122,43 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
 
     if (!date) {
         return (
-            <div className={`p-6 bg-stone-50 border-l border-stone-200 h-full overflow-y-auto ${className}`}>
-                <div className="flex flex-col items-center justify-center h-full text-stone-400">
-                    <p>Select a date to view details</p>
+            <div className={`p-6 bg-white/60 backdrop-blur-xl border-l border-white/20 h-full overflow-y-auto ${className}`}>
+                <div className="flex flex-col items-center justify-center h-full text-stone-300 gap-2">
+                    <BookOpen size={24} className="opacity-50" />
+                    <p className="font-serif italic">Select a date to start reading</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`flex flex-col h-full bg-stone-50 border-l border-stone-200 text-sm overflow-hidden ${className}`}>
-            <div className="p-4 border-b border-stone-200 bg-white">
+        <div className={`flex flex-col h-full bg-white/60 backdrop-blur-xl border-l border-white/20 text-sm overflow-hidden transition-all duration-300 ${className}`}>
+            <div className="p-6 pb-2 shrink-0">
                 <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold tracking-tight">
-                        <span className="font-mono text-base opacity-70 ml-2">{date}</span>
-                    </h2>
-                    <Tooltip title="今日单词" placement="bottom">
-                        <Button
-                            type="text"
-                            icon={<BookOpen size={16} className="text-stone-500" />}
-                            onClick={openWords}
-                        />
-                    </Tooltip>
+                    <div className="flex flex-col">
+                        <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Select Date</span>
+                        <h2 className="text-3xl font-bold tracking-tight text-stone-800 font-serif">
+                            {date ? (
+                                <span>
+                                    {new Date(date).getDate()}
+                                    <span className="text-lg text-stone-400 font-normal ml-2 font-sans">
+                                        {new Date(date).toLocaleString('en-US', { month: 'short' })}
+                                    </span>
+                                </span>
+                            ) : '—'}
+                        </h2>
+                    </div>
+
+                    {date && (
+                        <Tooltip title="今日单词" placement="bottom">
+                            <button
+                                onClick={openWords}
+                                className="p-2 text-stone-400 hover:text-stone-700 hover:bg-black/5 rounded-full transition-all"
+                            >
+                                <BookOpen size={20} strokeWidth={1.5} />
+                            </button>
+                        </Tooltip>
+                    )}
                 </div>
             </div>
 
@@ -161,53 +175,54 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
                         </div>
 
                         {data.publishedTaskGroups.length > 0 ? (
-                            <div className="space-y-2">
-                                {data.publishedTaskGroups.map((group) => (
-                                    <div key={group.task.id} className="space-y-1">
-                                        {/* 使用 Antd Divider 的时间分隔线 */}
-                                        {group.task.publishedAt && (
-                                            <Divider plain className="!my-3 !text-[10px] !text-stone-400">
-                                                {new Date(group.task.publishedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} 发布
-                                            </Divider>
-                                        )}
+                            <div className="space-y-6">
+                                {data.publishedTaskGroups.map((group, groupIdx) => (
+                                    <div
+                                        key={group.task.id}
+                                        className="relative animate-in fade-in slide-in-from-right-4 duration-700 fill-mode-backwards"
+                                        style={{ animationDelay: `${groupIdx * 100}ms` }}
+                                    >
+                                        {/* 时间线装饰 (Optional) */}
+                                        <div className="absolute left-0 top-0 bottom-0 w-px bg-stone-200/50 -ml-4 hidden"></div>
 
-                                        <div className="grid gap-3">
+
+
+                                        <div className="grid gap-2">
                                             {group.articles.length === 0 ? (
-                                                <div className="text-xs text-stone-400 italic text-center">
-                                                    (暂无文章)
+                                                <div className="text-xs text-stone-400 italic pl-4">
+                                                    Empty content
                                                 </div>
                                             ) : (
-                                                group.articles.map((a) => (
+                                                group.articles.map((a, idx) => (
                                                     <div
                                                         key={a.id}
-                                                        className="relative rounded-lg border border-black/5 bg-white p-3 hover:border-black/20 hover:shadow-sm transition-all group/card"
+                                                        className="group/card relative rounded-xl hover:bg-white/60 hover:shadow-sm border border-transparent hover:border-white/40 p-3 transition-all duration-300 cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
                                                     >
                                                         <a
                                                             href={`/article/${a.id}`}
                                                             className="block"
                                                         >
-                                                            <div className="flex justify-between items-start mb-1">
-                                                                <div className="text-[10px] font-mono text-stone-400 group-hover/card:text-stone-500">
-                                                                    {a.model}
-                                                                </div>
-                                                            </div>
-                                                            <div className="font-medium text-stone-800 group-hover/card:text-black leading-snug pr-6">
-                                                                {a.title}
+                                                            <div className="flex flex-col gap-1">
+
+                                                                <h3 className="font-serif text-lg text-stone-800 leading-snug group-hover/card:text-black transition-colors">
+                                                                    {a.title}
+                                                                </h3>
                                                             </div>
                                                         </a>
                                                         <Popconfirm
                                                             title="删除文章"
-                                                            description="确定要删除这篇文章吗？此操作不可撤销。"
+                                                            description="Are you sure?"
                                                             onConfirm={(e) => {
                                                                 e?.stopPropagation();
                                                                 deleteArticle(a.id);
                                                             }}
-                                                            okText="删除"
-                                                            cancelText="取消"
-                                                            okButtonProps={{ danger: true }}
+                                                            okText="Delete"
+                                                            cancelText="Cancel"
+                                                            okButtonProps={{ danger: true, size: 'small' }}
+                                                            cancelButtonProps={{ size: 'small' }}
                                                         >
                                                             <button
-                                                                className="absolute bottom-2 right-2 p-1 rounded opacity-0 group-hover/card:opacity-100 hover:bg-red-50 text-stone-400 hover:text-red-500 transition-all"
+                                                                className="absolute top-3 right-3 p-1.5 rounded-full opacity-0 group-hover/card:opacity-100 hover:bg-red-50 text-stone-300 hover:text-red-500 transition-all scale-90 hover:scale-100"
                                                                 onClick={(e) => e.preventDefault()}
                                                             >
                                                                 <Trash2 size={14} />
@@ -221,37 +236,72 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
                                 ))}
                             </div>
                         ) : (
-                            <div className="py-12 text-center text-sm text-stone-400 bg-stone-50/50 rounded-xl border border-dashed border-stone-200">
-                                还没有发布任何内容
+                            <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
+                                <div className="p-4 rounded-full bg-stone-100/50">
+                                    <BookOpen size={24} className="opacity-50" />
+                                </div>
+                                <p className="text-sm font-medium tracking-wide">No reading for this day</p>
                             </div>
                         )}
                     </>
                 )}
             </div>
-            <Modal
-                title={`当日单词 · ${date}`}
+            <Drawer
+                title={
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Vocabulary</span>
+                        <span className="font-serif text-xl font-bold text-stone-800">
+                            {date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                        </span>
+                    </div>
+                }
+                placement="right"
+                width={400}
+                onClose={() => setWordsOpen(false)}
                 open={wordsOpen}
-                onCancel={() => setWordsOpen(false)}
-                footer={null}
-                width={720}
+                styles={{
+                    mask: {
+                        backdropFilter: 'blur(4px)',
+                        background: 'rgba(0, 0, 0, 0.2)'
+                    },
+                    header: {
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+                        padding: '24px 24px 16px'
+                    },
+                    body: {
+                        padding: '16px 24px'
+                    },
+                    wrapper: {
+                        boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.08)'
+                    }
+                }}
+                className="!bg-white/80 !backdrop-blur-2xl"
             >
                 {wordsLoading ? (
-                    <div className="py-8 text-center text-sm text-stone-500">加载中...</div>
+                    <div className="py-20 flex flex-col items-center justify-center gap-3 text-stone-400">
+                        <div className="w-8 h-8 border-2 border-stone-200 border-t-stone-400 rounded-full animate-spin"></div>
+                        <span className="text-xs uppercase tracking-wide">Loading Words...</span>
+                    </div>
                 ) : newWords.length + reviewWords.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-stone-500">暂无单词</div>
+                    <div className="py-20 text-center text-stone-400 flex flex-col items-center gap-3">
+                        <div className="p-3 bg-stone-100 rounded-full">
+                            <BookOpen size={20} className="opacity-40" />
+                        </div>
+                        <p className="text-sm">No vocabulary collected yet.</p>
+                    </div>
                 ) : (
                     <Tabs
-                        size="small"
+                        defaultActiveKey="new"
                         items={[
                             {
                                 key: 'new',
-                                label: `新学 (${newWords.length})`,
+                                label: <span className="text-xs font-semibold uppercase tracking-wider">New Words <span className="ml-1 px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px]">{newWords.length}</span></span>,
                                 children: (
-                                    <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto">
+                                    <div className="flex flex-wrap gap-2 mt-4">
                                         {newWords.map((word) => (
                                             <span
                                                 key={word}
-                                                className="px-2 py-1 text-xs rounded border border-stone-200 bg-white text-stone-700"
+                                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-stone-200 text-stone-700 shadow-sm hover:border-stone-300 hover:shadow transition-all cursor-default select-all"
                                             >
                                                 {word}
                                             </span>
@@ -261,13 +311,13 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
                             },
                             {
                                 key: 'review',
-                                label: `复习 (${reviewWords.length})`,
+                                label: <span className="text-xs font-semibold uppercase tracking-wider">Review <span className="ml-1 px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 text-[10px]">{reviewWords.length}</span></span>,
                                 children: (
-                                    <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto">
+                                    <div className="flex flex-wrap gap-2 mt-4">
                                         {reviewWords.map((word) => (
                                             <span
                                                 key={word}
-                                                className="px-2 py-1 text-xs rounded border border-stone-200 bg-white text-stone-700"
+                                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-orange-50/50 border border-orange-100 text-orange-800 shadow-sm hover:border-orange-200 hover:shadow transition-all cursor-default select-all"
                                             >
                                                 {word}
                                             </span>
@@ -278,7 +328,7 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
                         ]}
                     />
                 )}
-            </Modal>
+            </Drawer>
         </div>
     );
 }

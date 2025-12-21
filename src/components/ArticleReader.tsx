@@ -49,77 +49,71 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
     }, [activeId]);
 
     return (
-        <div className={clsx("w-full bg-transparent", className)}>
-            {/* 顶部元数据与难度切换区域 */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-gray-100">
-                {/* 标题与元数据 */}
-                <div className="flex-1">
-                    <h1
-                        className="mb-3 font-bold text-[#111111] tracking-tight"
-                        style={{ fontSize: '32px', lineHeight: '1.2' }}
-                    >
-                        {title}
-                    </h1>
+        <div className={clsx("w-full transition-all duration-500", className)}>
+            {/* Paper Container */}
+            <div className="relative mx-auto max-w-3xl bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-8 md:p-12 lg:p-16 ring-1 ring-black/5">
 
-                    <div
-                        className="flex flex-wrap gap-x-6 gap-y-2 items-center text-sm font-medium text-gray-500"
-                    >
-                        <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                            {publishDate}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                            {stats.readCount} reads
-                        </span>
+                {/* 顶部元数据与难度切换区域 */}
+                <div className="flex flex-col gap-8 mb-12 pb-8 border-b border-stone-200/60">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-4">
+                            <h1 className="text-3xl md:text-4xl font-bold text-stone-900 tracking-tight leading-tight font-display">
+                                {title}
+                            </h1>
+                            <div className="flex items-center gap-4 text-sm font-medium text-stone-500 uppercase tracking-wider">
+                                <span>{publishDate}</span>
+                                <span className="w-1 h-1 rounded-full bg-stone-300"></span>
+                                <span>{stats.readCount} reads</span>
+                            </div>
+                        </div>
+
+                        {/* Segmented Control for Level */}
+                        <div className="bg-stone-100/80 p-1.5 rounded-xl inline-flex shrink-0 border border-stone-200/50">
+                            {[1, 2, 3].map((l) => {
+                                const isActive = level === l;
+                                return (
+                                    <button
+                                        key={l}
+                                        onClick={() => onLevelChange?.(l as 1 | 2 | 3)}
+                                        className={clsx(
+                                            "relative px-3 py-1 text-xs font-bold transition-colors duration-200 z-10 uppercase tracking-wide",
+                                            isActive ? "text-stone-800" : "text-stone-400 hover:text-stone-600"
+                                        )}
+                                    >
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="level-indicator"
+                                                className="absolute inset-0 bg-white rounded-lg shadow-sm border border-black/5 -z-10"
+                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            />
+                                        )}
+                                        L{l}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
-                {/* Segmented Control for Level */}
-                <div className="bg-gray-100/80 p-1.5 rounded-xl inline-flex self-start md:self-center shrink-0">
-                    {[1, 2, 3].map((l) => {
-                        const isActive = level === l;
-                        return (
-                            <button
-                                key={l}
-                                onClick={() => onLevelChange?.(l as 1 | 2 | 3)}
-                                className={clsx(
-                                    "relative px-4 py-1.5 text-sm font-semibold transition-colors duration-200 z-10",
-                                    isActive ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
-                                )}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="level-indicator"
-                                        className="absolute inset-0 bg-white rounded-lg shadow-sm border border-black/5 -z-10"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    />
-                                )}
-                                Level {l}
-                            </button>
-                        );
-                    })}
+                {/* 正文区 */}
+                <article ref={contentRef} className="font-serif leading-loose text-lg md:text-xl text-stone-800 space-y-8">
+                    {content.map((text, idx) => (
+                        <TokenizedParagraph
+                            key={idx}
+                            index={idx}
+                            text={text}
+                            targetWords={targetWords}
+                            activeWordId={activeId}
+                        />
+                    ))}
+                </article>
+
+                {/* 底部统计 */}
+                <div className="mt-16 pt-8 border-t border-stone-200/60 text-center flex items-center justify-center gap-3 text-sm font-medium text-stone-400 uppercase tracking-widest">
+                    <span>{stats.wordCount} words</span>
+                    <span className="w-1 h-1 rounded-full bg-stone-300"></span>
+                    <span>{stats.readingTime}</span>
                 </div>
-            </div>
-
-            {/* 正文区 */}
-            <article ref={contentRef}>
-                {content.map((text, idx) => (
-                    <TokenizedParagraph
-                        key={idx}
-                        index={idx}
-                        text={text}
-                        targetWords={targetWords}
-                        activeWordId={activeId}
-                    />
-                ))}
-            </article>
-
-            {/* 底部统计 */}
-            <div className="mt-12 text-center text-gray-400 text-sm font-medium flex items-center justify-center gap-2">
-                <span>{stats.wordCount} words</span>
-                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                <span>{stats.readingTime}</span>
             </div>
         </div>
     );
@@ -166,12 +160,12 @@ const TokenizedParagraph = React.memo(({ index, text, targetWords, activeWordId 
 
     // Visual Style Update: text-[19px], leading-relaxed (1.8), #333 text color
     const pClassName = clsx(
-        "mb-7 text-[#333333] transition-colors duration-300 rounded-lg p-1 -ml-1",
-        isAudioActive && "bg-orange-50/50 border-l-4 border-orange-400 pl-3",
+        "mb-8 text-stone-800 transition-colors duration-300 rounded-lg p-1 -ml-1",
+        isAudioActive && "bg-orange-50/50 border-l-4 border-orange-400 pl-4",
     );
 
     return (
-        <p className={pClassName} style={{ fontSize: '18px', lineHeight: '1.6' }}>
+        <p className={pClassName}>
             {tokens.map((token, i) => {
                 const lowerPart = token.text.toLowerCase();
                 const isTarget = token.isWord && targetWords.some(w => w.toLowerCase() === lowerPart);

@@ -39,7 +39,7 @@ export const MacOSCalendar: React.FC<CalendarProps> = ({ className, publishedDay
     const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return (
-        <div className={`flex flex-col h-full w-full bg-white/70 backdrop-blur-2xl rounded-xl border border-white/20 shadow-2xl overflow-hidden font-sans text-stone-800 transition-all duration-300 ${className}`}>
+        <div className={`flex flex-col h-full w-full bg-white/60 backdrop-blur-2xl rounded-xl border border-white/40 shadow-2xl overflow-hidden font-sans text-stone-800 transition-all duration-300 ${className}`}>
             {/* 头部 */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-black/5">
                 <div className="flex items-end gap-3">

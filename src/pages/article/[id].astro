@@ -185,7 +185,7 @@ const sourceAnchorId = sources.length > 0 ? "article-sources" : null;
 				{sidebarWords.length > 0 && (
 					<aside class="lg:w-80 lg:shrink-0">
 						<div class="lg:sticky lg:top-6 space-y-6">
-							<AudioPlayer client:load />
+							<AudioPlayer client:only="react" />
 							<WordSidebar client:load words={sidebarWords} />
 						</div>
 					</aside>
