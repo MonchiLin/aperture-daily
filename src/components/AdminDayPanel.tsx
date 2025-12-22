@@ -6,7 +6,7 @@ import TaskQueueList from './admin/TaskQueueList';
 
 const ADMIN_KEY_STORAGE = 'luma-words_admin_key';
 
-export default function AdminDayPanel(props: { date: string }) {
+export default function AdminDayPanel(props: { date: string; onRefreshRequest?: () => void }) {
 	const [adminKey, setAdminKey] = useState<string | null>(null);
 	const [isAdmin, setIsAdmin] = useState(false);
 	const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -72,12 +72,27 @@ export default function AdminDayPanel(props: { date: string }) {
 
 		const timer = setInterval(() => {
 			fetchJson(`/api/admin/tasks?task_date=${encodeURIComponent(props.date)}`, adminKey!)
-				.then(data => setTasks((data?.tasks ?? []) as TaskRow[]))
+				.then(data => {
+					const newTasks = (data?.tasks ?? []) as TaskRow[];
+					setTasks(newTasks);
+
+					// 检查是否有任务刚刚完成 (从我们的视角看，只要有 succeeded 的任务，也许是新的)
+					// 更精确的做法：保存上一帧状态。但这里简化处理：只要 wheel 在转，每次拉取到新状态后，
+					// 如果发现有 succeeded 的任务且之前 tasks 里对应状态不是 succeeded (或者简单地，通知父级尝试刷新)
+					// 为了避免过度刷新，我们只在检测到“任务数量”或“完成状态”变化时触发？
+					// 这里的简单策略：只要处于 Active 轮询模式，每当发现有任务变成了 succeeded，就触发一次内容刷新。
+					// 实际上，只要轮询到数据，为了保险起见，都可以尝试让父组件刷新一下内容（如果 payload 不大）。
+					// 鉴于 10s 一次，频率不高，我们尝试：如果本次结果中有 succeeded 的任务，且当前组件处于轮询态，就请求父组件刷新。
+					const hasSucceeded = newTasks.some(t => t.status === 'succeeded');
+					if (hasSucceeded && props.onRefreshRequest) {
+						props.onRefreshRequest();
+					}
+				})
 				.catch(console.error);
-		}, 3000);
+		}, 10000);
 
 		return () => clearInterval(timer);
-	}, [canUse, tasks, adminKey, props.date]);
+	}, [canUse, tasks, adminKey, props.date, props.onRefreshRequest]);
 
 
 	async function generate() {

@@ -128,9 +128,11 @@ async function buildCandidateWords(
  * 2) 排除今日已用词，构建优先级候选
  * 3) 调用 LLM 并写入文章与任务状态
  */
-export async function runArticleGenerationTask(locals: App.Locals, taskId: string) {
-	const db = getDb(locals);
-	const env = locals.runtime.env;
+export async function runArticleGenerationTask(
+	env: App.Locals['runtime']['env'],
+	db: ReturnType<typeof getDb>,
+	taskId: string
+) {
 
 	const taskRows = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
 	const task = taskRows[0];
@@ -305,8 +307,8 @@ export async function runArticleGenerationTask(locals: App.Locals, taskId: strin
 
 			if (nextQueued.length > 0) {
 				console.log(`[Queue] Starting next task: ${nextQueued[0].id}`);
-				// 启动下一任务（非阻塞，复用当前 locals）
-				runArticleGenerationTask(locals, nextQueued[0].id).catch((e) =>
+				// 启动下一任务（非阻塞）
+				runArticleGenerationTask(env, db, nextQueued[0].id).catch((e) =>
 					console.error('[Queue] Failed to start next task:', e)
 				);
 			}
@@ -314,4 +316,8 @@ export async function runArticleGenerationTask(locals: App.Locals, taskId: strin
 			console.error('[Queue] Error finding next queued task:', e);
 		}
 	}
+}
+
+export async function runArticleGenerationTaskViaHttp(locals: App.Locals, taskId: string) {
+	return runArticleGenerationTask(locals.runtime.env, getDb(locals), taskId);
 }

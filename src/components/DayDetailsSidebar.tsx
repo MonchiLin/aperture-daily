@@ -34,11 +34,18 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
     const [newWords, setNewWords] = useState<string[]>([]);
     const [reviewWords, setReviewWords] = useState<string[]>([]);
 
-    useEffect(() => {
+    const loadDayData = () => {
         if (!date) return;
 
+        // 如果已经在 loading，就不重复触发，避免闪烁
+        // (可选优化：后台静默刷新不应该设置全局 loading，这里简单复用逻辑)
+        // 为了体验更好，我们把 setLoading(true) 改为仅在 data 为空时显示骨架屏，
+        // 或者我们区分 isRefreshing 和 isLoading。
+        // 简单起见，这里复用 logic 但不强制全屏 loading 如果已有数据。
+
         let canceled = false;
-        setLoading(true);
+        // 只有第一次或者数据为空时才显示 loading 状态，避免轮询时的频繁闪烁
+        if (data.publishedTaskGroups.length === 0) setLoading(true);
 
         fetch(`/api/day/${date}`)
             .then(res => res.json())
@@ -46,21 +53,26 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
                 if (canceled) return;
                 if (json.error) {
                     console.error(json.error);
-                    setData({ publishedTaskGroups: [] });
+                    // 仅当出错且无数据时才重置
+                    if (data.publishedTaskGroups.length === 0) setData({ publishedTaskGroups: [] });
                 } else {
                     setData(json);
                 }
             })
             .catch(err => {
                 console.error(err);
-                if (!canceled) setData({ publishedTaskGroups: [] });
             })
             .finally(() => {
                 if (!canceled) setLoading(false);
             });
 
+        return () => { canceled = true; };
+    };
+
+    useEffect(() => {
+        const cancel = loadDayData();
         return () => {
-            canceled = true;
+            if (cancel) cancel();
         };
     }, [date]);
 
@@ -178,7 +190,7 @@ export default function DayDetailsSidebar({ date, className }: DayDetailsSidebar
                     <>
                         {/* Admin Control Hook */}
                         <div className="mb-8">
-                            <AdminDayPanel date={date} />
+                            <AdminDayPanel date={date} onRefreshRequest={loadDayData} />
                         </div>
 
                         {data.publishedTaskGroups.length > 0 ? (

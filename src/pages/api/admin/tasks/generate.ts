@@ -4,7 +4,7 @@ import { requireAdmin } from '../../../../lib/admin';
 import { getDb } from '../../../../lib/db';
 import { badRequest, json } from '../../../../lib/http';
 
-import { runArticleGenerationTask } from '../../../../lib/tasks/articleGeneration';
+import { runArticleGenerationTaskViaHttp } from '../../../../lib/tasks/articleGeneration';
 import { enqueueGenerationTasks, startNextQueuedIfIdle } from '../../../../lib/tasks/generationQueue';
 
 const bodySchema = z.object({
@@ -33,7 +33,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const created = await enqueueGenerationTasks(db, taskDate);
 
 		await startNextQueuedIfIdle(db, taskDate, (taskId) => {
-			locals.runtime.ctx.waitUntil(runArticleGenerationTask(locals, taskId));
+			locals.runtime.ctx.waitUntil(runArticleGenerationTaskViaHttp(locals, taskId));
 		});
 
 		return json({ ok: true, task_date: taskDate, tasks: created }, { status: 201 });

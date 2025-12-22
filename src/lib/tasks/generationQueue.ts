@@ -24,6 +24,20 @@ export async function enqueueGenerationTasks(db: Db, taskDate: string) {
 		throw new Error('No generation profile found. Create one first.');
 	}
 
+	// 幂等性检查：如果今日已有生成任务（无论什么状态），则视为已入队，不再重复创建。
+	const existing = await db
+		.select({ id: tasks.id })
+		.from(tasks)
+		.where(and(eq(tasks.taskDate, taskDate), eq(tasks.type, 'article_generation')))
+		.limit(1);
+
+	if (existing.length > 0) {
+		console.log(`[Queue] Tasks for ${taskDate} already exist. Skipping enqueue.`);
+		return [];
+	}
+
+
+
 	// 清理超时的 running 任务（按 profile.timeout_ms 判断）。
 	const running = await db
 		.select({ id: tasks.id, startedAt: tasks.startedAt, profileId: tasks.profileId })
