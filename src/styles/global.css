@@ -2,6 +2,23 @@
 @import "tailwindcss";
 @import "@radix-ui/themes/styles.css";
 
+@plugin "@tailwindcss/typography";
+
+@theme {
+	--font-sans: "HarmonyOS Sans SC";
+	--font-serif: "HarmonyOS Sans SC";
+	--font-mono: "HarmonyOS Sans SC";
+
+	--color-paper: #F9F9F8;
+	--color-paper-ink: #2D2D2D;
+
+	--color-ink: #1A1A1A;
+	--color-ink-fg: #E0E0E0;
+
+	--color-accent: #E65100;
+	--color-accent-soft: #FFAB91;
+}
+
 @layer base {
 	:root {
 		color-scheme: light;
@@ -15,18 +32,7 @@
 	body {
 		margin: 0;
 		min-height: 100vh;
-		font-family:
-			'Nunito',
-			ui-sans-serif,
-			system-ui,
-			-apple-system,
-			'Segoe UI',
-			Roboto,
-			Helvetica,
-			Arial,
-			'Noto Sans',
-			'Apple Color Emoji',
-			'Segoe UI Emoji';
+		font-family: "HarmonyOS Sans SC";
 	}
 
 	a {

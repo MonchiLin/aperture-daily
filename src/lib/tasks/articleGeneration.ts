@@ -294,7 +294,7 @@ export async function runArticleGenerationTask(locals: App.Locals, taskId: strin
 			})
 			.where(eq(tasks.id, taskId));
 	} finally {
-	// 同日自动启动下一条排队任务
+		// 同日自动启动下一条排队任务
 		try {
 			const nextQueued = await db
 				.select({ id: tasks.id })
