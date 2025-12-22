@@ -1,0 +1,51 @@
+---
+interface Props {
+  title: string;
+  publishDate: string;
+  stats: {
+    readCount: number;
+    readingTime: string;
+  };
+}
+
+const { title, publishDate, stats } = Astro.props;
+---
+
+<header class="mb-12 md:mb-16">
+  {/* Meta Top Line */}
+  <div
+    class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-6 border-b-2 border-slate-900 pb-2"
+  >
+    <div class="flex items-center gap-3">
+      <span class="text-slate-900">{publishDate}</span>
+      <span class="text-stone-300">|</span>
+      <span>{stats.readCount} Reads</span>
+      <span class="text-stone-300">|</span>
+      <span>{stats.readingTime}</span>
+    </div>
+    <div class="flex gap-1 opacity-50 grayscale pointer-events-none">
+      {/* Static Level Indicators for SEO/Visual consistency */}
+      {
+        [1, 2, 3].map((l) => (
+          <div
+            class:list={[
+              "w-6 h-6 flex items-center justify-center text-xs font-bold transition-all rounded-sm border leading-none",
+              l === 1 // Assume Default Level 1
+                ? "bg-slate-900 text-white border-slate-900"
+                : "bg-transparent text-stone-400 border-transparent",
+            ]}
+          >
+            {l}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  {/* Huge Serif Title */}
+  <h1
+    class="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] font-serif"
+  >
+    {title}
+  </h1>
+</header>

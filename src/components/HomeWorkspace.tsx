@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { MacOSCalendar } from './MacOSCalender';
 import DayDetailsSidebar from './DayDetailsSidebar';
-import 'temporal-polyfill/global';
+import dayjs from 'dayjs';
 
 type HomeWorkspaceProps = {
     publishedDays: string[];
+    initialDate?: string;
 };
 
-export default function HomeWorkspace({ publishedDays }: HomeWorkspaceProps) {
+export default function HomeWorkspace({ publishedDays, initialDate }: HomeWorkspaceProps) {
     // 初始状态默认今天（符合常见日历行为）。
     const [selectedDate, setSelectedDate] = useState<string | null>(
-        Temporal.Now.plainDateISO().toString()
+        initialDate || dayjs().format('YYYY-MM-DD')
     );
 
     return (

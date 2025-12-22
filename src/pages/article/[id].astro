@@ -1,6 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import ArticleTabs from "../../components/ArticleTabs";
+import ArticleContent from "../../components/ArticleContent.astro";
+import ArticleHeader from "../../components/ArticleHeader.astro";
 import WordSidebar from "../../components/WordSidebar";
 import AudioPlayer from "../../components/AudioPlayer";
 import { and, eq, isNotNull } from "drizzle-orm";
@@ -109,7 +111,7 @@ const sourceAnchorId = sources.length > 0 ? "article-sources" : null;
 					<div class="space-y-8">
 						{parsed?.result?.articles ? (
 							<ArticleTabs
-								client:load
+								client:only="react"
 								articleId={row.articles.id}
 								articles={parsed.result.articles}
 								initialIsAdmin={isAdmin}
@@ -117,7 +119,53 @@ const sourceAnchorId = sources.length > 0 ? "article-sources" : null;
 								dateLabel={dateLabel}
 								sourceAnchorId={sourceAnchorId}
 								targetWords={sidebarWords.map((w) => w.word)}
-							/>
+							>
+								{(() => {
+									const sorted: {
+										level: 1 | 2 | 3;
+										level_name: string;
+										content: string;
+									}[] = [...parsed.result.articles].sort(
+										(a: any, b: any) => a.level - b.level,
+									);
+									const current = sorted[0];
+									if (!current) return null;
+
+									const text = current.content ?? "";
+									const words = text
+										.trim()
+										.split(/\s+/)
+										.filter(Boolean);
+									const count = words.length;
+									const minutes = count
+										? Math.max(1, Math.ceil(count / 120))
+										: 0;
+									const minuteLabel =
+										minutes === 1 ? "minute" : "minutes";
+
+									return (
+										<div class="relative">
+											<div class="bg-white rounded-3xl border border-gray-100 p-6 md:p-8">
+												<ArticleHeader
+													title={
+														row.articles.title || ""
+													}
+													publishDate={
+														dateLabel || ""
+													}
+													stats={{
+														readCount: 0,
+														readingTime: `${minutes} ${minuteLabel}`,
+													}}
+												/>
+												<ArticleContent
+													content={text}
+												/>
+											</div>
+										</div>
+									);
+								})()}
+							</ArticleTabs>
 						) : (
 							<div class="rounded-xl border border-black/10 bg-white/60 p-5 text-sm opacity-70">
 								内容解析失败（content_json 非预期结构）。

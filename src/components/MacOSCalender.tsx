@@ -1,5 +1,5 @@
 ﻿import React, { useMemo, useState } from 'react';
-import 'temporal-polyfill/global';
+import dayjs, { type Dayjs } from 'dayjs';
 
 type CalendarProps = {
     className?: string;
@@ -10,28 +10,35 @@ type CalendarProps = {
 };
 
 export const MacOSCalendar: React.FC<CalendarProps> = ({ className, publishedDays = [], dayHrefBase, selectedDate, onSelectDate }) => {
-    // 初始化为今天
-    const today = Temporal.Now.plainDateISO();
-    const [currentMonth, setCurrentMonth] = useState(today.with({ day: 1 }));
+    // 初始化为今天所在的月份 (本地时间)
+    const [currentMonth, setCurrentMonth] = useState(() => {
+        return dayjs(selectedDate || undefined).startOf('month');
+    });
 
     // 导航
-    const nextMonth = () => setCurrentMonth(currentMonth.add({ months: 1 }));
-    const prevMonth = () => setCurrentMonth(currentMonth.subtract({ months: 1 }));
+    const nextMonth = () => setCurrentMonth(currentMonth.add(1, 'month'));
+    const prevMonth = () => setCurrentMonth(currentMonth.subtract(1, 'month'));
     const goToday = () => {
-        const t = Temporal.Now.plainDateISO();
-        setCurrentMonth(t.with({ day: 1 }));
-        if (onSelectDate) onSelectDate(t.toString());
+        const t = dayjs();
+        setCurrentMonth(t.startOf('month'));
+        if (onSelectDate) onSelectDate(t.format('YYYY-MM-DD'));
     }
 
     // 生成日期
     const days = useMemo(() => {
-        const startDate = currentMonth.subtract({ days: currentMonth.dayOfWeek - 1 });
+        const startOfMonth = currentMonth;
+        // Mon=1, Sun=7
+        let dayOfWeek: number = startOfMonth.day();
+        if (dayOfWeek === 0) dayOfWeek = 7;
 
-        const dayList = [];
+        // 算出日历网格开始的日期：当前月1号 减去 (dayOfWeek - 1) 天
+        const startDate = startOfMonth.subtract(dayOfWeek - 1, 'day');
+
+        const dayList: Dayjs[] = [];
         let iter = startDate;
         for (let i = 0; i < 42; i++) {
             dayList.push(iter);
-            iter = iter.add({ days: 1 });
+            iter = iter.add(1, 'day');
         }
         return dayList;
     }, [currentMonth]);
@@ -44,10 +51,10 @@ export const MacOSCalendar: React.FC<CalendarProps> = ({ className, publishedDay
             <header className="flex items-center justify-between py-4 mb-2">
                 <div className="flex flex-col">
                     <span className="text-sm font-bold tracking-widest uppercase text-stone-500 mb-1">
-                        {currentMonth.year}
+                        {currentMonth.year()}
                     </span>
                     <h2 className="text-4xl font-black tracking-tight font-serif text-slate-900/90 leading-none">
-                        {currentMonth.toLocaleString('en-US', { month: 'long' })}
+                        {currentMonth.format('MMMM')}
                     </h2>
                 </div>
 
@@ -80,9 +87,10 @@ export const MacOSCalendar: React.FC<CalendarProps> = ({ className, publishedDay
             {/* 日期网格 - 干净的平铺 */}
             <div className="grid grid-cols-7 gap-y-4 gap-x-1">
                 {days.map(date => {
-                    const dateStr = date.toString();
-                    const isCurrentMonth = date.month === currentMonth.month;
-                    const isToday = date.equals(today);
+                    const dateStr = date.format('YYYY-MM-DD');
+                    const isCurrentMonth = date.month() === currentMonth.month();
+                    // dayjs comparisons
+                    const isToday = date.isSame(dayjs(), 'day');
                     const isPublished = publishedDays.includes(dateStr);
                     const isSelected = selectedDate === dateStr;
 
@@ -99,7 +107,7 @@ export const MacOSCalendar: React.FC<CalendarProps> = ({ className, publishedDay
                     const content = (
                         <>
                             <span className={`text-base font-serif font-medium ${isSelected ? 'font-bold' : ''}`}>
-                                {date.day}
+                                {date.date()}
                             </span>
 
                             {/* 事件指示 - 极简点 */}

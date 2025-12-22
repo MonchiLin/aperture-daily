@@ -1,0 +1,22 @@
+---
+interface Props {
+  content: string;
+}
+
+const { content } = Astro.props;
+
+const paragraphs = content
+  .split("\n")
+  .filter((p) => p.trim().length > 0)
+  .map((p) => p.replace(/\s+/g, " ").trim());
+---
+
+<article class="font-serif leading-loose text-xl md:text-2xl text-slate-800/90 space-y-8">
+  {
+    paragraphs.map((text, idx) => (
+      <p class="mb-8 text-stone-800 transition-colors duration-300 rounded-lg p-1 -ml-1">
+        {text}
+      </p>
+    ))
+  }
+</article>

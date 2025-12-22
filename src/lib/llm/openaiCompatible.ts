@@ -19,6 +19,9 @@ import {
 
 import { createOpenAiCompatibleClient, type OpenAiCompatibleEnv } from './client';
 
+// xhigh medium low auto
+const reasoningEffort = "medium"
+
 // ============================================
 // 候选词类型
 // ============================================
@@ -71,7 +74,7 @@ async function runWordSelection(args: {
         model: args.model,
         stream: false,
         reasoning: {
-            effort: "xhigh",
+            effort: reasoningEffort,
             summary: "detailed"
         },
         text: { format: { type: 'json_object' } },
@@ -134,7 +137,7 @@ async function runResearch(args: {
         model: args.model,
         stream: false,
         reasoning: {
-            effort: "xhigh",
+            effort: reasoningEffort,
             summary: "detailed"
         },
         tools: [
@@ -195,7 +198,7 @@ async function runDraftGeneration(args: {
     const draftResp = await args.client.responses.create({
         model: args.model,
         stream: false,
-        reasoning: { effort: 'xhigh' },
+        reasoning: { effort: reasoningEffort },
         input: args.history
     });
     console.log('[LLM Stage 3/4] API response received in', Date.now() - stageStart, 'ms');
@@ -235,7 +238,7 @@ async function runJsonConversion(args: {
     const genResp = await args.client.responses.create({
         model: args.model,
         stream: false,
-        reasoning: { effort: 'xhigh' },
+        reasoning: { effort: reasoningEffort },
         text: { format: { type: 'json_object' } },
         input: args.history
     });

@@ -17,11 +17,16 @@ const publishedTasks = await db
 const publishedDays = Array.from(
 	new Set(publishedTasks.map((t) => t.taskDate)),
 ).sort();
+const initialDate = new Date().toISOString().split("T")[0];
 ---
 
 <Layout
 	title="Daily Vocabulary Reader"
 	mainClass="p-0 max-w-none overflow-hidden"
 >
-	<HomeWorkspace client:only="react" publishedDays={publishedDays} />
+	<HomeWorkspace
+		client:load
+		publishedDays={publishedDays}
+		initialDate={initialDate}
+	/>
 </Layout>
