@@ -5,6 +5,9 @@ export type OpenAiCompatibleEnv = {
     LLM_BASE_URL: string;
 };
 
+// 35 minutes timeout for long-running LLM calls (e.g., o3-mini with xhigh reasoning + web_search)
+const LLM_TIMEOUT_MS = 35 * 60 * 1000;
+
 export function createOpenAiCompatibleClient(
     env: OpenAiCompatibleEnv,
     options?: { dangerouslyAllowBrowser?: boolean }
@@ -15,6 +18,7 @@ export function createOpenAiCompatibleClient(
     return new OpenAI({
         apiKey: env.LLM_API_KEY,
         baseURL: env.LLM_BASE_URL,
+        timeout: LLM_TIMEOUT_MS,
         ...(options?.dangerouslyAllowBrowser ? { dangerouslyAllowBrowser: true } : null)
     });
 }
