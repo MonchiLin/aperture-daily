@@ -35,7 +35,7 @@ export function formatTime(iso: string | null | undefined): string {
         return new Date(iso).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai'
+            hour12: false // 24-hour format
         });
     } catch {
         return iso;

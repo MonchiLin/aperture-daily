@@ -33,6 +33,8 @@ export function getDb(_locals?: App.Locals) {
 				throw new Error(data.errors?.[0]?.message || 'D1 API Error');
 			}
 
+			// Transform D1 HTTP API result to Drizzle Proxy format:
+			// { rows: [...], columns: [...] }
 			const result = data.result[0];
 			return {
 				rows: result.results.map((row: any) => Object.values(row)),

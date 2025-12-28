@@ -64,8 +64,8 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
                 tasks.map(t => (
                     <div key={t.id} className="group flex flex-col gap-1 py-2 border-b border-dotted border-stone-200 last:border-0 hover:bg-stone-50 -mx-2 px-2 transition-colors">
                         <div className="flex justify-between items-center">
-                            <span className="font-serif font-bold text-stone-800 text-sm">
-                                {t.profileName || 'Default Edition'}
+                            <span className="font-mono text-stone-600 text-xs">
+                                {t.id}
                             </span>
                             <div className="flex items-center gap-2">
                                 <span className={clsx(

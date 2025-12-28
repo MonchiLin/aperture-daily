@@ -36,16 +36,12 @@ async function getUsedWordsToday(db: Db, taskDate: string): Promise<Set<string>>
         .where(inArray(articles.generationTaskId, taskIds));
 
     for (const article of taskArticles) {
-        try {
-            const content = JSON.parse(article.contentJson);
-            const selected = content?.input_words?.selected;
-            if (Array.isArray(selected)) {
-                for (const word of selected) {
-                    if (typeof word === 'string') usedWords.add(word);
-                }
+        const content = JSON.parse(article.contentJson);
+        const selected = content?.input_words?.selected;
+        if (Array.isArray(selected)) {
+            for (const word of selected) {
+                if (typeof word === 'string') usedWords.add(word);
             }
-        } catch {
-            // ignore
         }
     }
 
@@ -109,6 +105,27 @@ export class TaskQueue {
 
         const newTasks: Array<{ id: string; profileId: string; profileName: string }> = [];
         for (const profile of profiles) {
+            // Cron: Strict idempotency (one task per profile per day)
+            // Skip if any task exists, regardless of status
+            if (triggerSource === 'cron') {
+                const existing = await this.db
+                    .select({ id: tasks.id, status: tasks.status })
+                    .from(tasks)
+                    .where(and(
+                        eq(tasks.taskDate, taskDate),
+                        eq(tasks.profileId, profile.id)
+                    ))
+                    .limit(1);
+
+                if (existing.length > 0) {
+                    const rec = existing[0];
+                    console.log(`[TaskQueue][Cron] Task exists for ${profile.name} (${rec.status}), skipping.`);
+                    continue;
+                }
+            }
+
+            // Manual: Allow duplicate/multiple tasks (always create new)
+
             const taskId = crypto.randomUUID();
             await this.db.insert(tasks).values({
                 id: taskId,
@@ -131,6 +148,16 @@ export class TaskQueue {
      * Global queue - processes tasks from any date
      */
     async claimTask(): Promise<typeof tasks.$inferSelect | null> {
+        // [Optimization] Check if queue is busy before querying candidates
+        // This reduces write contention on the tasks table
+        const runningCount = await this.db
+            .select({ count: sql<number>`count(*)` })
+            .from(tasks)
+            .where(eq(tasks.status, 'running'))
+            .then(res => res[0].count);
+
+        if (runningCount > 0) return null;
+
         // Find oldest queued task (any date)
         const candidates = await this.db
             .select()
@@ -144,7 +171,8 @@ export class TaskQueue {
         const candidate = candidates[0];
         const now = new Date().toISOString();
 
-        // Attempt to claim with optimistic lock (check version hasn't changed)
+        // Attempt to claim with optimistic lock AND global serial lock
+        // Ensure no other task is 'running' at the exact moment of update
         await this.db
             .update(tasks)
             .set({
@@ -155,7 +183,9 @@ export class TaskQueue {
             .where(and(
                 eq(tasks.id, candidate.id),
                 eq(tasks.status, 'queued'),
-                eq(tasks.version, candidate.version)
+                eq(tasks.version, candidate.version),
+                // Atomic Lock: Enforce serial execution
+                sql`(SELECT count(*) FROM ${tasks} WHERE ${tasks.status} = 'running') = 0`
             ));
 
         // Re-query to verify we got it
@@ -169,7 +199,23 @@ export class TaskQueue {
             .limit(1);
 
         if (updated.length === 0) {
-            // Someone else claimed it, try again
+            // Update failed. Could be:
+            // 1. Someone else claimed THIS task (optimistic lock fail)
+            // 2. Someone else claimed ANOTHER task (global lock fail)
+
+            // Check if queue is now busy
+            const currentRunning = await this.db
+                .select({ count: sql<number>`count(*)` })
+                .from(tasks)
+                .where(eq(tasks.status, 'running'))
+                .then(res => res[0].count);
+
+            if (currentRunning > 0) {
+                // Queue is busy, back off
+                return null;
+            }
+
+            // Queue is free but we missed this task? Try again (recursion)
             return this.claimTask();
         }
 
@@ -224,6 +270,12 @@ export class TaskQueue {
 
         const stuckTasks = runningTasks.filter(t => t.startedAt && t.startedAt < cutoffTime);
 
+        console.log(`[TaskQueue] Debug: Running=${runningTasks.length}, Stuck=${stuckTasks.length}`);
+        if (runningTasks.length > 0) {
+            console.log(`[TaskQueue] Running details:`, JSON.stringify(runningTasks));
+            console.log(`[TaskQueue] Cutoff time:`, cutoffTime);
+        }
+
         if (stuckTasks.length > 0) {
             console.log(`[TaskQueue] Found ${stuckTasks.length} stuck tasks, resetting to queued...`);
             for (const stuck of stuckTasks) {
@@ -238,7 +290,8 @@ export class TaskQueue {
                 console.log(`[TaskQueue] Reset stuck task ${stuck.id}`);
             }
         } else if (runningTasks.length > 0) {
-            console.log(`[TaskQueue] ${runningTasks.length} tasks are currently running (within timeout).`);
+            console.log(`[TaskQueue] Queue is busy (${runningTasks.length} running), skipping to enforce serial execution.`);
+            return;
         }
 
         while (true) {
@@ -312,7 +365,9 @@ export class TaskQueue {
 
         console.log(`[Task ${task.id}] Starting LLM generation with model: ${model}`);
 
-        // Try to load checkpoint from resultJson
+        // Checkpoint Recovery:
+        // If the task has a saved 'resultJson' containing a stage, we resume from there.
+        // This allows long-running LLM tasks to survive timeouts or restarts.
         let checkpoint: GenerationCheckpoint | null = null;
         if (task.resultJson) {
             try {
@@ -368,27 +423,27 @@ export class TaskQueue {
         };
 
         // Insert article and update task
-        await this.db.batch([
-            this.db.insert(articles).values({
-                id: articleId,
-                generationTaskId: task.id,
-                model,
-                variant: 1,
-                title: output.output.title,
-                contentJson: JSON.stringify(contentData),
-                status: 'published',
+        // Insert article and update task sequentially (avoiding .batch() issues)
+        await this.db.insert(articles).values({
+            id: articleId,
+            generationTaskId: task.id,
+            model,
+            variant: 1,
+            title: output.output.title,
+            contentJson: JSON.stringify(contentData),
+            status: 'published',
+            publishedAt: finishedAt
+        });
+
+        await this.db
+            .update(tasks)
+            .set({
+                status: 'succeeded',
+                resultJson: JSON.stringify(resultData),
+                finishedAt,
                 publishedAt: finishedAt
-            }),
-            this.db
-                .update(tasks)
-                .set({
-                    status: 'succeeded',
-                    resultJson: JSON.stringify(resultData),
-                    finishedAt,
-                    publishedAt: finishedAt
-                })
-                .where(eq(tasks.id, task.id))
-        ]);
+            })
+            .where(eq(tasks.id, task.id));
 
         console.log(`[Task ${task.id}] Completed successfully`);
     }

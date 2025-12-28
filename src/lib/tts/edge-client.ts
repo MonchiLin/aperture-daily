@@ -100,6 +100,8 @@ export class EdgeTTSClient {
                                 }
                             } catch (e) {
                                 console.error("Error parsing metadata", e);
+                                reject(e);
+                                this.ws?.close();
                             }
                         }
                     } else if (data.includes("Path:turn.end")) {
@@ -115,6 +117,8 @@ export class EdgeTTSClient {
                         audioData.push(audioPart);
                     } catch (e) {
                         console.error("Error processing audio blob", e);
+                        reject(e);
+                        this.ws?.close();
                     }
                 }
             };

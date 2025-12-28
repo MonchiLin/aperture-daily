@@ -4,10 +4,8 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "dev:cf": "astro build && wrangler dev --local --persist-to .wrangler/state",
-    "dev:remote": "astro build && wrangler dev --remote",
     "build": "astro build",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name luma-words",
+    "serve": "node ./dist/server/entry.mjs",
     "deploy:cron": "wrangler deploy --config wrangler.cron.jsonc",
     "preview": "astro preview",
     "check": "astro check",

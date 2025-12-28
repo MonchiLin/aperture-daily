@@ -28,24 +28,24 @@ export const WORD_SELECTION_SYSTEM_PROMPT = `你是词汇策展专家。你的�
 3. 选出的词应能自然出现在同一主题的新闻中
 4. 考虑词汇间的语义关联性
 
-输出格式：返回 JSON 对象：
+输出格式：返回 JSON 对象（**严格遵守以下 Key，不要使用 alias**）：
 {
   "selected_words": ["word1", "word2", ...],
   "selection_reasoning": "简要说明选词理由"
 }`;
 
 export function buildWordSelectionUserPrompt(args: {
-    candidateWordsJson: string;
-    topicPreference: string;
-    currentDate: string;
+  candidateWordsJson: string;
+  topicPreference: string;
+  currentDate: string;
 }) {
-    return `当前日期: ${args.currentDate}
+  return `当前日期: ${args.currentDate}
 主题偏好: ${args.topicPreference}
 
 候选词表:
 ${args.candidateWordsJson}
 
-请从候选词中选出 4-7 个适合的词汇。返回 JSON 对象。`;
+请从候选词中选出 4-7 个适合的词汇。返回 JSON 对象，确保 key 为 "selected_words"。`;
 }
 
 // ============================================
@@ -53,11 +53,11 @@ ${args.candidateWordsJson}
 // ============================================
 
 export function buildResearchUserPrompt(args: {
-    selectedWords: string[];
-    topicPreference: string;
-    currentDate: string;
+  selectedWords: string[];
+  topicPreference: string;
+  currentDate: string;
 }) {
-    return `已选词汇: ${args.selectedWords.join(', ')}
+  return `已选词汇: ${args.selectedWords.join(', ')}
 主题偏好: ${args.topicPreference}
 日期: ${args.currentDate}
 
@@ -116,12 +116,12 @@ const WRITING_GUIDELINES = `
 `;
 
 export function buildDraftGenerationUserPrompt(args: {
-    selectedWords: string[];
-    sourceUrls: string[];
-    currentDate: string;
-    topicPreference: string;
+  selectedWords: string[];
+  sourceUrls: string[];
+  currentDate: string;
+  topicPreference: string;
 }) {
-    return `请根据研究结果，为以下词汇写三个难度级别的新闻文章。
+  return `请根据研究结果，为以下词汇写三个难度级别的新闻文章。
 
 目标词汇: ${JSON.stringify(args.selectedWords)}
 主题偏好: ${args.topicPreference}
@@ -179,11 +179,11 @@ const JSON_SCHEMA = `
 }`;
 
 export function buildJsonConversionUserPrompt(args: {
-    draftText: string;
-    sourceUrls: string[];
-    selectedWords: string[];
+  draftText: string;
+  sourceUrls: string[];
+  selectedWords: string[];
 }) {
-    return `请将文章草稿转换为以下 JSON 格式。你必须输出一个有效的 JSON 对象。
+  return `请将文章草稿转换为以下 JSON 格式。你必须输出一个有效的 JSON 对象。
 
 目标词汇: ${JSON.stringify(args.selectedWords)}
 来源 URL: ${JSON.stringify(args.sourceUrls)}

@@ -1,6 +1,0 @@
-ADMIN_KEY=__FILL_ME__
-SHANBAY_COOKIE=__FILL_ME__
-LLM_API_KEY=__FILL_ME__
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL_DEFAULT=gpt-5.2
-

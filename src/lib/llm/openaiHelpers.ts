@@ -89,29 +89,22 @@ function pickSelectionReasoning(obj: Record<string, unknown>) {
 	return trimmed ? trimmed : undefined;
 }
 
-// 选词 JSON 容错：补齐 selected_words 字段，避免 schema 校验直接失败
+// 选词 JSON 容错：仅允许 selected_words 字段，不再做模糊匹配
 export function normalizeWordSelectionPayload(value: unknown): unknown {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
 	const obj = value as Record<string, unknown>;
-	const candidates: unknown[] = [
-		obj.selected_words,
-		obj.words,
-		obj.selected,
-		obj.selectedWords,
-		obj.selected_word,
-		obj.word_list,
-		obj.wordList
-	];
-	let selectedWords: string[] | null = null;
-	for (const candidate of candidates) {
-		selectedWords = pickWordList(candidate);
-		if (selectedWords?.length) break;
-	}
+
+	// Strict mode: Only look for 'selected_words'
+	// If strictness is paramount, we should not look for aliases.
+	const selectedWords = pickWordList(obj.selected_words);
+
 	if (!selectedWords?.length) return value;
+
 	const normalized: Record<string, unknown> = {
 		...obj,
 		selected_words: selectedWords
 	};
+
 	if (typeof obj.selection_reasoning !== 'string') {
 		const reasoning = pickSelectionReasoning(obj);
 		if (reasoning) normalized.selection_reasoning = reasoning;
