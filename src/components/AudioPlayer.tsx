@@ -35,37 +35,42 @@ export default function AudioPlayer() {
         if (!currentText) return;
 
         let active = true;
-        const fetchAudio = async () => {
-            audioState.setKey('isLoading', true);
-            clientRef.current.cancel();
 
-            try {
-                const result = await clientRef.current.synthesize(currentText, playbackRate);
+        // Debounce fetch to avoid rapid state changes causing WebSocket spam
+        const timer = setTimeout(() => {
+            const fetchAudio = async () => {
+                audioState.setKey('isLoading', true);
+                clientRef.current.cancel();
 
-                if (active) {
-                    const url = URL.createObjectURL(result.audioBlob);
-                    audioState.setKey('audioUrl', url);
-                    audioState.setKey('wordAlignments', result.wordBoundaries);
-                    audioState.setKey('isLoading', false);
-                    audioState.setKey('charIndex', -1);
-                    lastCharIndexRef.current = -1;
+                try {
+                    const result = await clientRef.current.synthesize(currentText, playbackRate);
+
+                    if (active) {
+                        const url = URL.createObjectURL(result.audioBlob);
+                        audioState.setKey('audioUrl', url);
+                        audioState.setKey('wordAlignments', result.wordBoundaries);
+                        audioState.setKey('isLoading', false);
+                        audioState.setKey('charIndex', -1);
+                        lastCharIndexRef.current = -1;
+                    }
+                } catch (e) {
+                    console.error("Audio fetch failed", e);
+                    if (active) audioState.setKey('isLoading', false);
                 }
-            } catch (e) {
-                console.error("Audio fetch failed", e);
-                if (active) audioState.setKey('isLoading', false);
+            };
+
+            if (state.audioUrl) {
+                URL.revokeObjectURL(state.audioUrl);
+                audioState.setKey('audioUrl', null);
+                audioState.setKey('wordAlignments', []);
             }
-        };
 
-        if (state.audioUrl) {
-            URL.revokeObjectURL(state.audioUrl);
-            audioState.setKey('audioUrl', null);
-            audioState.setKey('wordAlignments', []);
-        }
-
-        fetchAudio();
+            fetchAudio();
+        }, 300);
 
         return () => {
             active = false;
+            clearTimeout(timer);
         };
     }, [currentIndex, currentText, playbackRate, voice]);
 
@@ -136,7 +141,7 @@ export default function AudioPlayer() {
     const speeds = [0.75, 1, 1.25, 1.5];
 
     return (
-        <div className="mb-8 font-serif">
+        <div className="font-serif">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 border-b-2 border-slate-900 pb-2">
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-900">

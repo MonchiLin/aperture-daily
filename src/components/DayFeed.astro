@@ -1,0 +1,101 @@
+---
+/**
+ * 每日文章列表 - Astro 版本
+ * 
+ * 纯服务端渲染，完整输出文章列表 HTML。
+ */
+interface Article {
+    id: string;
+    model: string;
+    title: string;
+}
+
+interface Task {
+    id: string;
+    publishedAt: string | null;
+}
+
+interface PublishedTaskGroup {
+    task: Task;
+    articles: Article[];
+}
+
+interface Props {
+    date: string;
+    data: { publishedTaskGroups: PublishedTaskGroup[] };
+}
+
+const { date, data } = Astro.props;
+
+// 格式化日期显示
+const dateObj = new Date(date + 'T00:00:00');
+const dayNum = dateObj.getDate();
+const monthYear = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+---
+
+<div class="flex flex-col h-full font-serif text-slate-900">
+    <!-- 顶部刊头信息 -->
+    <div class="pb-6 border-b-2 border-slate-900 mb-6">
+        <div class="flex items-end justify-between">
+            <div>
+                <span class="block text-xs font-bold tracking-widest uppercase text-stone-500 mb-1">
+                    Daily Edition
+                </span>
+                <h2 class="text-5xl font-black tracking-tight text-slate-900 font-serif leading-none">
+                    {dayNum}
+                </h2>
+                <span class="text-xl italic text-stone-600 font-serif">
+                    {monthYear}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文章列表 -->
+    <div class="flex-1 space-y-8">
+        {data.publishedTaskGroups.length > 0 ? (
+            <div class="space-y-0 divide-y divide-stone-200 border-b border-stone-200">
+                {data.publishedTaskGroups.map((group, groupIdx) => (
+                    <div
+                        class="py-6 first:pt-0"
+                        style={`animation-delay: ${groupIdx * 100}ms`}
+                    >
+                        <div class="grid gap-8">
+                            {group.articles.length === 0 ? (
+                                <div class="text-sm text-stone-400 italic font-serif">
+                                    No articles in this section.
+                                </div>
+                            ) : (
+                                group.articles.map((article) => (
+                                    <div class="group relative">
+                                        <a 
+                                            href={`/article/${article.id}`} 
+                                            class="block group-hover:opacity-70 transition-opacity"
+                                        >
+                                            <div class="flex flex-col gap-2">
+                                                <h3 class="font-serif text-2xl font-bold text-slate-900 leading-tight">
+                                                    {article.title}
+                                                </h3>
+                                                <div class="pt-2 flex items-center justify-between">
+                                                    <span class="text-xs font-sans font-bold uppercase tracking-widest text-stone-400">
+                                                        Read Article
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <div class="py-12 flex flex-col items-center justify-center text-stone-400 gap-4 border-y border-stone-200">
+                <span class="font-serif italic text-lg text-stone-500">
+                    No content published for this date.
+                </span>
+            </div>
+        )}
+    </div>
+</div>

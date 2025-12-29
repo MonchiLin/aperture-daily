@@ -1,0 +1,86 @@
+---
+/**
+ * 词汇侧边栏 - Astro 版本
+ * 
+ * 纯服务端渲染，展示文章中的目标词汇及其定义。
+ */
+interface Definition {
+    pos: string;
+    definition: string;
+}
+
+interface Word {
+    word: string;
+    phonetic: string;
+    definitions: Definition[];
+}
+
+interface Props {
+    words: Word[];
+}
+
+const { words } = Astro.props;
+---
+
+<div class="space-y-4">
+    <!-- 标题 -->
+    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 pb-2 mb-4 border-b-2 border-slate-900">
+        Margin Notes
+    </h2>
+    
+    <!-- 词汇列表 -->
+    
+    <div class="space-y-4 overflow-hidden">
+        {words.map((word) => (
+            <div 
+                class="group pb-4 border-b border-stone-100 last:border-0 last:pb-0 cursor-pointer hover:bg-orange-50/50 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                data-word-card={word.word.toLowerCase()}
+            >
+                <div class="flex items-baseline gap-2 mb-1">
+                    <span class="font-serif text-lg font-bold text-slate-900">
+                        {word.word}
+                    </span>
+                    {word.phonetic && (
+                        <span class="text-xs text-stone-400 font-mono">
+                            {word.phonetic}
+                        </span>
+                    )}
+                </div>
+                
+                {word.definitions.length > 0 && (
+                    <div class="space-y-1">
+                        {word.definitions.map((def) => (
+                            <div class="text-sm text-stone-600">
+                                <span class="text-xs font-bold uppercase text-stone-400 mr-1">
+                                    {def.pos}
+                                </span>
+                                {def.definition}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        ))}
+    </div>
+</div>
+
+<script>
+    // 点击词汇卡片时高亮文章中的对应单词
+    document.querySelectorAll('[data-word-card]').forEach(card => {
+        card.addEventListener('click', () => {
+            const word = card.getAttribute('data-word-card');
+            if (!word) return;
+            
+            // 找到文章中的对应单词
+            const targetWord = document.querySelector(`[data-word="${word}"]`);
+            if (targetWord) {
+                targetWord.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 添加闪烁效果
+                targetWord.classList.add('animate-pulse');
+                setTimeout(() => {
+                    targetWord.classList.remove('animate-pulse');
+                }, 1000);
+            }
+        });
+    });
+</script>

@@ -1,27 +1,22 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import HomeWorkspace from "@/components/HomeWorkspace";
+/**
+ * 首页 - 重定向到今日日期
+ * 
+ * 使用服务端重定向，确保用户直接访问当天的内容页面。
+ */
 
-import { apiFetch } from "../lib/api";
-
-let publishedDays: string[] = [];
-try {
-	const data = await apiFetch<{ days: string[] }>('/api/days');
-	publishedDays = data.days || [];
-} catch (e) {
-	console.error("Failed to fetch days:", e);
+// 获取今天的日期（Asia/Shanghai 时区）
+function getTodayDate(): string {
+    const now = new Date();
+    // 使用 UTC+8 时区
+    const offset = 8 * 60; // 分钟
+    const localTime = new Date(now.getTime() + (offset + now.getTimezoneOffset()) * 60 * 1000);
+    return localTime.toISOString().split('T')[0];
 }
 
-const initialDate = new Date().toISOString().split("T")[0];
+const today = getTodayDate();
+
+// 服务端重定向
+return Astro.redirect(`/day/${today}`);
 ---
 
-<Layout
-	title="Daily Vocabulary Reader"
-	mainClass="p-0 max-w-none overflow-hidden"
->
-	<HomeWorkspace
-		client:load
-		publishedDays={publishedDays}
-		initialDate={initialDate}
-	/>
-</Layout>

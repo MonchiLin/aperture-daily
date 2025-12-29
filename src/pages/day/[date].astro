@@ -1,0 +1,67 @@
+---
+/**
+ * 日期页面 - SSR 渲染
+ * 
+ * 每个日期对应一个 URL，完整服务端渲染。
+ * View Transitions 提供平滑的页面切换体验。
+ */
+import Layout from "@/layouts/Layout.astro";
+import MacOSCalendarAstro from "@/components/MacOSCalendar.astro";
+import DayFeed from "@/components/DayFeed.astro";
+import AdminDayPanel from "@/components/AdminDayPanel";
+import { apiFetch } from "@/lib/api";
+
+// 获取路由参数
+const { date } = Astro.params;
+
+// 验证日期格式
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+if (!date || !dateRegex.test(date)) {
+    return Astro.redirect('/');
+}
+
+// 服务端预取数据
+let publishedDays: string[] = [];
+let dayData: { publishedTaskGroups: any[] } = { publishedTaskGroups: [] };
+
+try {
+    const daysResponse = await apiFetch<{ days: string[] }>('/api/days');
+    publishedDays = daysResponse.days || [];
+} catch (e) {
+    console.error("[SSR] Failed to fetch days:", e);
+}
+
+try {
+    dayData = await apiFetch(`/api/day/${date}`);
+} catch (e) {
+    console.error(`[SSR] Failed to fetch day data for ${date}:`, e);
+}
+---
+
+<Layout title={`${date} - Daily Vocabulary Reader`}>
+    <div class="relative w-full max-w-7xl mx-auto px-4 py-8 md:py-12">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+            <!-- 左侧日历 - 纯 Astro 组件，零 JS -->
+            <div class="md:col-span-4 lg:col-span-4 sticky top-24" transition:persist>
+                <MacOSCalendarAstro
+                    publishedDays={publishedDays}
+                    selectedDate={date}
+                />
+            </div>
+
+            <!-- 右侧文章列表 - SSR 输出完整 HTML -->
+            <div 
+                class="md:col-span-8 lg:col-span-8 min-h-[500px]"
+                transition:animate="slide"
+            >
+                <!-- 管理员面板保持为 React Island -->
+                <div class="mb-8">
+                    <AdminDayPanel client:idle date={date} />
+                </div>
+                
+                <!-- 文章列表 - 纯 Astro 组件 -->
+                <DayFeed date={date} data={dayData} />
+            </div>
+        </div>
+    </div>
+</Layout>

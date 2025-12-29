@@ -2,6 +2,7 @@ import { RotateCw, Trash2 } from 'lucide-react';
 import { type TaskRow, formatTime, fetchJson } from './shared';
 import { clsx } from 'clsx';
 import { useState } from 'react';
+import { Popconfirm } from 'antd';
 
 type TaskQueueListProps = {
     tasks: TaskRow[];
@@ -18,7 +19,6 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
 
     async function deleteAllFailed() {
         if (!adminKey || failedTasks.length === 0) return;
-        if (!confirm(`确定删除所有 ${failedTasks.length} 个失败的任务吗？`)) return;
         setDeleting(true);
         try {
             await fetchJson('/api/admin/tasks/delete-failed', adminKey, {
@@ -41,14 +41,22 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Task Queue</span>
                     {failedTasks.length > 0 && (
-                        <button
-                            onClick={deleteAllFailed}
-                            disabled={deleting}
-                            className="px-2 py-0.5 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 hover:border-red-300 uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
-                            title={`Delete all ${failedTasks.length} failed tasks`}
+                        <Popconfirm
+                            title="删除失败任务"
+                            description={`确定删除所有 ${failedTasks.length} 个失败的任务吗？`}
+                            onConfirm={deleteAllFailed}
+                            okText="确定"
+                            cancelText="取消"
+                            okButtonProps={{ danger: true }}
                         >
-                            {deleting ? 'Deleting...' : `🗑 Clear ${failedTasks.length} Failed`}
-                        </button>
+                            <button
+                                disabled={deleting}
+                                className="px-2 py-0.5 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 hover:border-red-300 uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                                title={`Delete all ${failedTasks.length} failed tasks`}
+                            >
+                                {deleting ? 'Deleting...' : `🗑 Clear ${failedTasks.length} Failed`}
+                            </button>
+                        </Popconfirm>
                     )}
                 </div>
                 <button onClick={onRefresh} className="text-stone-400 hover:text-stone-900 transition-colors" title="Refresh">
@@ -77,13 +85,21 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
                                         'bg-red-600': t.status === 'failed',
                                     }
                                 )} title={t.status} />
-                                <button
-                                    onClick={() => onDelete(t.id)}
-                                    className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-600 transition-all"
-                                    title="Delete Task"
+                                <Popconfirm
+                                    title="删除任务"
+                                    description="确定删除这个任务吗？这会同时删除关联的文章和批注。"
+                                    onConfirm={() => onDelete(t.id)}
+                                    okText="确定"
+                                    cancelText="取消"
+                                    okButtonProps={{ danger: true }}
                                 >
-                                    <Trash2 size={12} />
-                                </button>
+                                    <button
+                                        className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-600 transition-all"
+                                        title="Delete Task"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </Popconfirm>
                             </div>
                         </div>
 

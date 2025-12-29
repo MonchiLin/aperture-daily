@@ -143,7 +143,6 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 
 	async function deleteTask(taskId: string) {
 		if (!adminKey) return;
-		if (!confirm('确定删除这个任务吗？这会同时删除关联的文章和批注。')) return;
 		setLoading(true);
 		setError(null);
 		try {

@@ -1,162 +1,330 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import ArticleTabs from "../../components/ArticleTabs";
-import ArticleContent from "../../components/ArticleContent.astro";
-import ArticleHeader from "../../components/ArticleHeader.astro";
-import WordSidebar from "../../components/WordSidebar";
-import AudioPlayer from "../../components/AudioPlayer";
-import { isAdminRequest } from "../../lib/admin";
+/**
+ * 文章页 - SSR 渲染
+ * 
+ * 三个难度级别的内容都在 HTML 中输出，用 CSS 控制显示/隐藏。
+ * 难度切换使用极简的原生 JavaScript，无需 React。
+ * 高亮功能作为独立 Island 延迟加载。
+ */
+import Layout from "@/layouts/Layout.astro";
+import WordSidebarAstro from "@/components/WordSidebar.astro";
+import HighlightManager from "@/components/HighlightManager";
+import AudioPlayer from "@/components/AudioPlayer";
+import AudioInit from "@/components/AudioInit";
+import AIAnalyzer from "@/components/AIAnalyzer";
+import { apiFetch } from "@/lib/api";
 import {
-	extractSources,
-	extractWordDefinitions,
-	formatDateLabel,
-	mapToSidebarWords,
-	parseArticleContent,
-	getInitialArticleData,
-} from "../../lib/articles/utils";
-import type { ArticleParsedContent } from "../../lib/articles/types";
+    extractSources,
+    extractWordDefinitions,
+    formatDateLabel,
+    mapToSidebarWords,
+    parseArticleContent,
+} from "@/lib/articles/utils";
+import type { ArticleParsedContent } from "@/lib/articles/types";
 
-import { apiFetch } from "../../lib/api";
+const { id } = Astro.params;
 
-const id = Astro.params.id;
-if (!id) Astro.response.status = 404;
+if (!id) {
+    return Astro.redirect('/');
+}
 
+// 服务端获取文章数据
 let row: any = null;
+let parsed: ArticleParsedContent = {};
+let sources: string[] = [];
+let wordDefinitions: any[] = [];
+let sidebarWords: any[] = [];
+let dateLabel = "";
 
-if (id) {
-    try {
-        row = await apiFetch(`/api/articles/${id}`);
-    } catch (e: any) {
-        console.error("Failed to fetch article:", e);
-        if (e.message.includes("404")) {
-             Astro.response.status = 404;
-        } else {
-             // If error is not 404, valid error?
-        }
+try {
+    row = await apiFetch(`/api/articles/${id}`);
+    if (row?.articles?.content_json) {
+        parsed = parseArticleContent(row.articles.content_json);
+        sources = extractSources(parsed);
+        wordDefinitions = extractWordDefinitions(parsed);
+        sidebarWords = mapToSidebarWords(wordDefinitions);
+        dateLabel = formatDateLabel(row.tasks?.task_date);
+    }
+} catch (e: any) {
+    console.error("[SSR] Failed to fetch article:", e.message);
+    if (e.message?.includes("404") || e.message?.includes("Not found")) {
+        Astro.response.status = 404;
     }
 }
 
-if (!row) Astro.response.status = 404;
+// 获取三个难度级别的文章
+const articles = parsed?.result?.articles || [];
+const sortedArticles = [...articles].sort((a: any, b: any) => a.level - b.level);
+const title = row?.articles?.title || "Article";
 
-const isAdmin = isAdminRequest(Astro.request, Astro.locals);
+// 获取所有文章内容用于 AudioPlayer（按难度合并）
+const allArticleContents = sortedArticles.map((a: any) => ({
+    level: a.level,
+    content: a.content || ''
+}));
 
-let parsed: ArticleParsedContent = {};
-if (row) {
-	try {
-		parsed = parseArticleContent(row.articles.content_json);
-	} catch (e) {
-		throw e;
-	}
+// 计算阅读统计
+function getReadingStats(content: string) {
+    const words = content?.trim().split(/\s+/).filter(Boolean) || [];
+    const count = words.length;
+    const minutes = count ? Math.max(1, Math.ceil(count / 120)) : 0;
+    return { wordCount: count, minutes };
 }
 
-const sources = parsed?.result ? extractSources(parsed) : [];
-const wordDefinitions = parsed?.result ? extractWordDefinitions(parsed) : [];
-const sidebarWords = mapToSidebarWords(wordDefinitions);
-const initialData = parsed ? getInitialArticleData(parsed) : null;
-
-const dateLabel = row ? formatDateLabel(row.tasks.task_date) : "";
-const sourceAnchorId = sources.length > 0 ? "article-sources" : null;
+// 目标单词列表
+const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
 ---
 
-<Layout
-	title={row?.articles?.title ?? `Article ${id ?? ""}`}
-	mainClass="mx-auto w-full max-w-7xl px-4 py-10"
->
-	{
-		row ? (
-			<div class="flex flex-col lg:flex-row gap-10">
-				{/* Main Content */}
-				<main
-					class={`flex-1 min-w-0 ${sidebarWords.length === 0 ? "max-w-3xl mx-auto" : ""}`}
-				>
-					<div class="space-y-8">
-						{parsed?.result?.articles ? (
-							<ArticleTabs
-								client:only="react"
-								articleId={row.articles.id}
-								articles={parsed!.result!.articles!}
-								initialIsAdmin={isAdmin}
-								title={row.articles.title}
-								dateLabel={dateLabel}
-								sourceAnchorId={sourceAnchorId}
-								targetWords={sidebarWords.map((w) => w.word)}
-							>
-								{initialData && (
-									<div class="relative">
-										<div class="bg-white rounded-3xl border border-gray-100 p-6 md:p-8">
-											<ArticleHeader
-												title={row.articles.title || ""}
-												publishDate={dateLabel || ""}
-												stats={{
-													readCount: 0,
-													readingTime:
-														initialData.readingTime,
-												}}
-											/>
-											<ArticleContent
-												content={initialData.content}
-											/>
-										</div>
-									</div>
-								)}
-							</ArticleTabs>
-						) : (
-							<div class="rounded-xl border border-black/10 bg-white/60 p-5 text-sm opacity-70">
-								内容解析失败（content_json 非预期结构）。
-							</div>
-						)}
-
-						{sources.length > 0 ? (
-							<div
-								id={sourceAnchorId ?? undefined}
-								class="pt-8 mt-8 border-t border-slate-900/10"
-							>
-								<div class="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-4">
-									Sources
-								</div>
-								<ul class="space-y-1">
-									{sources.map((u) => {
-										let domain = u;
-										try {
-											domain = new URL(
-												u,
-											).hostname.replace(/^www\./, "");
-										} catch {}
-										return (
-											<li class="flex items-center gap-2">
-												<span class="w-1 h-1 rounded-full bg-stone-300" />
-												<a
-													href={u}
-													target="_blank"
-													rel="noreferrer"
-													class="text-xs font-serif text-stone-500 hover:text-slate-900 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-900 transition-all"
-													title={u}
-												>
-													{domain}
-												</a>
-											</li>
-										);
-									})}
-								</ul>
-							</div>
-						) : null}
-					</div>
-				</main>
-
-				{/* Sidebar - Words */}
-				{sidebarWords.length > 0 && (
-					<aside class="lg:w-80 lg:shrink-0">
-						<div class="lg:sticky lg:top-6 space-y-6">
-							<AudioPlayer client:only="react" />
-							<WordSidebar client:load words={sidebarWords} />
-						</div>
-					</aside>
-				)}
-			</div>
-		) : (
-			<div class="rounded-xl border border-black/10 bg-white/60 p-5 text-sm opacity-70">
-				该文章不存在或未发布。
-			</div>
-		)
-	}
+<Layout title={`${title} - Daily Vocabulary Reader`}>
+    {row ? (
+        <div class="flex flex-col lg:flex-row gap-10 mx-auto w-full max-w-7xl px-4 py-10">
+            <!-- 主内容区 -->
+            <main class={`flex-1 min-w-0 ${sidebarWords.length === 0 ? "max-w-3xl mx-auto" : ""}`}>
+                <div class="space-y-8">
+                    <!-- 文章容器 -->
+                    <div class="bg-white rounded-3xl border border-gray-100 p-6 md:p-8">
+                        <!-- 文章头部 -->
+                        <header class="mb-12 md:mb-16">
+                            <div class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-6 border-b-2 border-slate-900 pb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-slate-900">{dateLabel}</span>
+                                    <span class="text-stone-300">|</span>
+                                    <span id="reading-time">Loading...</span>
+                                </div>
+                                
+                                <!-- 难度切换器 -->
+                                <div class="flex gap-1" id="level-switcher">
+                                    {[1, 2, 3].map((level) => (
+                                        <button
+                                            type="button"
+                                            data-level-btn={level}
+                                            class:list={[
+                                                "level-btn w-6 h-6 flex items-center justify-center text-xs font-bold transition-all rounded-sm border leading-none",
+                                                level === 1 
+                                                    ? "bg-slate-900 text-white border-slate-900" 
+                                                    : "bg-transparent text-stone-400 border-transparent hover:border-stone-200 hover:text-stone-600"
+                                            ]}
+                                        >
+                                            {level}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <h1 class="text-2xl md:text-4xl font-black text-slate-900 tracking-tight leading-[1.1] font-serif">
+                                {title}
+                            </h1>
+                        </header>
+                        
+                        <!-- 三个难度的文章内容 -->
+                        <article id="article-content" class="font-serif leading-loose text-lg md:text-xl text-slate-800/90 space-y-8">
+                            {sortedArticles.map((article: any) => {
+                                const stats = getReadingStats(article.content);
+                                const paragraphs = article.content?.split('\n').filter((p: string) => p.trim()) || [];
+                                
+                                return (
+                                    <div
+                                        class="article-level"
+                                        data-level={article.level}
+                                        data-word-count={stats.wordCount}
+                                        data-minutes={stats.minutes}
+                                    >
+                                        {paragraphs.map((paragraph: string) => (
+                                            <p class="mb-8 text-stone-800 rounded-lg">
+                                                {paragraph}
+                                            </p>
+                                        ))}
+                                    </div>
+                                );
+                            })}
+                        </article>
+                    </div>
+                    
+                    <!-- 来源 -->
+                    {sources.length > 0 && (
+                        <div id="article-sources" class="pt-8 mt-8 border-t border-slate-900/10">
+                            <div class="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-4">
+                                Sources
+                            </div>
+                            <ul class="space-y-1">
+                                {sources.map((url) => {
+                                    let domain = url;
+                                    try {
+                                        domain = new URL(url).hostname.replace(/^www\./, "");
+                                    } catch {}
+                                    return (
+                                        <li class="flex items-center gap-2">
+                                            <span class="w-1 h-1 rounded-full bg-stone-300" />
+                                            <a
+                                                href={url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                class="text-xs font-serif text-stone-500 hover:text-slate-900 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-900 transition-all"
+                                                title={url}
+                                            >
+                                                {domain}
+                                            </a>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+                
+                <!-- 高亮管理器 - 作为独立 Island 加载 -->
+                <HighlightManager 
+                    client:load 
+                    articleId={id} 
+                    targetWords={targetWords}
+                />
+                
+                <!-- AI 选词分析器 -->
+                <AIAnalyzer 
+                    client:idle 
+                    articleContent={sortedArticles[0]?.content || ''} 
+                />
+            </main>
+            
+            <!-- 侧边栏 - 音频 + 词汇 -->
+            {sidebarWords.length > 0 && (
+                <aside class="lg:w-80 lg:shrink-0">
+                    <div class="lg:sticky lg:top-6 space-y-4">
+                    <div class="lg:sticky lg:top-6 space-y-4">
+                        <!-- Audio 初始化器（传递所有难度的内容） -->
+                        <AudioInit 
+                            client:idle 
+                            allContent={allArticleContents} 
+                        />
+                        
+                        <!-- Audio Edition (组件自带标题) -->
+                        <AudioPlayer client:only="react" />
+                        
+                        <!-- Margin Notes -->
+                        <WordSidebarAstro words={sidebarWords} />
+                    </div>
+                </aside>
+            )}
+        </div>
+    ) : (
+        <div class="mx-auto w-full max-w-7xl px-4 py-10">
+            <div class="rounded-xl border border-black/10 bg-white/60 p-5 text-sm opacity-70">
+                该文章不存在或未发布。
+            </div>
+        </div>
+    )}
 </Layout>
+
+<style is:global>
+    /* 强力覆盖：确保朗读时的高亮优先级最高 */
+    span.w-token.bg-orange-200 {
+        background-color: #fed7aa !important; /* orange-200 */
+        color: #7c2d12 !important; /* orange-900 */
+        box-shadow: 0 0 0 2px #fed7aa; /* 稍微扩散背景以确保可见性 */
+        border-radius: 2px;
+        position: relative;
+        z-index: 10;
+    }
+</style>
+
+<style>
+    /* 默认只显示 Level 1 */
+    .article-level {
+        display: none;
+    }
+    .article-level[data-active] {
+        display: block;
+    }
+    
+    /* 难度按钮激活状态 */
+    .level-btn[data-active] {
+        background-color: rgb(15 23 42); /* slate-900 */
+        color: white;
+        border-color: rgb(15 23 42);
+    }
+    
+    /* 目标单词高亮 */
+    .target-word {
+        color: #ea580c;
+        font-weight: 600;
+        border-bottom: 2px dotted #ea580c;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    // 极简的难度切换逻辑
+    // 使用 astro:page-load 以支持 View Transitions
+    function initLevelSwitcher() {
+        const levels = document.querySelectorAll('.article-level');
+        const buttons = document.querySelectorAll('[data-level-btn]');
+        const readingTimeEl = document.getElementById('reading-time');
+        
+        // 如果没有找到元素，说明不在文章页
+        if (levels.length === 0 || buttons.length === 0) return;
+        
+        function setLevel(level: number) {
+            // 切换内容显示
+            levels.forEach(el => {
+                const elLevel = parseInt(el.getAttribute('data-level') || '0');
+                if (elLevel === level) {
+                    el.setAttribute('data-active', '');
+                    // 更新阅读时间
+                    const minutes = el.getAttribute('data-minutes') || '1';
+                    if (readingTimeEl) {
+                        readingTimeEl.textContent = `${minutes} ${parseInt(minutes) === 1 ? 'minute' : 'minutes'}`;
+                    }
+                } else {
+                    el.removeAttribute('data-active');
+                }
+            });
+            
+            // 切换按钮状态
+            buttons.forEach(btn => {
+                const btnLevel = parseInt(btn.getAttribute('data-level-btn') || '0');
+                if (btnLevel === level) {
+                    btn.setAttribute('data-active', '');
+                    btn.classList.add('bg-slate-900', 'text-white', 'border-slate-900');
+                    btn.classList.remove('bg-transparent', 'text-stone-400', 'border-transparent');
+                } else {
+                    btn.removeAttribute('data-active');
+                    btn.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
+                    btn.classList.add('bg-transparent', 'text-stone-400', 'border-transparent');
+                }
+            });
+            
+            // 保存到 localStorage
+            try {
+                localStorage.setItem('luma-words_preferred_level', String(level));
+            } catch {}
+
+            // Dispatch event for React components
+            window.dispatchEvent(new CustomEvent('level-change', { detail: { level } }));
+        }
+        
+        // 绑定点击事件
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const level = parseInt(btn.getAttribute('data-level-btn') || '1');
+                setLevel(level);
+            });
+        });
+        
+        // 恢复上次选择的难度
+        let initialLevel = 1;
+        try {
+            const saved = localStorage.getItem('luma-words_preferred_level');
+            if (saved) initialLevel = parseInt(saved) || 1;
+        } catch {}
+        
+        // 确保有效范围
+        if (initialLevel < 1 || initialLevel > 3) initialLevel = 1;
+        
+        // 初始化
+        setLevel(initialLevel);
+    }
+    
+    // 支持普通页面加载和 View Transitions SPA 导航
+    document.addEventListener('DOMContentLoaded', initLevelSwitcher);
+    document.addEventListener('astro:page-load', initLevelSwitcher);
+</script>
