@@ -1,7 +1,11 @@
 # AGENT.md
 
 ## 目标
-基于 Astro + Cloudflare 的每日单词阅读站。核心流程：抓词 -> 生成三档文章 -> 归档发布 -> 阅读/高亮/解析。
+## 目标
+基于 Astro (Frontend) + ElysiaJS (Backend) 的每日单词阅读站。
+- **Frontend**: 纯静态/SSR UI，部署于 Cloudflare Pages。
+- **Backend**: 长运行任务 (LLM 生成) 与 SQLite 数据库，部署于 Docker/VPS。
+核心流程：抓词 -> 队列任务 (Elysia) -> 生成三档文章 -> 入库 -> 前端展示。
 
 ## 不可妥协
 - 快速失败：不做静默降级与自动重试，错误显式可见。

@@ -5,11 +5,7 @@ import ArticleContent from "../../components/ArticleContent.astro";
 import ArticleHeader from "../../components/ArticleHeader.astro";
 import WordSidebar from "../../components/WordSidebar";
 import AudioPlayer from "../../components/AudioPlayer";
-import { getDb } from "../../lib/db";
 import { isAdminRequest } from "../../lib/admin";
-import {
-	getArticleWithDetails,
-} from "../../lib/articles/service";
 import {
 	extractSources,
 	extractWordDefinitions,
@@ -23,8 +19,24 @@ import type { ArticleParsedContent } from "../../lib/articles/types";
 const id = Astro.params.id;
 if (!id) Astro.response.status = 404;
 
-const db = getDb(Astro.locals);
-const row = id ? await getArticleWithDetails(db, id) : null;
+// const db = getDb(Astro.locals);
+// const row = id ? await getArticleWithDetails(db, id) : null;
+// Use environment variable for API URL
+const API_BASE = import.meta.env.PUBLIC_API_BASE || "http://localhost:3000";
+
+if (id) {
+    try {
+        const resp = await fetch(`${API_BASE}/api/articles/${id}`);
+        if (resp.ok) {
+            row = await resp.json();
+            // Check if backend returned error object
+            if (row.error) row = null;
+        }
+    } catch (e) {
+        console.error("Failed to fetch article from backend:", e);
+    }
+}
+
 if (!row) Astro.response.status = 404;
 
 const isAdmin = isAdminRequest(Astro.request, Astro.locals);

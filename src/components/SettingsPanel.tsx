@@ -6,23 +6,16 @@ import { clsx } from 'clsx';
 
 const ADMIN_KEY_STORAGE = 'luma-words_admin_key';
 
-async function checkAdminSession() {
-	const resp = await fetch('/api/admin/check', { credentials: 'same-origin' });
-	return resp.ok;
-}
-
-async function loginAdmin(adminKey: string) {
-	const resp = await fetch('/api/admin/session', {
-		method: 'POST',
-		credentials: 'same-origin',
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ key: adminKey })
-	});
-	return resp.ok;
-}
-
-async function logoutAdmin() {
-	await fetch('/api/admin/session', { method: 'DELETE', credentials: 'same-origin' });
+// Check key validity against backend
+async function verifyKey(key: string) {
+	try {
+		const resp = await fetch('http://localhost:3000/api/auth/check', {
+			headers: { 'x-admin-key': key }
+		});
+		return resp.ok;
+	} catch {
+		return false;
+	}
 }
 
 export default function SettingsPanel() {
@@ -54,27 +47,15 @@ export default function SettingsPanel() {
 			if (storedVoice) setVoiceSettings(storedVoice);
 		} catch { /* ignore */ }
 
+		// Initial check
 		(async () => {
-			try {
-				const hasSession = await checkAdminSession();
-				if (canceled) return;
-				if (hasSession) {
-					setIsAdmin(true);
-					return;
-				}
-				const key = (() => {
-					try { return (localStorage.getItem(ADMIN_KEY_STORAGE) ?? '').trim(); }
-					catch { return ''; }
-				})();
-				if (!key) {
-					setIsAdmin(false);
-					return;
-				}
-				const ok = await loginAdmin(key);
-				if (!canceled) setIsAdmin(ok);
-			} catch {
-				if (!canceled) setIsAdmin(false);
+			const key = localStorage.getItem(ADMIN_KEY_STORAGE)?.trim();
+			if (!key) {
+				setIsAdmin(false);
+				return;
 			}
+			const ok = await verifyKey(key);
+			if (!canceled) setIsAdmin(ok);
 		})();
 
 		return () => { canceled = true; };
@@ -100,13 +81,11 @@ export default function SettingsPanel() {
 		} catch { /* ignore */ }
 
 		if (nextKey) {
-			void loginAdmin(nextKey)
+			void verifyKey(nextKey)
 				.then(setIsAdmin)
 				.catch(() => setIsAdmin(false));
 		} else {
-			void logoutAdmin()
-				.then(() => setIsAdmin(false))
-				.catch(() => setIsAdmin(false));
+			setIsAdmin(false);
 		}
 	}
 
@@ -114,7 +93,6 @@ export default function SettingsPanel() {
 		setAdminKey('');
 		setIsAdmin(false);
 		try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignore */ }
-		void logoutAdmin().catch(() => undefined);
 	}
 
 	return (

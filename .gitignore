@@ -30,3 +30,9 @@ pnpm-debug.log*
 
 *storybook.log
 storybook-static
+
+# Backend Artifacts (Split Stack)
+server/.env
+server/local.db
+server/local.db-journal
+server/node_modules/

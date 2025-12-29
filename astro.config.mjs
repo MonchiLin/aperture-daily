@@ -2,13 +2,14 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
-import node from '@astrojs/node';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
@@ -55,5 +56,5 @@ export default defineConfig({
     },
   },
 
-  adapter: node({ mode: 'standalone' })
+  adapter: cloudflare()
 });

@@ -79,8 +79,8 @@ export default function ProfilesPanel(props: { adminKey: string }) {
         setLoading(true);
         setError(null);
         try {
-            const data = await adminFetchJson('/api/admin/profiles', adminKey);
-            setProfiles((data?.profiles ?? []) as GenerationProfile[]);
+            const data = await adminFetchJson('http://localhost:3000/api/profiles', adminKey);
+            setProfiles((data ?? []) as GenerationProfile[]);
         } catch (e) {
             setError((e as Error).message);
         } finally {
@@ -120,22 +120,22 @@ export default function ProfilesPanel(props: { adminKey: string }) {
 
         const payload: Record<string, unknown> = {
             name,
-            topic_preference: topicPreference,
+            topicPreference, // Backend expects topicPreference (camelCase) based on my index.ts impl
             concurrency,
-            timeout_ms: timeoutMinutes * 60000
+            timeoutMs: timeoutMinutes * 60000
         };
 
         setLoading(true);
         try {
             if (editorMode === 'create') {
-                await adminFetchJson('/api/admin/profiles', adminKey, {
+                await adminFetchJson('http://localhost:3000/api/profiles', adminKey, {
                     method: 'POST',
                     headers: { 'content-type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
             } else if (draft.id) {
-                await adminFetchJson(`/api/admin/profiles/${encodeURIComponent(draft.id)}`, adminKey, {
-                    method: 'PATCH',
+                await adminFetchJson(`http://localhost:3000/api/profiles/${encodeURIComponent(draft.id)}`, adminKey, {
+                    method: 'PUT',
                     headers: { 'content-type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
@@ -153,7 +153,7 @@ export default function ProfilesPanel(props: { adminKey: string }) {
         setLoading(true);
         setError(null);
         try {
-            await adminFetchJson(`/api/admin/profiles/${encodeURIComponent(id)}`, adminKey, { method: 'DELETE' });
+            await adminFetchJson(`http://localhost:3000/api/profiles/${encodeURIComponent(id)}`, adminKey, { method: 'DELETE' });
             await refresh();
         } catch (e) {
             setError((e as Error).message);

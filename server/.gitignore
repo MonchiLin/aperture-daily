@@ -1,0 +1,18 @@
+# System
+.DS_Store
+node_modules/
+bun.lock
+
+# Environment & Secrets
+.env
+.env.*
+
+# Database
+local.db
+local.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Logs
+*.log
+npm-debug.log*
