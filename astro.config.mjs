@@ -18,6 +18,9 @@ export default defineConfig({
   session: {
     driver: 'null'
   },
+  optimizeDeps: {
+    include: ['web-highlighter']
+  },
   integrations: [react()],
 
   vite: {

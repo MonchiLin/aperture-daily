@@ -2,6 +2,7 @@
   "name": "luma-words",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "bun@1.1.0",
   "scripts": {
     "dev": "astro dev",
     "dev:server": "cd server && bun run --watch index.ts",
@@ -37,6 +38,7 @@
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "nanostores": "^1.1.0",
+    "nprogress": "^0.2.0",
     "openai": "^6.15.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -55,6 +57,7 @@
     "@storybook/addon-vitest": "^10.1.10",
     "@storybook/react-vite": "^10.1.10",
     "@tailwindcss/typography": "^0.5.19",
+    "@types/nprogress": "^0.2.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitest/browser-playwright": "^4.0.16",
