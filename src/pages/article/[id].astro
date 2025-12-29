@@ -44,9 +44,13 @@ try {
         wordDefinitions = extractWordDefinitions(parsed);
         sidebarWords = mapToSidebarWords(wordDefinitions);
         dateLabel = formatDateLabel(row.tasks?.task_date);
+        // 文章内容完整，启用 Cloudflare 边缘缓存 (1小时)
+        Astro.response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     }
 } catch (e: any) {
     console.error("[SSR] Failed to fetch article:", e.message);
+    // 错误情况，禁止缓存
+    Astro.response.headers.set('Cache-Control', 'no-store');
     if (e.message?.includes("404") || e.message?.includes("Not found")) {
         Astro.response.status = 404;
     }

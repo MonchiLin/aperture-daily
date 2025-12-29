@@ -33,8 +33,18 @@ try {
 
 try {
     dayData = await apiFetch(`/api/day/${date}`);
+    // 只有在有内容时才启用缓存
+    if (dayData.publishedTaskGroups?.length > 0) {
+        // 有文章发布，启用 Cloudflare 边缘缓存 (5分钟)
+        Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    } else {
+        // 无内容（任务可能执行中），禁止缓存
+        Astro.response.headers.set('Cache-Control', 'no-store');
+    }
 } catch (e) {
     console.error(`[SSR] Failed to fetch day data for ${date}:`, e);
+    // 错误情况，禁止缓存
+    Astro.response.headers.set('Cache-Control', 'no-store');
 }
 ---
 
