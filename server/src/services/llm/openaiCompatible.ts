@@ -1,4 +1,53 @@
-import { z } from 'zod';
+import { OpenAI, APIConnectionTimeoutError, APIConnectionError, APIError } from 'openai';
+// ... previous imports ...
+
+// Helper for error classification
+/**
+ * OpenAI Compatible LLM Service
+ * 
+ * Implements a multi-stage Chain-of-Thought (CoT) pipeline for article generation.
+ * 
+ * Stages:
+ * 1. Word Selection: Picks words from candidate list based on user preference.
+ * 2. Research: Performs web search to gather context using `web_search` tool.
+ * 3. Draft Generation: Synthesizes research into a cohesive article.
+ * 4. JSON Conversion: Formats the draft into the final strict JSON schema.
+ * 
+ * Features:
+ * - Robust Error Handling: Classifies ClientTimeout vs UpstreamError.
+ * - Checkpointing: Saves progress after each stage to allow resumption.
+ * - Type Safety: Validates LLM output with Zod schemas.
+ */
+async function safeLLMCall<T>(
+    operationName: string,
+    call: () => Promise<T>
+): Promise<T> {
+    try {
+        return await call();
+    } catch (e: any) {
+        if (e instanceof APIConnectionTimeoutError) {
+            console.error(`[${operationName}] Client Timeout:`, e);
+            throw new Error(`Client Timeout: The request exceeded our local timeout limit (Local).`);
+        }
+        if (e instanceof APIConnectionError) {
+            console.error(`[${operationName}] Connection Error:`, e);
+            throw new Error(`Connection Error: Failed to connect to upstream LLM provider. (Network/DNS)`);
+        }
+        if (e instanceof APIError) {
+            const status = e.status;
+            console.error(`[${operationName}] Upstream API Error (${status}):`, e);
+            if (status === 408) throw new Error(`Upstream Timeout: Server returned 408 Request Timeout.`);
+            if (status === 504) throw new Error(`Upstream Timeout: Server returned 504 Gateway Timeout.`);
+            if (status === 502) throw new Error(`Upstream Error: Server returned 502 Bad Gateway.`);
+            if (status === 500) throw new Error(`Upstream Error: Server Internal Error (500).`);
+            throw new Error(`Upstream API Error: ${status} - ${e.message}`);
+        }
+        console.error(`[${operationName}] Unknown Error:`, e);
+        throw e;
+    }
+}
+
+
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
 import { dailyNewsOutputSchema } from '../../schemas/dailyNews';
 import { SOURCE_URL_LIMIT, WORD_SELECTION_MAX_WORDS, WORD_SELECTION_MIN_WORDS } from './llmLimits';
@@ -70,7 +119,7 @@ async function runWordSelection(args: {
     });
 
     console.log('[LLM Stage 1/4] Sending API request...');
-    const wordSelectionResp = await args.client.responses.create({
+    const wordSelectionResp = await safeLLMCall('WordSelection', () => args.client.responses.create({
         model: args.model,
         stream: false,
         reasoning: {
@@ -79,7 +128,7 @@ async function runWordSelection(args: {
         },
         text: { format: { type: 'json_object' } },
         input: args.history
-    });
+    }));
     console.log('[LLM Stage 1/4] API response received in', Date.now() - stageStart, 'ms');
 
     console.log('[Word Selection] API Response keys:', Object.keys(wordSelectionResp));
@@ -133,7 +182,7 @@ async function runResearch(args: {
     });
 
     console.log('[LLM Stage 2/4] Sending web_search API request...');
-    const researchResp = await args.client.responses.create({
+    const researchResp = await safeLLMCall('Research', () => args.client.responses.create({
         model: args.model,
         stream: false,
         reasoning: {
@@ -149,7 +198,7 @@ async function runResearch(args: {
         tool_choice: 'auto',
         input: args.history,
         include: ['web_search_call.results', 'web_search_call.action.sources']
-    });
+    }));
     console.log('[LLM Stage 2/4] API response received in', Date.now() - stageStart, 'ms');
 
     const researchText = researchResp.output_text?.trim() ?? '';
@@ -195,12 +244,12 @@ async function runDraftGeneration(args: {
     });
 
     console.log('[LLM Stage 3/4] Sending API request...');
-    const draftResp = await args.client.responses.create({
+    const draftResp = await safeLLMCall('DraftGeneration', () => args.client.responses.create({
         model: args.model,
         stream: false,
         reasoning: { effort: reasoningEffort },
         input: args.history
-    });
+    }));
     console.log('[LLM Stage 3/4] API response received in', Date.now() - stageStart, 'ms');
 
     const draftText = draftResp.output_text?.trim();
@@ -235,13 +284,13 @@ async function runJsonConversion(args: {
     });
 
     console.log('[LLM Stage 4/4] Sending API request...');
-    const genResp = await args.client.responses.create({
+    const genResp = await safeLLMCall('JsonConversion', () => args.client.responses.create({
         model: args.model,
         stream: false,
         reasoning: { effort: reasoningEffort },
         text: { format: { type: 'json_object' } },
         input: args.history
-    });
+    }));
     console.log('[LLM Stage 4/4] API response received in', Date.now() - stageStart, 'ms');
 
     const content = genResp.output_text;

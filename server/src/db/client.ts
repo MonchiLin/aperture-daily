@@ -10,7 +10,15 @@ if (!ACCOUNT_ID || !DATABASE_ID || !API_TOKEN) {
     throw new Error("Missing Cloudflare D1 credentials. STRICT MODE: Local DB is disabled.");
 }
 
-// D1 Proxy Logic
+/**
+ * Cloudflare D1 HTTP Proxy
+ * 
+ * Since this backend runs on a standard Docker container (not a Cloudflare Worker),
+ * we cannot use the native D1 binding. 
+ * Instead, we use `sqlite-proxy` to forward all SQL queries to the Cloudflare D1 HTTP API.
+ * 
+ * NOTE: This introduces network latency for each query.
+ */
 export const db = drizzle(async (sql, params, method) => {
     const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${DATABASE_ID}/query`;
 

@@ -145,10 +145,17 @@ export class TaskQueue {
     }
 
     /**
-     * Atomically claim a queued task
+     * Atomically claims a queued task for execution.
+     * 
+     * Mechanism: Optimistic Locking via Versioning.
+     * 1. Finds the oldest 'queued' task.
+     * 2. Attempts to update its status to 'running' ONLY if the version matches.
+     * 3. Increments the version to invalidate other concurrent claims.
+     * 
+     * This ensures multiple workers (or threads) never pick up the same task.
      */
     async claimTask(): Promise<any | null> {
-        // [Optimization] Check if queue is busy
+        // [Optimization] Fast-exit if queue is busy (Concurrency Control)
         const runningCountRes = await this.db.all(sql`SELECT count(*) as count FROM tasks WHERE status = 'running'`);
         const runningCount = runningCountRes[0]?.count || 0;
 
@@ -311,6 +318,9 @@ export class TaskQueue {
 
         console.log(`[Task ${task.id}] Starting LLM generation with model: ${model}`);
 
+        // Checkpoint Resumption Logic
+        // If the task previously failed mid-execution, it may have saved a checkpoint in `result_json`.
+        // We restore the state (history, selected words, etc.) to avoid re-doing expensive steps.
         let checkpoint: GenerationCheckpoint | null = null;
         if (task.result_json) {
             try {

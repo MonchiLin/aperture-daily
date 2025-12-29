@@ -26,6 +26,15 @@ if (!env.LLM_API_KEY) console.warn("WARNING: LLM_API_KEY is missing. Worker will
 const WORKER_INTERVAL_MS = 10000; // Check every 10 seconds
 let isWorking = false;
 
+/**
+ * Background Task Worker
+ * 
+ * Periodically wakes up to process the ephemeral Task Queue.
+ * Architecture: Polling-based worker.
+ * - Interval: 10 seconds.
+ * - Concurrency: Single-threaded event loop (effectively serial unless partitioned).
+ * - Safety: Catches all errors to prevent process crash.
+ */
 async function runWorker() {
     if (isWorking) return;
     isWorking = true;
@@ -42,11 +51,13 @@ async function runWorker() {
 // Start Worker
 setTimeout(runWorker, 1000); // Start after 1s delay
 
-// Setup Server
+// =========================================
+// Server Initialization (Elysia)
+// =========================================
 const app = new Elysia()
     .use(cors())
     .use(swagger())
-    .get("/", () => "Hello Elysia from dancix backend!")
+    .get("/", () => `Hello Elysia from dancix backend! (Build: ${process.env.BUILD_TIME || 'Dev'})`)
     .get("/health", () => ({ status: "ok", timestamp: new Date().toISOString() }))
     // Verification test for DB connection
     .get("/db-check", async () => {

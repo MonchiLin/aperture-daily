@@ -75,7 +75,7 @@ export const ArticleReader: React.FC<ArticleReaderProps> = ({
                         })}
                     </div>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] font-serif">
+                <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight leading-[1.1] font-serif">
                     {title}
                 </h1>
             </header>

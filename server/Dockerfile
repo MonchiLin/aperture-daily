@@ -18,6 +18,10 @@ COPY . .
 # but we can set defaults or expose ports
 ENV PORT=3000
 
+# Build time injection
+ARG BUILD_TIME
+ENV BUILD_TIME=$BUILD_TIME
+
 # Expose the API port
 EXPOSE 3000
 
