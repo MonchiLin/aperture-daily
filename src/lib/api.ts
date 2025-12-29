@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.PUBLIC_API_BASE;
+export const API_BASE = import.meta.env.PUBLIC_API_BASE || "http://localhost:3000";
 
 type FetchOptions = RequestInit & {
     token?: string | null; // For x-admin-key

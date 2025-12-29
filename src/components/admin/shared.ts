@@ -15,8 +15,11 @@ export type TaskRow = {
     published_at: string | null;
 };
 
+import { API_BASE } from '../../lib/api';
+
 export async function fetchJson<T = unknown>(url: string, adminKey: string, init?: RequestInit): Promise<T> {
-    const resp = await fetch(url, {
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    const resp = await fetch(fullUrl, {
         ...init,
         headers: {
             ...(init?.headers ?? {}),

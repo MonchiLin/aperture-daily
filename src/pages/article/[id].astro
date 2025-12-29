@@ -43,7 +43,7 @@ const isAdmin = isAdminRequest(Astro.request, Astro.locals);
 let parsed: ArticleParsedContent = {};
 if (row) {
 	try {
-		parsed = parseArticleContent(row.articles.contentJson);
+		parsed = parseArticleContent(row.articles.content_json);
 	} catch (e) {
 		throw e;
 	}
@@ -54,7 +54,7 @@ const wordDefinitions = parsed?.result ? extractWordDefinitions(parsed) : [];
 const sidebarWords = mapToSidebarWords(wordDefinitions);
 const initialData = parsed ? getInitialArticleData(parsed) : null;
 
-const dateLabel = row ? formatDateLabel(row.tasks.taskDate) : "";
+const dateLabel = row ? formatDateLabel(row.tasks.task_date) : "";
 const sourceAnchorId = sources.length > 0 ? "article-sources" : null;
 ---
 

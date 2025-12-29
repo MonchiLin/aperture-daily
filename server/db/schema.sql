@@ -14,12 +14,10 @@ CREATE TABLE generation_profiles (
 	id text PRIMARY KEY NOT NULL,
 	name text NOT NULL,
 	topic_preference text NOT NULL,
-	model_setting_json text NOT NULL,
 	concurrency integer NOT NULL,
 	timeout_ms integer NOT NULL,
 	created_at text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
 	updated_at text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
-	CONSTRAINT chk_generation_profiles_model_setting_json_valid CHECK(json_valid(model_setting_json)),
 	CONSTRAINT chk_generation_profiles_concurrency_gt0 CHECK(concurrency > 0),
 	CONSTRAINT chk_generation_profiles_timeout_ms_gt0 CHECK(timeout_ms > 0)
 );
@@ -40,6 +38,7 @@ CREATE TABLE tasks (
 	started_at text,
 	finished_at text,
 	published_at text,
+    version integer DEFAULT 0 NOT NULL,
 	FOREIGN KEY (profile_id) REFERENCES generation_profiles(id) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT chk_tasks_type_enum CHECK(type IN ('article_generation')),
 	CONSTRAINT "chk_tasks_trigger_source_enum" CHECK ("tasks"."trigger_source" IN ('manual', 'cron')),

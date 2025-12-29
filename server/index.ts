@@ -1,27 +1,23 @@
 import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
-import { eq, desc, and, inArray } from 'drizzle-orm';
+import { eq, desc, and, inArray, sql } from 'drizzle-orm';
 import * as schema from './db/schema';
 import { db } from './src/db/client';
-
-console.log("Using D1 (Strict). Skipping runtime migration (Managed via Wrangler/Drizzle Kit).");
-
-
-
-// Initialize TaskQueue
 import { TaskQueue } from './src/services/tasks/TaskQueue';
 import { getBusinessDate } from './src/lib/time';
 import { fetchAndStoreDailyWords } from './src/services/dailyWords';
 
+console.log("Using D1 (Strict). Skipping runtime migration (Managed via Wrangler/Drizzle Kit).");
+
+// Initialize TaskQueue
 const queue = new TaskQueue(db);
 
-// Environment Validation (for Worker)
 // Environment Validation (for Worker)
 const env = {
     LLM_API_KEY: process.env.LLM_API_KEY,
     LLM_BASE_URL: process.env.LLM_BASE_URL,
-    LLM_MODEL_DEFAULT: process.env.LLM_MODEL_DEFAULT
+    LLM_MODEL_DEFAULT: process.env.LLM_MODEL
 };
 
 if (!env.LLM_API_KEY) console.warn("WARNING: LLM_API_KEY is missing. Worker will fail.");
@@ -109,7 +105,10 @@ const app = new Elysia()
         console.log(`[GET /api/tasks] Request for date: ${task_date}`);
         try {
             if (!task_date) return { error: "Missing task_date", status: 400 };
-            const results = await db.select().from(schema.tasks).where(eq(schema.tasks.taskDate, task_date as string)).orderBy(desc(schema.tasks.createdAt));
+
+            // Use raw SQL to ensure we get data despite ORM mapping issues
+            const results = await db.all(sql`SELECT * FROM tasks WHERE task_date = ${task_date} ORDER BY created_at DESC`);
+
             console.log(`[GET /api/tasks] Found ${results.length} tasks`);
             return { tasks: results };
         } catch (e: any) {
@@ -119,50 +118,56 @@ const app = new Elysia()
     })
     // Get single task
     .get("/api/tasks/:id", async ({ params: { id } }) => {
-        const result = await db.select().from(schema.tasks).where(eq(schema.tasks.id, id as any)).limit(1);
+        const result = await db.all(sql`SELECT * FROM tasks WHERE id = ${id} LIMIT 1`);
         if (result.length === 0) return { error: "Not found", status: 404 };
         return result[0];
     })
     // --- Content Retrieval ---
     .get("/api/days", async () => {
-        // Return list of dates that have published tasks/articles
-        const result = await db
-            .selectDistinct({ date: schema.tasks.taskDate })
-            .from(schema.tasks)
-            .where(eq(schema.tasks.status, 'succeeded')) // Assuming succeeded = published content avail
-            .orderBy(desc(schema.tasks.taskDate));
-        return { days: result.map(r => r.date) };
+        try {
+            const result = await db.all(sql`SELECT DISTINCT task_date FROM tasks WHERE status = 'succeeded' ORDER BY task_date DESC`);
+            return { days: result.map((r: any) => r.task_date) };
+        } catch (e: any) {
+            console.error("API Error /api/days:", e);
+            return { error: e.message };
+        }
     })
     .get("/api/day/:date", async ({ params: { date } }) => {
         try {
-            const taskRows = await db
-                .select()
-                .from(schema.tasks)
-                .where(and(eq(schema.tasks.taskDate, date), eq(schema.tasks.type, 'article_generation')))
-                .orderBy(schema.tasks.finishedAt);
+            const taskRows = await db.all(sql`
+                SELECT * FROM tasks 
+                WHERE task_date = ${date} AND type = 'article_generation' 
+                ORDER BY finished_at
+            `);
 
-            const taskIds = taskRows.map((t) => t.id);
-            const articleRows = taskIds.length > 0
-                ? await db
-                    .select()
-                    .from(schema.articles)
-                    .where(inArray(schema.articles.generationTaskId, taskIds))
-                    .orderBy(schema.articles.model)
-                : [];
+            const taskIds = taskRows.map((t: any) => t.id);
+            let articleRows: any[] = [];
 
-            const articlesByTaskId = articleRows.reduce<Record<string, typeof articleRows>>((acc, article) => {
-                const taskId = article.generationTaskId as string;
+            if (taskIds.length > 0) {
+                // Manual IN clause construction or iteration
+                // D1 might not support array param for IN directly via simple proxy, use explicit string construction safely
+                const placeholders = taskIds.map(() => '?').join(',');
+                // drizzle-orm sql helper doesn't auto-expand arrays easily in basic mode, 
+                // but for raw sql we need manual handling.
+
+                // Let's use simple loop if few tasks, or construct dynamic sql
+                const sqlQuery = `SELECT * FROM articles WHERE generation_task_id IN (${taskIds.map(id => `'${id}'`).join(',')}) ORDER BY model`;
+                articleRows = await db.all(sql.raw(sqlQuery));
+            }
+
+            const articlesByTaskId = articleRows.reduce((acc: any, article: any) => {
+                const taskId = article.generation_task_id;
                 if (!acc[taskId]) acc[taskId] = [];
                 acc[taskId].push(article);
                 return acc;
             }, {});
 
             const publishedTaskGroups = taskRows
-                .map((task) => ({
+                .map((task: any) => ({
                     task,
                     articles: articlesByTaskId[task.id] ?? []
                 }))
-                .filter((group) => group.articles.length > 0);
+                .filter((group: any) => group.articles.length > 0);
 
             return { publishedTaskGroups };
         } catch (e: any) {
@@ -172,14 +177,14 @@ const app = new Elysia()
     })
     .get("/api/day/:date/words", async ({ params: { date } }) => {
         try {
-            const rows = await db.select().from(schema.dailyWords).where(eq(schema.dailyWords.date, date)).limit(1);
-            const row = rows[0];
+            const rows = await db.all(sql`SELECT * FROM daily_words WHERE date = ${date} LIMIT 1`);
+            const row: any = rows[0];
             if (!row) {
                 return { date, words: [], word_count: 0 };
             }
 
-            const newWords = JSON.parse(row.newWordsJson);
-            const reviewWords = JSON.parse(row.reviewWordsJson);
+            const newWords = JSON.parse(row.new_words_json);
+            const reviewWords = JSON.parse(row.review_words_json);
             const newList = Array.isArray(newWords) ? newWords : [];
             const reviewList = Array.isArray(reviewWords) ? reviewWords : [];
             return {
@@ -198,30 +203,51 @@ const app = new Elysia()
     // End of Daily Content API
     // Delete task
     .delete("/api/tasks/:id", async ({ params: { id } }) => {
-        await db.delete(schema.tasks).where(eq(schema.tasks.id, id as any));
-        // Also delete related articles?
-        await db.delete(schema.articles).where(eq(schema.articles.generationTaskId, id as any));
+        await db.run(sql`DELETE FROM tasks WHERE id = ${id}`);
+        await db.run(sql`DELETE FROM articles WHERE generation_task_id = ${id}`);
         return { status: "ok" };
     })
     // Article operations
+    // Article operations
     .get("/api/articles/:id", async ({ params: { id } }) => {
         try {
-            const rows = await db
-                .select()
-                .from(schema.articles)
-                .innerJoin(schema.tasks, eq(schema.articles.generationTaskId, schema.tasks.id))
-                .where(eq(schema.articles.id, id))
-                .limit(1);
+            // Return { articles: {...}, tasks: {...} } structure
+            const articleRows = await db.all(sql`SELECT * FROM articles WHERE id = ${id} LIMIT 1`);
+            if (articleRows.length === 0) return { error: "Not found", status: 404 };
+            const article = articleRows[0];
 
-            if (rows.length === 0) return { error: "Not found", status: 404 };
-            return rows[0];
+            // Fetch related task
+            const taskRows = await db.all(sql`SELECT * FROM tasks WHERE id = ${article.generation_task_id} LIMIT 1`);
+            const task = taskRows.length > 0 ? taskRows[0] : null;
+
+            return { articles: article, tasks: task };
         } catch (e: any) {
             return { status: "error", message: e.message };
         }
     })
     .delete("/api/articles/:id", async ({ params: { id } }) => {
-        await db.delete(schema.articles).where(eq(schema.articles.id, id));
+        await db.run(sql`DELETE FROM articles WHERE id = ${id}`);
         return { status: "ok" };
+    })
+    // Admin Bulk Operations
+    .post("/api/admin/tasks/delete-failed", async () => {
+        try {
+            // Find failed tasks first ? Or just delete.
+            // Need to delete related articles if any (unlikely for failed, but good practice)
+            // Get IDs first
+            const failedTasks = await db.all(sql`SELECT id FROM tasks WHERE status = 'failed'`);
+            if (failedTasks.length === 0) return { status: "ok", count: 0 };
+
+            const ids = failedTasks.map((t: any) => t.id);
+            // Loop delete for safety/simplicity with raw sql
+            for (const id of ids) {
+                await db.run(sql`DELETE FROM tasks WHERE id = ${id}`);
+                await db.run(sql`DELETE FROM articles WHERE generation_task_id = ${id}`);
+            }
+            return { status: "ok", count: ids.length };
+        } catch (e: any) {
+            return { status: "error", message: e.message };
+        }
     })
 
     // --- Authentication ---
@@ -229,35 +255,30 @@ const app = new Elysia()
         if (body?.key === process.env.ADMIN_KEY) return { status: "ok" };
         return error(401, { error: "Unauthorized" });
     })
-    .get("/api/auth/check", ({ request, error }) => {
-        const key = request.headers.get('x-admin-key');
+    .get("/api/auth/check", ({ request, error }: any) => {
+        // Safe header access
+        const key = request.headers.get ? request.headers.get('x-admin-key') : request.headers['x-admin-key'];
         if (key === process.env.ADMIN_KEY) return { status: "ok" };
         return error(401, { error: "Unauthorized" });
     })
 
     // --- Profiles Management ---
     .get("/api/profiles", async () => {
-        return await db.select().from(schema.generationProfiles).orderBy(desc(schema.generationProfiles.updatedAt));
+        return await db.all(sql`SELECT * FROM generation_profiles ORDER BY updated_at DESC`);
     })
     .get("/api/profiles/:id", async ({ params: { id }, error }) => {
-        const res = await db.select().from(schema.generationProfiles).where(eq(schema.generationProfiles.id, id)).limit(1);
+        const res = await db.all(sql`SELECT * FROM generation_profiles WHERE id = ${id} LIMIT 1`);
         if (res.length === 0) return error(404, "Not found");
         return res[0];
     })
     .post("/api/profiles", async ({ body, error }: any) => {
-        // Simple validation could be added here
         try {
             const id = crypto.randomUUID();
             const now = new Date().toISOString();
-            await db.insert(schema.generationProfiles).values({
-                id,
-                name: body.name,
-                topicPreference: body.topicPreference || "",
-                concurrency: Number(body.concurrency) || 1,
-                timeoutMs: Number(body.timeoutMs) || 60000,
-                createdAt: now,
-                updatedAt: now
-            });
+            await db.run(sql`
+                INSERT INTO generation_profiles (id, name, topic_preference, concurrency, timeout_ms, created_at, updated_at)
+                VALUES (${id}, ${body.name}, ${body.topicPreference || ""}, ${Number(body.concurrency) || 1}, ${Number(body.timeoutMs) || 60000}, ${now}, ${now})
+            `);
             return { status: "ok", id };
         } catch (e: any) {
             return error(500, e.message);
@@ -265,42 +286,36 @@ const app = new Elysia()
     })
     .put("/api/profiles/:id", async ({ params: { id }, body, error }: any) => {
         try {
-            await db.update(schema.generationProfiles).set({
-                name: body.name,
-                topicPreference: body.topicPreference,
-                concurrency: Number(body.concurrency),
-                timeoutMs: Number(body.timeoutMs),
-                updatedAt: new Date().toISOString()
-            }).where(eq(schema.generationProfiles.id, id));
+            await db.run(sql`
+                UPDATE generation_profiles 
+                SET name = ${body.name}, 
+                    topic_preference = ${body.topicPreference}, 
+                    concurrency = ${Number(body.concurrency)}, 
+                    timeout_ms = ${Number(body.timeoutMs)}, 
+                    updated_at = ${new Date().toISOString()}
+                WHERE id = ${id}
+            `);
             return { status: "ok" };
         } catch (e: any) {
             return error(500, e.message);
         }
     })
     .delete("/api/profiles/:id", async ({ params: { id }, error }) => {
-        await db.delete(schema.generationProfiles).where(eq(schema.generationProfiles.id, id));
+        await db.run(sql`DELETE FROM generation_profiles WHERE id = ${id}`);
         return { status: "ok" };
     })
 
     // --- Highlights Management ---
     .get("/api/articles/:id/highlights", async ({ params: { id } }) => {
-        return await db.select().from(schema.highlights).where(eq(schema.highlights.articleId, id));
+        return await db.all(sql`SELECT * FROM highlights WHERE article_id = ${id}`);
     })
     .post("/api/highlights", async ({ body, error }: any) => {
         try {
             const id = body.id || crypto.randomUUID();
-            await db.insert(schema.highlights).values({
-                id,
-                articleId: body.articleId,
-                actor: body.actor || 'user',
-                startMetaJson: JSON.stringify(body.startMeta), // Assuming frontend sends object
-                endMetaJson: JSON.stringify(body.endMeta),
-                text: body.text,
-                note: body.note,
-                styleJson: body.style ? JSON.stringify(body.style) : null,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            });
+            await db.run(sql`
+                INSERT INTO highlights (id, article_id, actor, start_meta_json, end_meta_json, text, note, style_json, created_at, updated_at)
+                VALUES (${id}, ${body.articleId}, ${body.actor || 'user'}, ${JSON.stringify(body.startMeta)}, ${JSON.stringify(body.endMeta)}, ${body.text}, ${body.note}, ${body.style ? JSON.stringify(body.style) : null}, ${new Date().toISOString()}, ${new Date().toISOString()})
+            `);
             return { status: "ok", id };
         } catch (e: any) {
             console.error(e);
@@ -309,30 +324,126 @@ const app = new Elysia()
     })
     .put("/api/highlights/:id", async ({ params: { id }, body, error }: any) => {
         try {
-            // Supports updating text, note, etc.
-            await db.update(schema.highlights).set({
-                note: body.note,
-                updatedAt: new Date().toISOString()
-            }).where(eq(schema.highlights.id, id));
+            await db.run(sql`UPDATE highlights SET note = ${body.note}, updated_at = ${new Date().toISOString()} WHERE id = ${id}`);
             return { status: "ok" };
         } catch (e: any) {
             return error(500, e.message);
         }
     })
     .delete("/api/highlights/:id", async ({ params: { id } }) => {
-        await db.delete(schema.highlights).where(eq(schema.highlights.id, id));
+        await db.run(sql`DELETE FROM highlights WHERE id = ${id}`);
         return { status: "ok" };
     })
+    // Task Admin Actions
+    .post("/api/admin/tasks/delete-failed", async () => {
+        try {
+            const failedTasks = await db.all(sql`SELECT id FROM tasks WHERE status = 'failed'`);
+            if (failedTasks.length === 0) return { status: "ok", count: 0 };
 
-    // --- Task Admin ---
-    .post("/api/tasks/delete-failed", async () => {
-        const res = await db.delete(schema.tasks).where(eq(schema.tasks.status, 'failed')); // DELETE RETURNING is supported in some sqlite versions but run() returns info usually
-        // Drizzle delete returns result info in some drivers, but for Bun SQLite it might differ.
-        // For simplicity:
-        return { status: "ok" };
+            const ids = failedTasks.map((t: any) => t.id);
+            for (const id of ids) {
+                await db.run(sql`DELETE FROM tasks WHERE id = ${id}`);
+                await db.run(sql`DELETE FROM articles WHERE generation_task_id = ${id}`);
+            }
+
+            return { status: "ok", count: ids.length };
+        } catch (e: any) {
+            return { status: "error", message: e.message };
+        }
     })
+// --- Internal Cron Scheduler ---
+// Logic to be shared between API and internal scheduler
+async function executeCronLogic(taskDate: string, logPrefix: string) {
+    try {
+        // 1. Fetch Words (if not exists)
+        const existingWords = await db.all(sql`SELECT count(*) as c FROM daily_words WHERE date = ${taskDate}`);
+        if ((existingWords[0]?.c || 0) === 0) {
+            console.log(`${logPrefix} Fetching words for ${taskDate}`);
+            const cookie = process.env.SHANBAY_COOKIE;
+            if (!cookie) throw new Error("Missing SHANBAY_COOKIE in .env");
+            await fetchAndStoreDailyWords(db, { taskDate, shanbayCookie: cookie });
+        } else {
+            console.log(`${logPrefix} Words already exist for ${taskDate}`);
+        }
 
-    .listen(3000);
+        // 2. Enqueue Task (Queue.enqueue is idempotent for 'cron' source)
+        console.log(`${logPrefix} Enqueuing tasks for ${taskDate}`);
+        const tasks = await queue.enqueue(taskDate, 'cron');
+        return { status: "ok", tasks };
+    } catch (e: any) {
+        console.error(`${logPrefix} Error:`, e);
+        throw e;
+    }
+}
+
+// Check every minute
+const CRON_INTERVAL_MS = 60000;
+let lastCronRunDate = '';
+
+function runCronScheduler() {
+    setInterval(async () => {
+        const now = new Date();
+        // Beijing Time (UTC+8)
+        // We need to shift UTC time. 
+        // Or simpler: use toLocaleString with timeZone
+        const tzOptions = { timeZone: 'Asia/Shanghai', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit' } as const;
+        // Format: "MM/DD/YYYY, HH" (depends on locale) -> let's parse robustly or use offset
+
+        // Manual offset: UTC+8
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        const bjMs = utcMs + (8 * 60 * 60 * 1000);
+        const bjDate = new Date(bjMs);
+
+        const hour = bjDate.getHours();
+        const yyyy = bjDate.getFullYear();
+        const mm = String(bjDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(bjDate.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        // Run between 09:00 and 10:00
+        if (hour === 9) {
+            if (lastCronRunDate !== todayStr) {
+                console.log(`[Cron Scheduler] Triggering daily job for ${todayStr} (Hour: ${hour})`);
+                try {
+                    await executeCronLogic(todayStr, '[Cron Scheduler]');
+                    lastCronRunDate = todayStr;
+                    console.log(`[Cron Scheduler] Daily job done.`);
+                } catch (e) {
+                    console.error(`[Cron Scheduler] Daily job failed, will retry next minute.`);
+                }
+            }
+        }
+    }, CRON_INTERVAL_MS);
+    console.log("[Cron Scheduler] Started. Target window: 09:00 - 10:00 CST");
+}
+
+// Start Scheduler
+runCronScheduler();
+
+// Updated API triggering the same logic
+app.post("/api/cron/trigger", async ({ request, error }: any) => {
+    const key = request.headers.get ? request.headers.get('x-admin-key') : request.headers['x-admin-key'];
+    if (key !== process.env.ADMIN_KEY) return error(401, { error: "Unauthorized" });
+
+    const now = new Date();
+    // Use simple local date for manual trigger, or same bj logic?
+    // Let's use simple generic YYYY-MM-DD from server time (usually UTC in docker), 
+    // but better to align with Scheduler logic if possible.
+    // For manual trigger, let's stick to simple ISO date part if sufficient, or BJ date.
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const taskDate = `${yyyy}-${mm}-${dd}`;
+
+    try {
+        const res = await executeCronLogic(taskDate, '[API Cron Trigger]');
+        return res;
+    } catch (e: any) {
+        return { status: "error", message: e.message };
+    }
+});
+
+app.listen(3000);
 
 console.log(
     `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

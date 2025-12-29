@@ -156,7 +156,8 @@ export const highlights = sqliteTable(
             .default(sql`(CURRENT_TIMESTAMP)`),
         updatedAt: text('updated_at')
             .notNull()
-            .default(sql`(CURRENT_TIMESTAMP)`)
+            .default(sql`(CURRENT_TIMESTAMP)`),
+        deletedAt: text('deleted_at')
     },
     (table) => [
         index('idx_highlights_article_id').on(table.articleId),
