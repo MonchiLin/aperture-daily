@@ -6,9 +6,12 @@ export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
     .get('/', async () => {
         return await db.all(sql`SELECT * FROM generation_profiles ORDER BY updated_at DESC`);
     })
-    .get('/:id', async ({ params: { id }, error }) => {
+    .get('/:id', async ({ params: { id }, set }) => {
         const res = await db.all(sql`SELECT * FROM generation_profiles WHERE id = ${id} LIMIT 1`);
-        if (res.length === 0) return error(404, "Not found");
+        if (res.length === 0) {
+            set.status = 404;
+            return { error: "Not found" };
+        }
         return res[0];
     })
     .post('/', async ({ body, error }: any) => {
