@@ -48,7 +48,7 @@ export const geminiCheckpointSchema = z.object({
     selectedWords: z.array(z.string()).optional(),
     sourceUrls: z.array(z.string()).optional(),
     draftText: z.string().optional(),
-    usage: z.record(z.any()).optional()
+    usage: z.record(z.string(), z.any()).optional()
 });
 
 export type GeminiCheckpoint = z.infer<typeof geminiCheckpointSchema>;

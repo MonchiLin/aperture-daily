@@ -1,6 +1,6 @@
 const BASE = 'https://apiv3.shanbay.com';
 
-import { decodeShanbayData } from '../lib/shanbayDecode';
+import { decodeShanbayData } from '../lib/shanbayDecode.js';
 
 async function fetchJson(url: string, cookie: string) {
     const resp = await fetch(url, {

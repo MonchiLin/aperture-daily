@@ -7,7 +7,7 @@ import { TaskQueue } from '../../src/services/tasks/TaskQueue';
 const TEST_DATE = '2025-12-23';
 const env = {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || process.env.LLM_API_KEY || '',
-    GEMINI_BASE_URL: process.env.GEMINI_BASE_URL || process.env.LLM_BASE_URL,
+    GEMINI_BASE_URL: process.env.GEMINI_BASE_URL || process.env.LLM_BASE_URL || '',
     LLM_MODEL_DEFAULT: process.env.LLM_MODEL || ''
 };
 
@@ -59,27 +59,27 @@ describe('Task Flow E2E (Real Gemini API)', () => {
         console.log('[Test] Enqueuing task...');
         const newTasks = await queue.enqueue(TEST_DATE, 'manual');
         expect(newTasks.length).toBeGreaterThan(0);
-        const taskId = newTasks[0].id;
+        const taskId = newTasks[0]!.id;
         console.log(`[Test] Task created: ${taskId}`);
 
         // 2. Verify Queued Status
-        const queuedTask = await db.all(sql`SELECT status FROM tasks WHERE id = ${taskId}`);
-        expect(queuedTask[0].status).toBe('queued');
+        const queuedTask = await db.all(sql`SELECT status FROM tasks WHERE id = ${taskId}`) as Array<{ status: string }>;
+        expect(queuedTask[0]!.status).toBe('queued');
 
         // 3. Process Queue (Blocking call, executes Gemini pipeline)
         console.log('[Test] Processing queue (Calling Gemini)...');
         await queue.processQueue(env);
 
         // 4. Verify Succeeded Status
-        const completedTask = await db.all(sql`SELECT status, result_json FROM tasks WHERE id = ${taskId}`);
-        expect(completedTask[0].status).toBe('succeeded');
-        expect(completedTask[0].result_json).toBeTruthy();
+        const completedTask = await db.all(sql`SELECT status, result_json FROM tasks WHERE id = ${taskId}`) as Array<{ status: string; result_json: string }>;
+        expect(completedTask[0]!.status).toBe('succeeded');
+        expect(completedTask[0]!.result_json).toBeTruthy();
 
         // 5. Verify Article Created
-        const articles = await db.all(sql`SELECT * FROM articles WHERE generation_task_id = ${taskId}`);
+        const articles = await db.all(sql`SELECT * FROM articles WHERE generation_task_id = ${taskId}`) as Array<{ title: string; content_json: string }>;
         expect(articles.length).toBe(1);
 
-        const article = articles[0];
+        const article = articles[0]!;
 
         // Basic Content Checks
         expect(article.title).toBeTruthy();

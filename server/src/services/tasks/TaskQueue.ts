@@ -10,7 +10,7 @@ interface Db {
 
 export type TaskEnv = {
     GEMINI_API_KEY: string;
-    GEMINI_BASE_URL?: string;
+    GEMINI_BASE_URL: string;  // Always has a value (defaults to empty string)
     LLM_MODEL_DEFAULT: string;
 };
 

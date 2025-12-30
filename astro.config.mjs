@@ -18,9 +18,6 @@ export default defineConfig({
   session: {
     driver: 'null'
   },
-  optimizeDeps: {
-    include: ['web-highlighter']
-  },
   integrations: [react()],
 
   vite: {
@@ -29,10 +26,6 @@ export default defineConfig({
       alias: {
         "@": path.resolve(dirname, "./src")
       }
-    },
-    optimizeDeps: {
-      // Prevent first-load hydration failures caused by Vite lazy-optimizing this dependency.
-      include: ['web-highlighter']
     },
     // @ts-ignore
     test: {
