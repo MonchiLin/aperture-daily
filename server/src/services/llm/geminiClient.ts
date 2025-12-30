@@ -112,13 +112,20 @@ export type GeminiClient = ReturnType<typeof createGeminiClient>;
  * 从 Gemini 响应中提取文本
  */
 export function extractGeminiText(response: GeminiResponse): string {
-    if (!response.candidates?.[0]?.content?.parts) return '';
+    let text = '';
 
-    const parts = response.candidates[0].content.parts;
-    return parts
-        .filter(p => p.text && !p.thought)
-        .map(p => p.text)
-        .join('');
+    if (response.candidates?.[0]?.content?.parts) {
+        text = response.candidates[0].content.parts
+            .filter(p => p.text && !p.thought)
+            .map(p => p.text)
+            .join('');
+    }
+
+    if (!text) {
+        console.warn('[Gemini] Extracted text is empty. FULL RESPONSE:', JSON.stringify(response, null, 2));
+    }
+
+    return text;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { generateDailyNewsWithGemini, type GeminiCheckpoint } from '../llm/geminiPipeline';
+import { generateDailyNews3StageWithGemini, type GeminiCheckpoint3 } from '../llm/geminiPipeline3';
 import type { CandidateWord } from '../llm/types';
 
 // Interface for loose typing since we are using raw SQL
@@ -9,8 +9,8 @@ interface Db {
 }
 
 export type TaskEnv = {
-    LLM_API_KEY: string;
-    LLM_BASE_URL?: string;
+    GEMINI_API_KEY: string;
+    GEMINI_BASE_URL?: string;
     LLM_MODEL_DEFAULT: string;
 };
 
@@ -319,26 +319,36 @@ export class TaskQueue {
 
         console.log(`[Task ${task.id}] Starting LLM generation with model: ${model}`);
 
-        // Checkpoint Resumption Logic
+        // Checkpoint Resumption Logic (三阶段版)
         // If the task previously failed mid-execution, it may have saved a checkpoint in `result_json`.
-        // We restore the state (history, selected words, etc.) to avoid re-doing expensive steps.
-        let checkpoint: GeminiCheckpoint | null = null;
+        // We restore the state to avoid re-doing expensive steps.
+        let checkpoint: GeminiCheckpoint3 | null = null;
         if (task.result_json) {
             try {
                 const parsed = JSON.parse(task.result_json);
-                if (parsed.stage && parsed.history) {
-                    checkpoint = parsed as GeminiCheckpoint;
+                // 只接受三阶段的合法 stage 值
+                const validStages = ['search_selection', 'draft', 'conversion'];
+                if (parsed && typeof parsed === 'object' && 'stage' in parsed && validStages.includes(parsed.stage)) {
+                    checkpoint = parsed as GeminiCheckpoint3;
                     console.log(`[Task ${task.id}] Resuming from checkpoint: ${checkpoint.stage}`);
+                } else if (parsed && typeof parsed === 'object' && 'stage' in parsed) {
+                    // 旧的四阶段 checkpoint（word_selection, research, draft, conversion）
+                    console.warn(`[Task ${task.id}] Found old 4-stage checkpoint (${parsed.stage}), ignoring and starting fresh.`);
                 }
-            } catch (e) { }
+            } catch (e) {
+                console.warn(`[Task ${task.id}] Failed to parse checkpoint, starting fresh.`);
+            }
         }
 
-        const output = await generateDailyNewsWithGemini({
-            env: { GEMINI_API_KEY: env.LLM_API_KEY, GEMINI_BASE_URL: env.LLM_BASE_URL },
+        // 将 CandidateWord[] 转换为 string[]
+        const candidateWordStrings = candidates.map(c => c.word);
+
+        const output = await generateDailyNews3StageWithGemini({
+            env: { GEMINI_API_KEY: env.GEMINI_API_KEY, GEMINI_BASE_URL: env.GEMINI_BASE_URL },
             model,
             currentDate: task.task_date,
             topicPreference: profile.topic_preference,
-            candidateWords: candidates,
+            candidateWords: candidateWordStrings,
             checkpoint,
             onCheckpoint: async (cp) => {
                 await this.db.run(sql`UPDATE tasks SET result_json = ${JSON.stringify(cp)} WHERE id = ${task.id}`);

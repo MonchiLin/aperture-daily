@@ -15,12 +15,12 @@ const queue = new TaskQueue(db);
 
 // Environment Validation (for Worker)
 const env = {
-    LLM_API_KEY: process.env.LLM_API_KEY,
-    LLM_BASE_URL: process.env.LLM_BASE_URL,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    GEMINI_BASE_URL: process.env.GEMINI_BASE_URL,
     LLM_MODEL_DEFAULT: process.env.LLM_MODEL
 };
 
-if (!env.LLM_API_KEY) console.warn("WARNING: LLM_API_KEY is missing. Worker will fail.");
+if (!env.GEMINI_API_KEY) console.warn("WARNING: GEMINI_API_KEY is missing. Worker will fail.");
 
 // Background Worker Loop
 const WORKER_INTERVAL_MS = 10000; // Check every 10 seconds
@@ -389,6 +389,39 @@ const app = new Elysia()
         return { status: "ok" };
     })
     // Task Admin Actions
+    .post("/api/admin/tasks/retry-failed", async ({ body }: any) => {
+        try {
+            const date = body?.task_date;
+
+            // Build query for failed tasks
+            let queryStr = "SELECT id FROM tasks WHERE status = 'failed'";
+            if (date) {
+                queryStr += ` AND task_date = '${date}'`;
+            }
+
+            const failedTasks = await db.all(sql.raw(queryStr));
+            if (failedTasks.length === 0) return { status: "ok", count: 0 };
+
+            const taskIds = failedTasks.map((t: any) => t.id);
+            const inClause = taskIds.map(id => `'${id}'`).join(',');
+
+            // Reset tasks
+            await db.run(sql.raw(`
+                UPDATE tasks 
+                SET status = 'queued', 
+                    version = version + 1, 
+                    started_at = NULL, 
+                    finished_at = NULL, 
+                    error_message = NULL, 
+                    error_context_json = NULL
+                WHERE id IN (${inClause})
+            `));
+
+            return { status: "ok", count: taskIds.length };
+        } catch (e: any) {
+            return { status: "error", message: e.message };
+        }
+    })
     .post("/api/admin/tasks/delete-failed", async ({ body }: any) => {
         try {
             const date = body?.task_date;

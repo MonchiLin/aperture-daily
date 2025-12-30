@@ -32,14 +32,23 @@ export const wordSelectionSchema = z.object({
 });
 
 // ============================================
-// Checkpoint 类型
+// Checkpoint 类型 (Gemini Exclusive)
 // ============================================
 
-export type GenerationCheckpoint = {
-    stage: 'word_selection' | 'research' | 'draft' | 'conversion';
-    history: ConversationHistory;
-    selectedWords?: string[];
-    sourceUrls?: string[];
-    draftText?: string;
-    usage?: Record<string, any>;
-};
+export const geminiHistorySchema = z.array(z.object({
+    role: z.enum(['user', 'model']),
+    parts: z.array(z.object({
+        text: z.string()
+    }))
+}));
+
+export const geminiCheckpointSchema = z.object({
+    stage: z.enum(['word_selection', 'research', 'draft', 'conversion']),
+    history: geminiHistorySchema,
+    selectedWords: z.array(z.string()).optional(),
+    sourceUrls: z.array(z.string()).optional(),
+    draftText: z.string().optional(),
+    usage: z.record(z.any()).optional()
+});
+
+export type GeminiCheckpoint = z.infer<typeof geminiCheckpointSchema>;

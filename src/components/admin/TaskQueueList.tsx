@@ -15,6 +15,7 @@ type TaskQueueListProps = {
 
 export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, taskDate }: TaskQueueListProps) {
     const [deleting, setDeleting] = useState(false);
+    const [retrying, setRetrying] = useState(false);
     const failedTasks = tasks.filter(t => t.status === 'failed');
 
     async function deleteAllFailed() {
@@ -35,28 +36,57 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
         }
     }
 
+    async function retryAllFailed() {
+        if (!adminKey || failedTasks.length === 0) return;
+        setRetrying(true);
+        try {
+            await fetchJson('/api/admin/tasks/retry-failed', adminKey, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ task_date: taskDate })
+            });
+            onRefresh();
+        } catch (e) {
+            console.error(e);
+            alert((e as Error).message || '重试失败');
+        } finally {
+            setRetrying(false);
+        }
+    }
+
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between border-b border-stone-200 pb-1">
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Task Queue</span>
                     {failedTasks.length > 0 && (
-                        <Popconfirm
-                            title="删除失败任务"
-                            description={`确定删除所有 ${failedTasks.length} 个失败的任务吗？`}
-                            onConfirm={deleteAllFailed}
-                            okText="确定"
-                            cancelText="取消"
-                            okButtonProps={{ danger: true }}
-                        >
-                            <button
-                                disabled={deleting}
-                                className="px-2 py-0.5 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 hover:border-red-300 uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
-                                title={`Delete all ${failedTasks.length} failed tasks`}
+                        <>
+                            <Popconfirm
+                                title="删除失败任务"
+                                description={`确定删除所有 ${failedTasks.length} 个失败的任务吗？`}
+                                onConfirm={deleteAllFailed}
+                                okText="确定"
+                                cancelText="取消"
+                                okButtonProps={{ danger: true }}
                             >
-                                {deleting ? 'Deleting...' : `🗑 Clear ${failedTasks.length} Failed`}
+                                <button
+                                    disabled={deleting || retrying}
+                                    className="px-2 py-0.5 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 hover:border-red-300 uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                                    title={`Delete all ${failedTasks.length} failed tasks`}
+                                >
+                                    {deleting ? 'Deleting...' : `🗑 Clear ${failedTasks.length} Failed`}
+                                </button>
+                            </Popconfirm>
+
+                            <button
+                                onClick={retryAllFailed}
+                                disabled={deleting || retrying}
+                                className="px-2 py-0.5 text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded hover:bg-orange-100 hover:border-orange-300 uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                                title={`Retry all ${failedTasks.length} failed tasks`}
+                            >
+                                {retrying ? <RotateCw className="animate-spin" size={12} /> : `↻ Retry ${failedTasks.length} Failed`}
                             </button>
-                        </Popconfirm>
+                        </>
                     )}
                 </div>
                 <button onClick={onRefresh} className="text-stone-400 hover:text-stone-900 transition-colors" title="Refresh">

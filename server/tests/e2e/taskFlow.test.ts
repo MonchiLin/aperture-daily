@@ -6,8 +6,8 @@ import { TaskQueue } from '../../src/services/tasks/TaskQueue';
 // 测试配置
 const TEST_DATE = '2025-12-23';
 const env = {
-    LLM_API_KEY: process.env.LLM_API_KEY || '',
-    LLM_BASE_URL: process.env.LLM_BASE_URL,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY || process.env.LLM_API_KEY || '',
+    GEMINI_BASE_URL: process.env.GEMINI_BASE_URL || process.env.LLM_BASE_URL,
     LLM_MODEL_DEFAULT: process.env.LLM_MODEL || ''
 };
 
@@ -15,8 +15,8 @@ describe('Task Flow E2E (Real Gemini API)', () => {
     const queue = new TaskQueue(db);
 
     beforeAll(async () => {
-        if (!env.LLM_API_KEY) {
-            throw new Error('LLM_API_KEY not found in environment');
+        if (!env.GEMINI_API_KEY) {
+            throw new Error('GEMINI_API_KEY (or legacy LLM_API_KEY) not found in environment');
         }
 
         console.log(`[Test] Cleaning up data for ${TEST_DATE}...`);
@@ -80,7 +80,6 @@ describe('Task Flow E2E (Real Gemini API)', () => {
         expect(articles.length).toBe(1);
 
         const article = articles[0];
-        console.log(`[Test] Article created: ${article.title}`);
 
         // Basic Content Checks
         expect(article.title).toBeTruthy();
