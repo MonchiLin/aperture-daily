@@ -1,4 +1,4 @@
-# dancix
+# Aperture Daily
 
 简要索引：AGENT.md 只保留大纲，细节在代码与注释中。
 
@@ -37,7 +37,7 @@ npm run db:studio
 **零成本、全球CDN加速、Git 自动集成**
 
 1.  进入 [Cloudflare Dashboard](https://dash.cloudflare.com/) > **Workers & Pages** > **Create application** > **Pages** > **Connect to Git**.
-2.  选择你的仓库 (`luma-words`).
+2.  选择你的仓库 (`aperture-daily`).
 3.  **构建配置 (Build settings)**:
     *   **Framework preset**: `Astro`
     *   **Build command**: `npm run build`
@@ -54,7 +54,7 @@ npm run db:studio
 项目已包含 `.github/workflows/docker-publish.yml`，它会：
 1.  监听 `main` 分支的推送。
 2.  进入 `server/` 目录构建 Docker 镜像。
-3.  发布到 `ghcr.io/<your-username>/luma-words:latest`。
+3.  发布到 `ghcr.io/<your-username>/aperture-daily:latest`。
 
 **前置要求**：
 *   在 GitHub 仓库 > Settings > Actions > General > **Workflow permissions** 中开启 `Read and write permissions`。
@@ -66,8 +66,8 @@ npm run db:studio
 version: '3.8'
 services:
   backend:
-    image: ghcr.io/<your-username>/luma-words:latest  # 替换为您的 GitHub 用户名
-    container_name: luma-words-backend
+    image: ghcr.io/<your-username>/aperture-daily:latest  # 替换为您的 GitHub 用户名
+    container_name: aperture-daily-backend
     restart: always
     ports:
       - "3000:3000"
@@ -84,7 +84,7 @@ services:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 luma-words-backend
+    command: --interval 300 aperture-daily-backend
 ```
 
 **启动服务**：

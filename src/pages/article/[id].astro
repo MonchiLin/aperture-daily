@@ -79,7 +79,7 @@ function getReadingStats(content: string) {
 const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
 ---
 
-<Layout title={`${title} - Daily Vocabulary Reader`}>
+<Layout title={`${title} - Aperture Daily`}>
     {row ? (
         <div class="flex flex-col lg:flex-row gap-10 mx-auto w-full max-w-7xl px-4 py-10">
             <!-- 主内容区 -->
@@ -357,7 +357,7 @@ const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
             
             // 保存到 localStorage
             try {
-                localStorage.setItem('luma-words_preferred_level', String(level));
+                localStorage.setItem('aperture-daily_preferred_level', String(level));
             } catch {}
 
             // Dispatch event for React components
@@ -375,7 +375,7 @@ const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
         // 恢复上次选择的难度
         let initialLevel = 1;
         try {
-            const saved = localStorage.getItem('luma-words_preferred_level');
+            const saved = localStorage.getItem('aperture-daily_preferred_level');
             if (saved) initialLevel = parseInt(saved) || 1;
         } catch {}
         

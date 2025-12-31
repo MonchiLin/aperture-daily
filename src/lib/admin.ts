@@ -1,6 +1,6 @@
 import { unauthorized } from './http';
 
-export const ADMIN_SESSION_COOKIE = 'luma-words_admin';
+export const ADMIN_SESSION_COOKIE = 'aperture-daily_admin';
 
 function getCookieValue(request: Request, name: string): string | null {
 	const header = request.headers.get('cookie');

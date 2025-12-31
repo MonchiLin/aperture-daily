@@ -6,7 +6,7 @@ import { clsx } from 'clsx';
 
 import { apiFetch } from '../lib/api';
 
-const ADMIN_KEY_STORAGE = 'luma-words_admin_key';
+const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
 
 // Check key validity against backend
 async function verifyKey(key: string) {
@@ -43,7 +43,7 @@ export default function SettingsPanel() {
 			const storedKey = localStorage.getItem(ADMIN_KEY_STORAGE) ?? '';
 			setAdminKey(storedKey);
 
-			const storedVoice = localStorage.getItem('luma-words_voice_preference');
+			const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
 			if (storedVoice) setVoiceSettings(storedVoice);
 		} catch { /* ignore */ }
 
@@ -71,7 +71,7 @@ export default function SettingsPanel() {
 			if (nextKey) localStorage.setItem(ADMIN_KEY_STORAGE, nextKey);
 			else localStorage.removeItem(ADMIN_KEY_STORAGE);
 
-			localStorage.setItem('luma-words_voice_preference', voice);
+			localStorage.setItem('aperture-daily_voice_preference', voice);
 			// Dynamic import to avoid SSR issues if called there, though this is client side
 			import('../lib/store/audioStore').then(mod => {
 				mod.setVoice(voice);

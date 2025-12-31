@@ -35,9 +35,9 @@ const app = new Elysia()
     .use(swagger({
         documentation: {
             info: {
-                title: 'Dancix API',
+                title: 'Aperture Daily API',
                 version: '1.0.0',
-                description: '每日单词学习平台 API'
+                description: 'Aperture Daily 每日单词学习平台 API'
             }
         }
     }))
