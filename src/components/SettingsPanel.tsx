@@ -3,26 +3,16 @@ import { useEffect, useMemo, useState } from 'react';
 import ProfilesPanel from './ProfilesPanel';
 import Modal from './ui/Modal';
 import { clsx } from 'clsx';
-
-import { apiFetch } from '../lib/api';
+import { isAdminStore, verifyAndSetAdmin } from '../lib/store/adminStore';
+import { useStore } from '@nanostores/react';
 
 const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
-
-// Check key validity against backend
-async function verifyKey(key: string) {
-	try {
-		await apiFetch('/api/auth/check', { token: key });
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 export default function SettingsPanel() {
 	const [open, setOpen] = useState(false);
 	const [adminKey, setAdminKey] = useState('');
 	const [savedAt, setSavedAt] = useState<number | null>(null);
-	const [isAdmin, setIsAdmin] = useState(false);
+	const isAdmin = useStore(isAdminStore);
 	const [voice, setVoiceSettings] = useState('en-US-GuyNeural');
 	const [tab, setTab] = useState<'general' | 'audio' | 'profiles'>('general');
 
@@ -38,7 +28,6 @@ export default function SettingsPanel() {
 	];
 
 	useEffect(() => {
-		let canceled = false;
 		try {
 			const storedKey = localStorage.getItem(ADMIN_KEY_STORAGE) ?? '';
 			setAdminKey(storedKey);
@@ -46,26 +35,13 @@ export default function SettingsPanel() {
 			const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
 			if (storedVoice) setVoiceSettings(storedVoice);
 		} catch { /* ignore */ }
-
-		// Initial check
-		(async () => {
-			const key = localStorage.getItem(ADMIN_KEY_STORAGE)?.trim();
-			if (!key) {
-				setIsAdmin(false);
-				return;
-			}
-			const ok = await verifyKey(key);
-			if (!canceled) setIsAdmin(ok);
-		})();
-
-		return () => { canceled = true; };
 	}, []);
 
 	useEffect(() => {
 		if (!isAdmin && tab === 'profiles') setTab('general');
 	}, [isAdmin, tab]);
 
-	function save() {
+	async function save() {
 		const nextKey = adminKey.trim();
 		try {
 			if (nextKey) localStorage.setItem(ADMIN_KEY_STORAGE, nextKey);
@@ -80,19 +56,13 @@ export default function SettingsPanel() {
 			setSavedAt(Date.now());
 		} catch { /* ignore */ }
 
-		if (nextKey) {
-			void verifyKey(nextKey)
-				.then(setIsAdmin)
-				.catch(() => setIsAdmin(false));
-		} else {
-			setIsAdmin(false);
-		}
+		await verifyAndSetAdmin(nextKey);
 	}
 
 	function clearKey() {
 		setAdminKey('');
-		setIsAdmin(false);
 		try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignore */ }
+		verifyAndSetAdmin(null);
 	}
 
 	return (

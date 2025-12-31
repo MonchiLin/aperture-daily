@@ -15,6 +15,7 @@ import { profilesRoutes } from './routes/profiles';
 import { highlightsRoutes } from './routes/highlights';
 import { adminRoutes } from './routes/admin';
 import { cronRoutes } from './routes/cron';
+import { env } from './src/config/env';
 
 // Import workers
 import { startTaskWorker } from './workers/taskWorker';
@@ -42,11 +43,31 @@ const app = new Elysia()
         }
     }))
     .use(healthRoutes)
+    .use(authRoutes)
+    // --- Admin Protection Middleware ---
+    .derive(({ request, error }) => {
+        const path = new URL(request.url).pathname;
+        const isProtected = path.startsWith('/api/admin') ||
+            path.startsWith('/api/tasks') ||
+            path.startsWith('/api/generate') ||
+            path.startsWith('/api/profiles') ||
+            path.startsWith('/api/words') ||
+            path.startsWith('/api/cron') ||
+            (path.startsWith('/api/articles') && request.method === 'DELETE');
+
+        if (!isProtected) return {};
+
+        const key = request.headers.get('x-admin-key');
+        if (key !== env.ADMIN_KEY) {
+            return error(401, { error: "Unauthorized: Admin key required" });
+        }
+        return { isAdmin: true };
+    })
+    // ------------------------------------
     .use(tasksRoutes(queue))
     .use(wordsRoutes)
     .use(contentRoutes)
     .use(articlesRoutes)
-    .use(authRoutes)
     .use(profilesRoutes)
     .use(highlightsRoutes)
     .use(adminRoutes(queue))

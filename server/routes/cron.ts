@@ -6,9 +6,6 @@ import { env } from '../config/env';
 
 export const cronRoutes = (queue: TaskQueue) => new Elysia()
     .post('/api/cron/trigger', async ({ request, error }: any) => {
-        const key = request.headers.get ? request.headers.get('x-admin-key') : request.headers['x-admin-key'];
-        if (key !== env.ADMIN_KEY) return error(401, { error: "Unauthorized" });
-
         const taskDate = dayjs().format('YYYY-MM-DD');
 
         try {

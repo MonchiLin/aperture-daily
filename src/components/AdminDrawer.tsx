@@ -8,8 +8,14 @@ import { Drawer, ConfigProvider } from 'antd';
 import { Settings } from 'lucide-react';
 import AdminDayPanel from './AdminDayPanel';
 
+import { isAdminStore } from '../lib/store/adminStore';
+import { useStore } from '@nanostores/react';
+
 export default function AdminDrawer({ date }: { date: string }) {
     const [open, setOpen] = useState(false);
+    const isAdmin = useStore(isAdminStore);
+
+    if (!isAdmin) return null;
 
     return (
         <ConfigProvider

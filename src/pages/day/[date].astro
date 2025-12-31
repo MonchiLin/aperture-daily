@@ -7,7 +7,7 @@
  */
 import Layout from "@/layouts/Layout.astro";
 import MacOSCalendarAstro from "@/components/MacOSCalendar.astro";
-import DayFeed from "@/components/DayFeed.astro";
+import DayFeed from "@/components/DayFeed";
 import { apiFetch } from "@/lib/api";
 
 // 获取路由参数
@@ -76,8 +76,8 @@ try {
                 class="md:col-span-8 lg:col-span-8 min-h-[500px]"
                 transition:animate="slide"
             >
-                <!-- 文章列表 - 纯 Astro 组件 -->
-                <DayFeed date={date} data={dayData} wordData={wordData} />
+                <!-- 文章列表 - React 组件 (支持 SSR) -->
+                <DayFeed client:load date={date} initialArticles={dayData.articles} wordData={wordData} />
             </div>
         </div>
     </div>

@@ -5,6 +5,7 @@ import { type TaskRow } from './admin/shared';
 import AdminActions from './admin/AdminActions';
 import TaskQueueList from './admin/TaskQueueList';
 import { apiFetch } from '../lib/api';
+import { refreshArticles } from '../lib/store/articlesStore';
 
 const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
 
@@ -83,12 +84,23 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 			apiFetch<{ tasks?: TaskRow[] }>(`/api/tasks?task_date=${encodeURIComponent(props.date)}`, { token: adminKey })
 				.then(data => {
 					const newTasks = data?.tasks ?? [];
+
+					// 检查是否有任务刚刚完成 (从非成功状态变为成功)
+					const hasNewSucceeded = newTasks.some(nt =>
+						nt.status === 'succeeded' &&
+						!tasks.find(ot => ot.id === nt.id && ot.status === 'succeeded')
+					);
+
 					setTasks(newTasks);
 
-					// 检查是否有任务刚刚完成
-					const hasSucceeded = newTasks.some(t => t.status === 'succeeded');
-					if (hasSucceeded && props.onRefreshRequest) {
-						props.onRefreshRequest();
+					if (hasNewSucceeded) {
+						// 1. 触发响应式文章刷新 (无需刷新网页)
+						refreshArticles(props.date);
+
+						// 2. 通知父组件 (如果需要)
+						if (props.onRefreshRequest) {
+							props.onRefreshRequest();
+						}
 					}
 				})
 				.catch(console.error);
@@ -110,6 +122,7 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 				body: JSON.stringify({ task_date: props.date })
 			});
 			await refresh();
+			await refreshArticles(props.date);
 			setCollapsed(false);
 		} catch (e) {
 			setError((e as Error).message);
@@ -150,6 +163,7 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 				body: '{}'
 			});
 			await refresh();
+			await refreshArticles(props.date);
 		} catch (e) {
 			setError((e as Error).message);
 		} finally {
