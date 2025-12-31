@@ -19,8 +19,8 @@ import {
 
 import { createOpenAiCompatibleClient, type OpenAiCompatibleEnv } from './client';
 
-// xhigh medium low auto
-const reasoningEffort = "xhigh"
+// high medium low auto
+const reasoningEffort = "high"
 
 // ============================================
 // 候选词类型
@@ -144,11 +144,11 @@ async function runResearch(args: {
             {
                 type: 'web_search',
                 user_location: { type: 'approximate', timezone: 'Asia/Shanghai' }
-            }
+            } as any
         ],
         tool_choice: 'auto',
         input: args.history,
-        include: ['web_search_call.results', 'web_search_call.action.sources']
+        include: ['web_search_call.results', 'web_search_call.action.sources'] as any
     });
     console.log('[LLM Stage 2/4] API response received in', Date.now() - stageStart, 'ms');
 

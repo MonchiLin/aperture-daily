@@ -52,7 +52,7 @@ const monthYear = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeri
             <div class="flex flex-col">
                 {data.articles.map((article, idx) => (
                     <article class="group relative border-b border-stone-200 last:border-0 hover:bg-stone-50 -mx-4 px-4 transition-colors cursor-pointer">
-                        <a href={`/article/${article.id}`} class="flex items-center py-3 w-full gap-4">
+                        <a href={`/article/${article.id}`} class="flex items-baseline py-3 w-full gap-4">
                             {/* Number */}
                             <span class="text-xs font-bold text-stone-300 font-sans w-6 shrink-0 group-hover:text-stone-500 transition-colors">
                                 {String(idx + 1).padStart(2, '0')}
@@ -64,7 +64,7 @@ const monthYear = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeri
                             </h3>
                             
                             {/* Arrow Icon (Only visible on hover) */}
-                            <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0 text-stone-400">
+                            <div class="shrink-0 self-center opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0 text-stone-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
                                     <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
                                 </svg>

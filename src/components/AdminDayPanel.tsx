@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { message } from 'antd';
-import { type TaskRow, fetchJson } from './admin/shared';
+import { type TaskRow } from './admin/shared';
 import AdminActions from './admin/AdminActions';
 import TaskQueueList from './admin/TaskQueueList';
 import { apiFetch } from '../lib/api';
 
-const ADMIN_KEY_STORAGE = 'luma-words_admin_key';
+const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
 
 export default function AdminDayPanel(props: { date: string; onRefreshRequest?: () => void; isDrawerMode?: boolean }) {
 	const [adminKey, setAdminKey] = useState<string | null>(null);

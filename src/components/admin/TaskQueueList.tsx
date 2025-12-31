@@ -134,7 +134,22 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
                         </div>
 
                         <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-stone-500">
-                            <span className="font-mono">{formatTime(t.created_at)}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-mono">{formatTime(t.created_at)}</span>
+                                {t.status === 'running' && (() => {
+                                    let stageText = 'Stage 1/3: 搜索选词';
+                                    try {
+                                        const cp = t.result_json ? JSON.parse(t.result_json) : null;
+                                        if (cp?.stage === 'search_selection') stageText = 'Stage 2/3: 撰写草稿';
+                                        else if (cp?.stage === 'draft') stageText = 'Stage 3/3: 格式转换';
+                                    } catch { }
+                                    return (
+                                        <span className="text-orange-500 font-serif italic font-medium lowercase tracking-normal bg-orange-50 px-1.5 py-0.5 rounded-sm">
+                                            {stageText}
+                                        </span>
+                                    );
+                                })()}
+                            </div>
                             {t.status === 'failed' && <span className="text-red-600 font-bold">Failed</span>}
                             {t.status === 'running' && <span className="text-orange-600 font-bold">Processing</span>}
                         </div>
