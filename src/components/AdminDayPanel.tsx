@@ -1,26 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { message } from 'antd';
-import { type TaskRow } from './admin/shared';
 import AdminActions from './admin/AdminActions';
 import TaskQueueList from './admin/TaskQueueList';
 import { apiFetch } from '../lib/api';
 import { refreshArticles } from '../lib/store/articlesStore';
+import { useAdminTasks } from '../lib/hooks/useAdminTasks';
 
 const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
 
 export default function AdminDayPanel(props: { date: string; onRefreshRequest?: () => void; isDrawerMode?: boolean }) {
 	const [adminKey, setAdminKey] = useState<string | null>(null);
 	const [isAdmin, setIsAdmin] = useState(false);
-	const [tasks, setTasks] = useState<TaskRow[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	// 默认不折叠如果是在 Drawer 模式，否则默认折叠
 	const [collapsed, setCollapsed] = useState(!props.isDrawerMode);
 
-	const canUse = useMemo(() => isAdmin && !!adminKey, [isAdmin, adminKey]);
-
-	// 校验管理员权限
+	// 权限校验
 	useEffect(() => {
 		try {
 			const key = localStorage.getItem(ADMIN_KEY_STORAGE);
@@ -35,7 +29,6 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 		let canceled = false;
 		(async () => {
 			try {
-				// Verify against backend
 				await apiFetch('/api/auth/check', { token: adminKey });
 				if (!canceled) setIsAdmin(true);
 			} catch {
@@ -47,156 +40,87 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 		};
 	}, [adminKey]);
 
+	// 使用拆分后的 Hook
+	const {
+		tasks,
+		loading,
+		error,
+		refresh,
+		generate,
+		fetchWords,
+		deleteTask
+	} = useAdminTasks({
+		date: props.date,
+		adminKey: isAdmin ? adminKey : null,
+		onSucceeded: () => {
+			// 任务成功后的响应式刷新
+			refreshArticles(props.date);
+			if (props.onRefreshRequest) props.onRefreshRequest();
+		}
+	});
+
 	// 强制展开如果是在 Drawer 模式
 	useEffect(() => {
 		if (props.isDrawerMode) setCollapsed(false);
 	}, [props.isDrawerMode]);
 
-	// 加载任务
-	async function refresh() {
-		if (!adminKey) return;
-		if (tasks.length === 0) setLoading(true);
-		setError(null);
+	const handleGenerate = async () => {
 		try {
-			// Redirect to new backend
-			const data = await apiFetch<{ tasks?: TaskRow[] }>(`/api/tasks?task_date=${encodeURIComponent(props.date)}`, { token: adminKey });
-			setTasks(data?.tasks ?? []);
-		} catch (e) {
-			setError((e as Error).message);
-		} finally {
-			setLoading(false);
-		}
-	}
-
-	// 初次加载
-	useEffect(() => {
-		if (!canUse) return;
-		void refresh();
-	}, [canUse, props.date]);
-
-	// 自动轮询刷新
-	useEffect(() => {
-		if (!canUse) return;
-		const hasActiveTasks = tasks.some(t => t.status === 'running' || t.status === 'queued');
-		if (!hasActiveTasks) return;
-
-		const timer = setInterval(() => {
-			apiFetch<{ tasks?: TaskRow[] }>(`/api/tasks?task_date=${encodeURIComponent(props.date)}`, { token: adminKey })
-				.then(data => {
-					const newTasks = data?.tasks ?? [];
-
-					// 检查是否有任务刚刚完成 (从非成功状态变为成功)
-					const hasNewSucceeded = newTasks.some(nt =>
-						nt.status === 'succeeded' &&
-						!tasks.find(ot => ot.id === nt.id && ot.status === 'succeeded')
-					);
-
-					setTasks(newTasks);
-
-					if (hasNewSucceeded) {
-						// 1. 触发响应式文章刷新 (无需刷新网页)
-						refreshArticles(props.date);
-
-						// 2. 通知父组件 (如果需要)
-						if (props.onRefreshRequest) {
-							props.onRefreshRequest();
-						}
-					}
-				})
-				.catch(console.error);
-		}, 10000);
-
-		return () => clearInterval(timer);
-	}, [canUse, tasks, adminKey, props.date, props.onRefreshRequest]);
-
-
-	async function generate() {
-		if (!adminKey) return;
-		setLoading(true);
-		setError(null);
-		try {
-			await apiFetch('/api/generate', {
-				method: 'POST',
-				token: adminKey,
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ task_date: props.date })
-			});
-			await refresh();
-			await refreshArticles(props.date);
+			await generate();
+			await refreshArticles(props.date); // 手动触发后的立即刷新指令
 			setCollapsed(false);
 		} catch (e) {
-			setError((e as Error).message);
-		} finally {
-			setLoading(false);
+			console.error(e);
 		}
-	}
+	};
 
-	async function fetchWords() {
-		if (!adminKey) return;
-		setLoading(true);
-		setError(null);
+	const handleFetchWords = async () => {
 		try {
-			await apiFetch('/api/words/fetch', {
-				method: 'POST',
-				token: adminKey,
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ task_date: props.date }),
-			});
+			await fetchWords();
 			if (props.onRefreshRequest) props.onRefreshRequest();
 			message.success('单词已拉取，请稍后查看');
 		} catch (e) {
-			setError((e as Error).message);
-		} finally {
-			setLoading(false);
+			console.error(e);
 		}
-	}
+	};
 
-	async function deleteTask(taskId: string) {
-		if (!adminKey) return;
-		setLoading(true);
-		setError(null);
+	const handleDeleteTask = async (taskId: string) => {
 		try {
-			await apiFetch(`/api/tasks/${taskId}`, {
-				method: 'DELETE',
-				token: adminKey,
-				headers: { 'content-type': 'application/json' },
-				body: '{}'
-			});
-			await refresh();
+			await deleteTask(taskId);
 			await refreshArticles(props.date);
 		} catch (e) {
-			setError((e as Error).message);
-		} finally {
-			setLoading(false);
+			console.error(e);
 		}
-	}
+	};
 
-	if (!canUse) return null;
+	if (!isAdmin) return null;
+
+	const content = (
+		<div className="space-y-6">
+			<AdminActions
+				loading={loading}
+				onFetchWords={handleFetchWords}
+				onGenerate={handleGenerate}
+			/>
+
+			{error && (
+				<div className="text-xs font-serif text-red-700 bg-red-50 p-3 italic border-l-2 border-red-700">
+					Error: {error}
+				</div>
+			)}
+
+			<TaskQueueList
+				tasks={tasks}
+				onRefresh={() => refresh()}
+				onDelete={handleDeleteTask}
+				adminKey={adminKey!}
+				taskDate={props.date}
+			/>
+		</div>
+	);
 
 	if (props.isDrawerMode) {
-		return (
-			<div className="space-y-6">
-				<AdminActions
-					loading={loading}
-					onFetchWords={fetchWords}
-					onGenerate={generate}
-				/>
-
-				{error && (
-					<div className="text-xs font-serif text-red-700 bg-red-50 p-3 italic border-l-2 border-red-700">
-						Error: {error}
-					</div>
-				)}
-
-				<TaskQueueList
-					tasks={tasks}
-					onRefresh={refresh}
-					onDelete={deleteTask}
-					adminKey={adminKey}
-					taskDate={props.date}
-				/>
-			</div>
-		);
+		return content;
 	}
 
 	return (
@@ -220,26 +144,8 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 				className={`grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] ${collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}
 			>
 				<div className="overflow-hidden">
-					<div className="pt-4 space-y-6">
-						<AdminActions
-							loading={loading}
-							onFetchWords={fetchWords}
-							onGenerate={generate}
-						/>
-
-						{error && (
-							<div className="text-xs font-serif text-red-700 bg-red-50 p-3 italic border-l-2 border-red-700">
-								Error: {error}
-							</div>
-						)}
-
-						<TaskQueueList
-							tasks={tasks}
-							onRefresh={refresh}
-							onDelete={deleteTask}
-							adminKey={adminKey}
-							taskDate={props.date}
-						/>
+					<div className="pt-4">
+						{content}
 					</div>
 				</div>
 			</div>

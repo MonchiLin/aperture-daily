@@ -3,8 +3,7 @@ import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useCallback } from 'react';
 import { audioState, setPlaybackRate, setVoice, togglePlay } from '../lib/store/audioStore';
 import { EdgeTTSClient } from '../lib/tts/edge-client';
-
-const BARS = Array.from({ length: 24 }, (_, i) => i);
+import AudioVisualizer from './AudioVisualizer';
 
 export default function AudioPlayer() {
     const state = useStore(audioState);
@@ -196,20 +195,10 @@ export default function AudioPlayer() {
                 </div>
             </div>
 
-            {/* Waveform */}
-            <div className="h-1 flex items-end justify-center gap-[1px] mt-4 opacity-30">
-                {BARS.map((i) => (
-                    <div
-                        key={i}
-                        className="w-1 bg-slate-900 transition-all duration-300"
-                        style={{
-                            height: isPlaying && !isLoading ? `${Math.max(20, Math.random() * 100)}%` : '2px',
-                            animation: isPlaying && !isLoading
-                                ? `bounce 0.8s ease-in-out ${i * 0.05}s infinite`
-                                : 'none',
-                        }}
-                    />
-                ))}
+
+            {/* Waveform (Extracted) */}
+            <div className="mt-4 opacity-50">
+                <AudioVisualizer isPlaying={isPlaying && !isLoading} />
             </div>
 
             {/* Hidden Audio Element */}
@@ -219,13 +208,6 @@ export default function AudioPlayer() {
                 onEnded={onEnded}
                 className="hidden"
             />
-
-            <style>{`
-                @keyframes bounce {
-                    0%, 100% { height: 2px; }
-                    50% { height: 16px; }
-                }
-            `}</style>
         </div>
     );
 }
