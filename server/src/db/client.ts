@@ -51,24 +51,6 @@ export const db = drizzle(async (sql, params, method) => {
         const firstResult = data.result?.[0];
         const rows = firstResult?.results || [];
 
-        // DEBUG LOGGING TO FILE
-        try {
-            // Use explicit 'fs' or 'Bun' write if possible, but we are in Bun env.
-            const fs = await import('fs');
-            const logEntry = `
-TS: ${new Date().toISOString()}
-METHOD: ${method}
-SQL: ${sql}
-PARAMS: ${JSON.stringify(params)}
-ROWS_LEN: ${rows.length}
-FIRST_ROW: ${JSON.stringify(rows[0])}
-----------------------------------------
-`;
-            fs.appendFileSync('./d1_debug.log', logEntry);
-        } catch (e) {
-            console.error("Failed to write debug log", e);
-        }
-
         return { rows };
     } catch (e) {
         console.error("D1 Proxy Fetch Error:", e);

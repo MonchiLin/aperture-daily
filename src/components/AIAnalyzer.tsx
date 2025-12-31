@@ -159,7 +159,7 @@ export default function AIAnalyzer({ articleContent }: AIAnalyzerProps) {
                         placement="top"
                         arrow={false}
                         destroyOnHidden
-                        styles={{ body: { padding: 0, backgroundColor: 'transparent', boxShadow: 'none' } }}
+                        overlayInnerStyle={{ padding: 0, backgroundColor: 'transparent', boxShadow: 'none' }}
                         // Force z-index high
                         zIndex={1000}
                     >

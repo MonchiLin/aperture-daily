@@ -1,7 +1,7 @@
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
 import { WORD_SELECTION_MAX_WORDS } from './limits';
 
-// openaiCompatible 辅助函数
+// 确保文章内容有正确的段落分隔
 function ensureContentParagraphs(content: string, level: number) {
     const text = content.replace(/\r\n/g, '\n').trim();
     if (!text) return text;
@@ -137,6 +137,47 @@ export function collectHttpUrlsFromUnknown(value: unknown): string[] {
     };
     walk(value);
     return urls;
+}
+
+/** 解析 Gemini Google Search 返回的重定向 URL，获取真实来源地址 */
+export async function resolveRedirectUrl(url: string): Promise<string> {
+    // 如果不是 Google 重定向 URL，直接返回
+    if (!url.includes('vertexaisearch.cloud.google.com/grounding-api-redirect')) {
+        return url;
+    }
+
+    try {
+        // 使用 HEAD 请求跟踪重定向，避免下载完整内容
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+        const res = await fetch(url, {
+            method: 'HEAD',
+            redirect: 'follow',
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        // 返回最终重定向后的 URL
+        if (res.url && res.url !== url) {
+            console.log(`[URL Resolver] Resolved: ${url.slice(0, 80)}... -> ${res.url}`);
+            return res.url;
+        }
+
+        return url;
+    } catch (error) {
+        // 解析失败时返回原 URL，不影响主流程
+        console.warn(`[URL Resolver] Failed to resolve: ${url.slice(0, 80)}...`, error);
+        return url;
+    }
+}
+
+/** 批量解析 URL 重定向，去重后返回 */
+export async function resolveRedirectUrls(urls: string[]): Promise<string[]> {
+    const resolved = await Promise.all(urls.map(resolveRedirectUrl));
+    // 去重（可能多个重定向指向同一真实 URL）
+    return Array.from(new Set(resolved));
 }
 
 // 将响应输出追加到历史（多轮对话）

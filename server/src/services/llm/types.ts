@@ -6,35 +6,23 @@ import { z } from 'zod';
 import { createOpenAiCompatibleClient } from './client';
 import { WORD_SELECTION_MAX_WORDS, WORD_SELECTION_MIN_WORDS } from './limits';
 
-// ============================================
 // 候选词类型
-// ============================================
-
 export type CandidateWord = {
     word: string;
     type: 'new' | 'review';
 };
 
-// ============================================
 // 客户端和对话类型
-// ============================================
-
 export type OpenAiClient = ReturnType<typeof createOpenAiCompatibleClient>;
 export type ConversationHistory = any[];
 
-// ============================================
 // 选词 Schema
-// ============================================
-
 export const wordSelectionSchema = z.object({
     selected_words: z.array(z.string()).min(WORD_SELECTION_MIN_WORDS).max(WORD_SELECTION_MAX_WORDS),
     selection_reasoning: z.string().optional()
 });
 
-// ============================================
-// Checkpoint 类型 (Gemini Exclusive)
-// ============================================
-
+// Checkpoint 类型 (Gemini 旧版)
 export const geminiHistorySchema = z.array(z.object({
     role: z.enum(['user', 'model']),
     parts: z.array(z.object({
@@ -53,10 +41,7 @@ export const geminiCheckpointSchema = z.object({
 
 export type GeminiCheckpoint = z.infer<typeof geminiCheckpointSchema>;
 
-// ============================================
-// Checkpoint 类型 (Gemini 3-Stage Pipeline)
-// ============================================
-
+// Checkpoint 类型 (Gemini 3-Stage)
 export type GeminiCheckpoint3 = {
     stage: 'search_selection' | 'draft' | 'conversion';
     selectedWords?: string[];

@@ -11,7 +11,8 @@ import { SOURCE_URL_LIMIT } from './limits';
 import {
     collectHttpUrlsFromUnknown,
     extractHttpUrlsFromText,
-    normalizeDailyNewsOutput
+    normalizeDailyNewsOutput,
+    resolveRedirectUrls
 } from './helpers';
 import {
     SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
@@ -36,10 +37,7 @@ export type GeminiHistory = GeminiMessage[];
 // Thinking 级别配置
 export const geminiThinkingLevel: ThinkingLevel = 'high';
 
-// ============================================
-// Stage 1: 搜索 + 选词（合并）
-// ============================================
-
+// Stage 1: 搜索 + 选词
 export async function runGeminiSearchAndSelection(args: {
     client: GeminiClient;
     history: GeminiHistory;
@@ -102,7 +100,16 @@ export async function runGeminiSearchAndSelection(args: {
 
     const selectedWords = parsed.selected_words.filter((w: unknown) => typeof w === 'string');
     const newsSummary = typeof parsed.news_summary === 'string' ? parsed.news_summary : '';
-    const sources = Array.isArray(parsed.sources) ? parsed.sources.filter((s: unknown) => typeof s === 'string') : [];
+
+    // 兼容处理：支持新的单一 source 字段和旧的 sources 数组字段
+    let rawSources: string[] = [];
+    if (typeof parsed.source === 'string' && parsed.source) {
+        // 新格式：单一来源
+        rawSources = [parsed.source];
+    } else if (Array.isArray(parsed.sources)) {
+        // 旧格式：多来源（向后兼容）
+        rawSources = parsed.sources.filter((s: unknown) => typeof s === 'string');
+    }
 
     if (selectedWords.length === 0) {
         console.error('[Gemini Search+Selection] No valid words in parsed.selected_words:', parsed.selected_words);
@@ -114,17 +121,20 @@ export async function runGeminiSearchAndSelection(args: {
         throw new Error('No news summary provided');
     }
 
-    // 从 response 和 sources 中提取 URLs
-    const sourceUrls = Array.from(
+    // 收集所有可能的 URL 来源
+    const allUrls = Array.from(
         new Set([
-            ...sources,
+            ...rawSources,
             ...extractHttpUrlsFromText(newsSummary),
             ...collectHttpUrlsFromUnknown(response)
         ])
     ).slice(0, SOURCE_URL_LIMIT);
 
+    // 解析 Google 重定向 URL，获取真实来源地址
+    const sourceUrls = await resolveRedirectUrls(allUrls);
+
     console.log('[Gemini Search+Selection] Selected words:', selectedWords);
-    console.log('[Gemini Search+Selection] Found', sourceUrls.length, 'source URLs');
+    console.log('[Gemini Search+Selection] Resolved', sourceUrls.length, 'source URL(s):', sourceUrls);
 
     args.history.push({ role: 'model', parts: [{ text: responseText }] });
     return {
@@ -136,10 +146,7 @@ export async function runGeminiSearchAndSelection(args: {
     };
 }
 
-// ============================================
 // Stage 2: 草稿生成
-// ============================================
-
 export async function runGeminiDraftGeneration(args: {
     client: GeminiClient;
     model: string;
@@ -194,10 +201,7 @@ export async function runGeminiDraftGeneration(args: {
     };
 }
 
-// ============================================
 // Stage 3: JSON 转换
-// ============================================
-
 export async function runGeminiJsonConversion(args: {
     client: GeminiClient;
     model: string;
