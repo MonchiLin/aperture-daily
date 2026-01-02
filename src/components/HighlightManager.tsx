@@ -2,14 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { audioState } from '../lib/store/audioStore';
 import { tokenizeSentences, findActiveSid } from '../lib/utils/highlighterLogic';
-import { setLevel, setActiveWord } from '../lib/store/interactionStore';
+import { setLevel, setActiveWord, setMemoryData, interactionStore } from '../lib/store/interactionStore';
 
 interface HighlightManagerProps {
     articleId: string;
     targetWords: string[];
+    memoriesMap?: Record<string, any>;
 }
 
-export default function HighlightManager({ articleId, targetWords }: HighlightManagerProps) {
+export default function HighlightManager({ articleId, targetWords, memoriesMap = {} }: HighlightManagerProps) {
+    const wordsWithHistory = Object.keys(memoriesMap);
+    const { activeWord } = useStore(interactionStore);
     const [currentLevel, setCurrentLevel] = useState(1);
     const playbackActiveSidRef = useRef<number | null>(null);
     const { charIndex, currentIndex, isPlaying } = useStore(audioState);
@@ -45,14 +48,34 @@ export default function HighlightManager({ articleId, targetWords }: HighlightMa
         return () => window.removeEventListener('word-hover' as any, handleWordHover);
     }, []);
 
+    // [New] Store Sync: Lookup memory for active word
+    useEffect(() => {
+        if (!activeWord) return;
+
+        const normalized = activeWord.toLowerCase();
+        const mems = memoriesMap[normalized];
+
+        console.log(`[HighlightManager] Hover: ${normalized}, History found:`, !!mems);
+
+        if (mems && Array.isArray(mems)) {
+            setMemoryData(mems.map(m => ({
+                snippet: m.snippet,
+                articleTitle: m.articleTitle,
+                articleId: m.articleId,
+                date: m.date,
+                timeAgo: m.timeAgo || m.date
+            })));
+        }
+    }, [activeWord, memoriesMap]);
+
     // 句子分词核心逻辑 (调用抽离后的工具函数)
     useEffect(() => {
         const levelContainer = document.querySelector(`.article-level[data-level="${currentLevel}"]`) as HTMLElement;
         if (!levelContainer || levelContainer.dataset.processed === 'true') return;
 
         console.log(`[HighlightManager] Initializing tokenization for Level ${currentLevel}`);
-        tokenizeSentences(levelContainer, targetWords);
-    }, [targetWords, articleId, currentLevel]);
+        tokenizeSentences(levelContainer, targetWords, wordsWithHistory);
+    }, [targetWords, articleId, currentLevel, wordsWithHistory]);
 
     // 朗读高亮同步 (调用抽离后的工具函数)
     useEffect(() => {

@@ -15,6 +15,7 @@ import { profilesRoutes } from './routes/profiles';
 import { highlightsRoutes } from './routes/highlights';
 import { adminRoutes } from './routes/admin';
 import { cronRoutes } from './routes/cron';
+import { contextRoutes } from './routes/context';
 import { env } from './config/env';
 
 // Import workers
@@ -72,6 +73,7 @@ const app = new Elysia()
     .use(highlightsRoutes)
     .use(adminRoutes(queue))
     .use(cronRoutes(queue))
+    .use(contextRoutes)
     .listen(3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

@@ -10,10 +10,11 @@ interface Point {
 interface TetherPath {
     path: string;
     opacity: number;
+    type: 'orange' | 'gold';
 }
 
 export default function VisualTether() {
-    const { activeWord, currentLevel } = useStore(interactionStore);
+    const { activeWord, currentLevel, memoryData } = useStore(interactionStore);
     const [paths, setPaths] = useState<TetherPath[]>([]);
     const svgRef = useRef<SVGSVGElement>(null);
 
@@ -24,68 +25,66 @@ export default function VisualTether() {
         }
 
         const updateTether = () => {
-            // 1. Find the Sidebar Card (Target)
-            const card = document.querySelector(`[data-word-card="${activeWord}"]`);
-            if (!card) return;
-
-            // 2. Find ALL Word Instances in the Current Level (Source)
-            // Note: We only look in the active level container to avoid hidden words
             const levelContainer = document.querySelector(`.article-level[data-level="${currentLevel}"]`);
             if (!levelContainer) return;
 
             const wordInstances = Array.from(levelContainer.querySelectorAll(`.target-word[data-word="${activeWord}"]`));
             if (wordInstances.length === 0) return;
 
-            const cardRect = card.getBoundingClientRect();
-            const cardPoint: Point = {
-                x: cardRect.left, // Sidebar Left Edge
-                y: cardRect.top + cardRect.height / 2
-            };
-
             const newPaths: TetherPath[] = [];
 
-            // 3. Draw a line for EACH instance ("Spider Web" mode)
-            wordInstances.forEach((el) => {
-                const rect = el.getBoundingClientRect();
+            // Dictionary Tether (Orange Only)
+            const card = document.querySelector(`[data-word-card="${activeWord}"]`);
+            if (card) {
+                const cardRect = card.getBoundingClientRect();
+                const target: Point = {
+                    x: cardRect.left,
+                    y: cardRect.top + cardRect.height / 2
+                };
 
-                // Check visibility: Simple viewport check
-                // We typically only want to tether to words currently on string or close to it
-                const isVisible = (
-                    rect.top >= -100 &&
-                    rect.bottom <= (window.innerHeight + 100)
-                );
-
-                if (isVisible) {
-                    const wordPoint: Point = {
-                        x: rect.right, // Word Right Edge
-                        y: rect.top + rect.height / 2
-                    };
-
-                    // Convert to SVG coordinates (relative to viewport)
-                    // Since SVG is fixed/absolute over the viewport, client coordinates are fine directly
-                    // provided the SVG is fixed and full screen.
-
-                    // Bezier Logic
-                    const dx = cardPoint.x - wordPoint.x;
-                    const cp1 = { x: wordPoint.x + dx * 0.4, y: wordPoint.y };
-                    const cp2 = { x: cardPoint.x - dx * 0.4, y: cardPoint.y };
-
-                    const d = `M ${wordPoint.x} ${wordPoint.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${cardPoint.x} ${cardPoint.y}`;
-
-                    newPaths.push({
-                        path: d,
-                        opacity: 1 // We can fade distance ones if we want later
-                    });
-                }
-            });
+                wordInstances.forEach((el) => {
+                    const line = calculateTether(el, target, 'orange');
+                    if (line) newPaths.push(line);
+                });
+            }
 
             setPaths(newPaths);
         };
 
-        // Initial draw
-        updateTether();
+        const calculateTether = (sourceEl: Element, targetPt: Point, type: 'orange' | 'gold'): TetherPath | null => {
+            const rect = sourceEl.getBoundingClientRect();
+            // Visibility check
+            if (rect.top < -50 || rect.bottom > (window.innerHeight + 50)) return null;
 
-        // Follow scrolling
+            // Determine if target is to the left or right of the word
+            const isTargetLeft = targetPt.x < rect.left;
+
+            // Anchor point on the word: left or right edge
+            const sourcePt: Point = {
+                x: isTargetLeft ? rect.left : rect.right,
+                y: rect.top + rect.height / 2
+            };
+
+            // Re-adjust target anchor if it's on the left
+            // For cards on the right (dict), we use rect.left (line 40).
+            // For cards on the left (memory), we should use cardRect.right.
+            // But targetPt is already passed in by updateTether.
+            // I'll update updateTether to pass the correct card edge.
+
+            const dx = targetPt.x - sourcePt.x;
+            const curveFactor = type === 'gold' ? 0.5 : 0.4;
+            const cp1 = { x: sourcePt.x + dx * curveFactor, y: sourcePt.y };
+            const cp2 = { x: targetPt.x - dx * curveFactor, y: targetPt.y };
+
+            const d = `M ${sourcePt.x} ${sourcePt.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${targetPt.x} ${targetPt.y}`;
+            return { path: d, opacity: 1, type };
+        };
+
+        // Initial draw & loop for animation frame if needed (but scroll listener is better for perf)
+        updateTether();
+        // Small delay for DOM layout of MemoryCard to settle (since it animates in)
+        const timer = setTimeout(updateTether, 350);
+
         const handleScroll = () => requestAnimationFrame(updateTether);
         window.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('resize', handleScroll);
@@ -93,8 +92,9 @@ export default function VisualTether() {
         return () => {
             window.removeEventListener('scroll', handleScroll);
             window.removeEventListener('resize', handleScroll);
+            clearTimeout(timer);
         };
-    }, [activeWord, currentLevel]);
+    }, [activeWord, currentLevel, memoryData]);
 
     if (paths.length === 0) return null;
 
@@ -106,25 +106,27 @@ export default function VisualTether() {
         >
             <style>{`
                 @keyframes tether-draw {
-                    from {
-                        opacity: 0;
-                        stroke-dashoffset: 1;
-                    }
-                    to {
-                        opacity: 1;
-                        stroke-dashoffset: 0;
-                    }
+                    from { opacity: 0; stroke-dashoffset: 1; }
+                    to { opacity: 1; stroke-dashoffset: 0; }
                 }
                 .tether-line {
-                    animation: tether-draw 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                    animation: tether-draw 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
                     stroke-dasharray: 1;
-                    stroke-dashoffset: 1; /* Start hidden */
+                    stroke-dashoffset: 1;
+                }
+                .tether-gold {
+                    stroke-dasharray: 4 4; /* Dashed for memory */
+                    animation: tether-draw 0.8s ease-out forwards;
                 }
             `}</style>
             <defs>
                 <linearGradient id="tetherGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#D9480F" stopOpacity="0.4" />
                     <stop offset="100%" stopColor="#D9480F" stopOpacity="0.8" />
+                </linearGradient>
+                <linearGradient id="memoryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#d97706" stopOpacity="0.9" />
                 </linearGradient>
                 <filter id="glow">
                     <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -139,12 +141,12 @@ export default function VisualTether() {
                     key={i}
                     d={p.path}
                     pathLength="1"
-                    stroke="url(#tetherGradient)"
-                    strokeWidth="1.5"
+                    stroke={p.type === 'gold' ? "url(#memoryGradient)" : "url(#tetherGradient)"}
+                    strokeWidth={p.type === 'gold' ? "2" : "1.5"}
                     fill="none"
                     strokeLinecap="round"
                     filter="url(#glow)"
-                    className="tether-line"
+                    className={p.type === 'gold' ? "tether-line tether-gold" : "tether-line"}
                     style={{ opacity: p.opacity }}
                 />
             ))}

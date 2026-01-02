@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { generateDailyNews3StageWithGemini } from '../llm/geminiPipeline3';
 import type { CandidateWord, GeminiCheckpoint3 } from '../llm/types';
+import { indexArticleWords } from '../wordIndexer';
 
 // Interface for loose typing since we are using raw SQL
 interface Db {
@@ -385,6 +386,14 @@ export class TaskQueue {
             INSERT INTO articles (id, generation_task_id, model, variant, title, content_json, status, published_at)
             VALUES (${articleId}, ${task.id}, ${model}, 1, ${output.output.title}, ${JSON.stringify(contentData)}, 'published', ${finishedAt})
         `);
+
+        // [Semantic Weaving] Index words for memory recall
+        try {
+            await indexArticleWords(articleId, contentData);
+        } catch (e) {
+            console.error(`[Task ${task.id}] Failed to index words:`, e);
+        }
+
 
         await this.db.run(sql`
             UPDATE tasks 

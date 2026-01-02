@@ -12,6 +12,7 @@ import HighlightManager from "@/components/HighlightManager";
 import VisualTether from "@/components/VisualTether";
 import AudioPlayer from "@/components/AudioPlayer";
 import AudioInit from "@/components/AudioInit";
+import MemorySpirit from "@/components/MemorySpirit";
 import AIAnalyzer from "@/components/AIAnalyzer";
 import { apiFetch } from "@/lib/api";
 import {
@@ -78,13 +79,41 @@ function getReadingStats(content: string) {
 
 // 目标单词列表
 const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
+
+// [Semantic Weaving] Pre-fetch memories (SSR Batch)
+let initialMemories = {};
+if (targetWords.length > 0) {
+    try {
+        const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:3000';
+        const authKey = Astro.cookies.get('admin_key')?.value || import.meta.env.ADMIN_KEY;
+
+        const resp = await fetch(`${apiBase}/api/context/batch`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authKey}`
+            },
+            body: JSON.stringify({
+                words: targetWords,
+                exclude_article_id: id
+            })
+        });
+        
+        if (resp.ok) {
+            const data = (await resp.json()) as { memories?: Record<string, any> };
+            initialMemories = data.memories || {};
+        }
+    } catch (e) {
+        console.error("Failed to fetch memories:", e);
+    }
+}
 ---
 
 <Layout title={`${title} - Aperture Daily`}>
     {row ? (
-        <div class="flex flex-col lg:flex-row gap-10 mx-auto w-full max-w-7xl px-4 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 mx-auto w-full max-w-7xl px-4 py-10">
             <!-- 主内容区 -->
-            <main class={`flex-1 min-w-0 ${sidebarWords.length === 0 ? "max-w-3xl mx-auto" : ""}`}>
+            <main class={`relative min-w-0 ${sidebarWords.length === 0 ? "max-w-3xl mx-auto" : ""}`}>
                 <div class="space-y-8">
                     <!-- 文章容器 -->
                     <div class="bg-white rounded-3xl border border-gray-100 p-6 md:p-8">
@@ -179,11 +208,15 @@ const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
                     <VisualTether client:only="react" />
                 </div>
                 
+                <!-- [New] Memory Spirit (Floating Echo) -->
+                <MemorySpirit client:load />
+
                 <!-- 高亮管理器 - 作为独立 Island 加载 -->
                 <HighlightManager 
                     client:load 
                     articleId={id} 
                     targetWords={targetWords}
+                    memoriesMap={initialMemories}
                 />
                 
                 <!-- AI 选词分析器 -->
@@ -205,7 +238,7 @@ const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
                         
                         <!-- Audio Edition (组件自带标题) -->
                         <AudioPlayer client:only="react" />
-                        
+
                         <!-- Margin Notes -->
                         <WordSidebarAstro words={sidebarWords} />
                     </div>
@@ -275,6 +308,26 @@ const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
         font-weight: 600;
         border-bottom: 2px dotted #ea580c;
         cursor: pointer;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    /* Golden Soul Pin - Words with History */
+    .target-word[data-has-history="true"] {
+        border-bottom-color: #f59e0b; /* Amber-500 */
+    }
+    
+    .target-word[data-has-history="true"]::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -4px;
+        width: 4px;
+        height: 4px;
+        background: #fbbf24;
+        border-radius: 99px;
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+        opacity: 0.8;
     }
 </style>
 

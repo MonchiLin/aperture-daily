@@ -168,3 +168,25 @@ export const highlights = sqliteTable(
         check('chk_highlights_style_json_valid', sql`${table.styleJson} IS NULL OR json_valid(${table.styleJson})`)
     ]
 );
+
+export const articleWordIndex = sqliteTable(
+    'article_word_index',
+    {
+        id: text('id').primaryKey(),
+        word: text('word').notNull(),
+        articleId: text('article_id')
+            .notNull()
+            .references(() => articles.id),
+        contextSnippet: text('context_snippet').notNull(),
+        role: text('role', { enum: ['keyword', 'entity'] }).notNull(),
+        createdAt: text('created_at')
+            .notNull()
+            .default(sql`(CURRENT_TIMESTAMP)`)
+    },
+    (table) => [
+        index('idx_awi_word').on(table.word),
+        index('idx_awi_article_id').on(table.articleId),
+        uniqueIndex('uq_awi_word_article').on(table.word, table.articleId),
+        check('chk_awi_role_enum', sql`${table.role} IN ('keyword', 'entity')`)
+    ]
+);

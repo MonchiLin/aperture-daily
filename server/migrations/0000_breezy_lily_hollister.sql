@@ -1,3 +1,17 @@
+CREATE TABLE `article_word_index` (
+	`id` text PRIMARY KEY NOT NULL,
+	`word` text NOT NULL,
+	`article_id` text NOT NULL,
+	`context_snippet` text NOT NULL,
+	`role` text NOT NULL,
+	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	FOREIGN KEY (`article_id`) REFERENCES `articles`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "chk_awi_role_enum" CHECK("article_word_index"."role" IN ('keyword', 'entity'))
+);
+--> statement-breakpoint
+CREATE INDEX `idx_awi_word` ON `article_word_index` (`word`);--> statement-breakpoint
+CREATE INDEX `idx_awi_article_id` ON `article_word_index` (`article_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `uq_awi_word_article` ON `article_word_index` (`word`,`article_id`);--> statement-breakpoint
 CREATE TABLE `articles` (
 	`id` text PRIMARY KEY NOT NULL,
 	`generation_task_id` text NOT NULL,
@@ -52,6 +66,7 @@ CREATE TABLE `highlights` (
 	`style_json` text,
 	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
 	`updated_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	`deleted_at` text,
 	FOREIGN KEY (`article_id`) REFERENCES `articles`(`id`) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT "chk_highlights_start_meta_json_valid" CHECK(json_valid("highlights"."start_meta_json")),
 	CONSTRAINT "chk_highlights_end_meta_json_valid" CHECK(json_valid("highlights"."end_meta_json")),

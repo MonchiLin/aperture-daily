@@ -14,7 +14,8 @@ export interface SentenceMapping {
  */
 export function tokenizeSentences(
     levelContainer: HTMLElement,
-    targetWords: string[]
+    targetWords: string[],
+    wordsWithHistory: string[] = []
 ) {
     if (!levelContainer || levelContainer.dataset.processed === 'true') return;
 
@@ -69,7 +70,7 @@ export function tokenizeSentences(
                 span.dataset.s = sent.start.toString();
 
                 // 处理 Target Words
-                processTargetWords(span, chunkText, targetWords);
+                processTargetWords(span, chunkText, targetWords, wordsWithHistory);
 
                 fragment.appendChild(span);
                 nodeCursor = relativeEnd;
@@ -94,7 +95,7 @@ export function tokenizeSentences(
 /**
  * 在句子 span 中标记生词
  */
-function processTargetWords(container: HTMLElement, text: string, targetWords: string[]) {
+function processTargetWords(container: HTMLElement, text: string, targetWords: string[], wordsWithHistory: string[]) {
     let lastP = 0;
     const wordRegex = /([a-zA-Z0-9'-]+)/g;
     let match;
@@ -102,28 +103,30 @@ function processTargetWords(container: HTMLElement, text: string, targetWords: s
     while ((match = wordRegex.exec(text)) !== null) {
         const word = match[0];
         const idx = match.index;
+        const lowercaseWord = word.toLowerCase();
 
         if (idx > lastP) {
             container.appendChild(document.createTextNode(text.substring(lastP, idx)));
         }
 
-        if (targetWords.includes(word.toLowerCase())) {
+        if (targetWords.includes(lowercaseWord)) {
             const wSpan = document.createElement('span');
-            wSpan.className = 'target-word'; // Semantic class, styled in global.css
+            wSpan.className = 'target-word';
             wSpan.textContent = word;
-            wSpan.dataset.word = word.toLowerCase(); // For Tether to find it
+            wSpan.dataset.word = lowercaseWord;
 
-            // Interaction: Link to Store
+            const hasHistory = wordsWithHistory.includes(lowercaseWord);
+            if (hasHistory) {
+                wSpan.dataset.hasHistory = "true";
+                console.log(`[Highlighter] Marked HISTORY for: ${lowercaseWord}`);
+            }
+
+            // Interaction
             wSpan.addEventListener('mouseenter', () => {
-                // Dispatch custom event for decoupling, or use global store access if possible. 
-                // Since this is a pure utility, dispatching an event is cleaner, but let's use the store directly if we import it.
-                // However, importing store in a utility file might be fine.
-                // Let's use a window event dispatch to avoid circular dependency risks or bundler issues if this file is used weirdly.
-                // Actually, the simplest way is to dispatch a 'word-hover' event.
-                window.dispatchEvent(new CustomEvent('word-hover', { detail: { word } }));
+                window.dispatchEvent(new CustomEvent('word-hover', { detail: { word, target: wSpan } }));
             });
             wSpan.addEventListener('mouseleave', () => {
-                window.dispatchEvent(new CustomEvent('word-hover', { detail: { word: null } }));
+                window.dispatchEvent(new CustomEvent('word-hover', { detail: { word: null, target: null } }));
             });
 
             wSpan.addEventListener('click', (e) => {

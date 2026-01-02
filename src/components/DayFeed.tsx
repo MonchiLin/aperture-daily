@@ -60,7 +60,7 @@ export default function DayFeed({ date, initialArticles, wordData, adminData }: 
                 </h2>
                 <div className="flex items-center gap-4">
                     <WordsDrawer date={date} wordData={wordData} />
-                    <AdminDrawer date={date} initialTasks={adminData?.tasks} />
+                    <AdminDrawer date={date} initialTasks={adminData?.tasks} isAdmin={adminData?.isAdmin} />
                 </div>
             </div>
 

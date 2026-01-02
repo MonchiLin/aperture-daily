@@ -1,9 +1,9 @@
 ---
 /**
- * 词汇侧边栏 - Astro 版本
- * 
- * 纯服务端渲染，展示文章中的目标词汇及其定义。
+ * 词汇侧边栏 - Astro 版本 (Wrapper for React Cards)
  */
+import WordReflectionCard from "./WordReflectionCard";
+
 interface Definition {
     pos: string;
     definition: string;
@@ -28,99 +28,15 @@ const { words } = Astro.props;
         Margin Notes
     </h2>
     
-    <!-- 词汇列表 -->
-    
-    <div class="space-y-4">
+    <!-- 词汇列表 (React Components) -->
+    <div class="space-y-1">
         {words.map((word) => (
-            <div 
-                class="group pb-4 border-b border-stone-100 last:border-0 last:pb-0 cursor-pointer -mx-2 px-2 py-2 rounded-lg transition-all duration-300"
-                data-word-card={word.word.toLowerCase()}
-            >
-                <div class="flex items-baseline gap-2 mb-1">
-                    <span class="font-serif text-lg font-bold text-slate-900">
-                        {word.word}
-                    </span>
-                    {word.phonetic && (
-                        <span class="text-xs text-stone-400 font-mono">
-                            {word.phonetic}
-                        </span>
-                    )}
-                </div>
-                
-                {word.definitions.length > 0 && (
-                    <div class="space-y-1">
-                        {word.definitions.map((def) => (
-                            <div class="text-sm text-stone-600">
-                                <span class="text-xs font-bold uppercase text-stone-400 mr-1">
-                                    {def.pos}
-                                </span>
-                                {def.definition}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            <WordReflectionCard 
+                client:idle 
+                word={word.word} 
+                phonetic={word.phonetic} 
+                definitions={word.definitions} 
+            />
         ))}
     </div>
 </div>
-
-</script>
-
-<style>
-    /* 移除之前的 active 样式 */
-</style>
-
-<script>
-    /**
-     * Margin Notes Logic
-     * 1. Click Card -> Scroll to Word
-     * (Auto-highlight removed per user request)
-     */
-    
-    import { interactionStore, setActiveWord } from '../lib/store/interactionStore';
-
-    // 1. Sidebar Hover -> Store
-    const cards = document.querySelectorAll('[data-word-card]');
-    cards.forEach(card => {
-        const word = card.getAttribute('data-word-card');
-        
-        card.addEventListener('mouseenter', () => {
-            if (word) setActiveWord(word);
-        });
-        
-        card.addEventListener('mouseleave', () => {
-            setActiveWord(null);
-        });
-
-        // Click logic (Keep existing scroll)
-        card.addEventListener('click', () => {
-             if (!word) return;
-             const targetWords = Array.from(document.querySelectorAll('.target-word'))
-                .filter(el => el.textContent?.trim().toLowerCase() === word);
-             if (targetWords.length > 0) {
-                 // Try to find one in viewport first, else first one
-                 const visible = targetWords.find(el => {
-                     const r = el.getBoundingClientRect();
-                     return r.top >= 0 && r.bottom <= window.innerHeight;
-                 });
-                 const target = visible || targetWords[0];
-                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-             }
-        });
-    });
-
-    // 2. Store -> Sidebar Active State
-    interactionStore.subscribe(state => {
-        const activeWord = state.activeWord;
-        cards.forEach(card => {
-            const word = card.getAttribute('data-word-card');
-            if (activeWord && word === activeWord) {
-                card.classList.add('scale-105', 'bg-white', 'shadow-xl', 'border-transparent', 'ring-1', 'ring-stone-200');
-                card.classList.remove('border-stone-100');
-            } else {
-                card.classList.remove('scale-105', 'bg-white', 'shadow-xl', 'border-transparent', 'ring-1', 'ring-stone-200');
-                card.classList.add('border-stone-100');
-            }
-        });
-    });
-</script>

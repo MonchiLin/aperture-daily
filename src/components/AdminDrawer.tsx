@@ -15,12 +15,16 @@ import { useStore } from '@nanostores/react';
 interface Props {
     date: string;
     initialTasks?: any[]; // SSR 预取的任务数据
+    isAdmin?: boolean;    // SSR 注入的管理员状态
 }
 
-export default function AdminDrawer({ date, initialTasks }: Props) {
+export default function AdminDrawer({ date, initialTasks, isAdmin: ssrIsAdmin }: Props) {
     const [open, setOpen] = useState(false);
-    const isAdmin = useStore(isAdminStore);
+    const storeIsAdmin = useStore(isAdminStore);
     const taskStatus = useStore(taskStatusStore);
+
+    // 优先使用 SSR 数据或 Store 数据，确保 hydration 一致
+    const isAdmin = ssrIsAdmin || storeIsAdmin;
 
     if (!isAdmin) return null;
 

@@ -14,7 +14,7 @@ function getAdminKey(request: Request): string | null {
     // 2. 尝试从 cookie 获取
     const cookies = request.headers.get('cookie') || '';
     const match = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
-    return match ? decodeURIComponent(match[1]) : null;
+    return (match && match[1]) ? decodeURIComponent(match[1]) : null;
 }
 
 export const authRoutes = new Elysia({ prefix: '/api/auth' })

@@ -56,7 +56,7 @@ export const db = drizzle(async (sql, params, method) => {
         console.error("D1 Proxy Fetch Error:", e);
         throw e;
     }
-});
+}, { schema });
 
 // Helper to check connection type (Always true now)
 export const isD1 = true;
