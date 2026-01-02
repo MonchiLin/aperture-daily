@@ -44,8 +44,8 @@ try {
         wordDefinitions = extractWordDefinitions(parsed);
         sidebarWords = mapToSidebarWords(wordDefinitions);
         dateLabel = formatDateLabel(row.tasks?.task_date);
-        // 文章内容完整，启用 Cloudflare 边缘缓存 (1小时)
-        Astro.response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+        // ISR 策略：CDN 缓存 1 天 (s-maxage)，过期后先返回旧内容 (stale) 并在后台异步刷新 (revalidate)
+        Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
     }
 } catch (e: any) {
     console.error("[SSR] Failed to fetch article:", e.message);
