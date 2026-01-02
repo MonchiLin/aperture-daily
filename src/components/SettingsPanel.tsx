@@ -3,10 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import ProfilesPanel from './ProfilesPanel';
 import Modal from './ui/Modal';
 import { clsx } from 'clsx';
-import { isAdminStore, verifyAndSetAdmin } from '../lib/store/adminStore';
+import { isAdminStore, adminKeyStore, login } from '../lib/store/adminStore';
 import { useStore } from '@nanostores/react';
-
-const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
 
 export default function SettingsPanel() {
 	const [open, setOpen] = useState(false);
@@ -27,42 +25,42 @@ export default function SettingsPanel() {
 		{ id: 'en-US-MichelleNeural', name: 'Michelle (Female)' },
 	];
 
-	useEffect(() => {
-		try {
-			const storedKey = localStorage.getItem(ADMIN_KEY_STORAGE) ?? '';
-			setAdminKey(storedKey);
+	// 从 store 读取 adminKey（如果已登录）
+	const storedAdminKey = useStore(adminKeyStore);
 
+	useEffect(() => {
+		if (storedAdminKey) setAdminKey(storedAdminKey);
+		try {
 			const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
 			if (storedVoice) setVoiceSettings(storedVoice);
 		} catch { /* ignore */ }
-	}, []);
+	}, [storedAdminKey]);
 
 	useEffect(() => {
 		if (!isAdmin && tab === 'profiles') setTab('general');
 	}, [isAdmin, tab]);
 
+	// 保存设置并登录
 	async function save() {
 		const nextKey = adminKey.trim();
+
+		// 保存音频设置
 		try {
-			if (nextKey) localStorage.setItem(ADMIN_KEY_STORAGE, nextKey);
-			else localStorage.removeItem(ADMIN_KEY_STORAGE);
-
 			localStorage.setItem('aperture-daily_voice_preference', voice);
-			// Dynamic import to avoid SSR issues if called there, though this is client side
-			import('../lib/store/audioStore').then(mod => {
-				mod.setVoice(voice);
-			});
-
-			setSavedAt(Date.now());
+			import('../lib/store/audioStore').then(mod => mod.setVoice(voice));
 		} catch { /* ignore */ }
 
-		await verifyAndSetAdmin(nextKey);
+		// 调用登录 API 设置 HttpOnly Cookie
+		if (nextKey) {
+			await login(nextKey);
+		}
+
+		setSavedAt(Date.now());
 	}
 
+	// 清除 key（仅清除本地状态，Cookie 需要重新登录覆盖）
 	function clearKey() {
 		setAdminKey('');
-		try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignore */ }
-		verifyAndSetAdmin(null);
 	}
 
 	return (

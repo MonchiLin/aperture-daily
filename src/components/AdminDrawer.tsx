@@ -2,20 +2,34 @@
  * AdminDrawer - 管理抽屉
  * 
  * 独立的管理入口，点击打开右侧抽屉显示管理功能。
+ * MANAGE 按钮显示任务状态指示器（失败=红点，运行中/排队中=橙色脉冲）
  */
 import { useState } from 'react';
 import { Drawer, ConfigProvider } from 'antd';
 import { Settings } from 'lucide-react';
 import AdminDayPanel from './AdminDayPanel';
 
-import { isAdminStore } from '../lib/store/adminStore';
+import { isAdminStore, taskStatusStore } from '../lib/store/adminStore';
 import { useStore } from '@nanostores/react';
 
-export default function AdminDrawer({ date }: { date: string }) {
+interface Props {
+    date: string;
+    initialTasks?: any[]; // SSR 预取的任务数据
+}
+
+export default function AdminDrawer({ date, initialTasks }: Props) {
     const [open, setOpen] = useState(false);
     const isAdmin = useStore(isAdminStore);
+    const taskStatus = useStore(taskStatusStore);
 
     if (!isAdmin) return null;
+
+    // 状态指示器：失败 > 运行中/排队中
+    const statusIndicator = taskStatus.hasFailed ? (
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500" title="有失败任务" />
+    ) : (taskStatus.hasRunning || taskStatus.hasQueued) ? (
+        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" title="有进行中任务" />
+    ) : null;
 
     return (
         <ConfigProvider
@@ -32,6 +46,7 @@ export default function AdminDrawer({ date }: { date: string }) {
                 >
                     <Settings size={12} />
                     MANAGE
+                    {statusIndicator}
                 </button>
                 <Drawer
                     title={
@@ -48,9 +63,10 @@ export default function AdminDrawer({ date }: { date: string }) {
                         body: { padding: '24px' }
                     }}
                 >
-                    <AdminDayPanel date={date} isDrawerMode={true} />
+                    <AdminDayPanel date={date} isDrawerMode={true} initialTasks={initialTasks} />
                 </Drawer>
             </>
         </ConfigProvider>
     );
 }
+

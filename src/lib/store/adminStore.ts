@@ -1,19 +1,60 @@
 import { atom, onMount } from 'nanostores';
 import { apiFetch } from '../api';
 
-const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
+// ========== Stores ==========
 
+// 是否是管理员
 export const isAdminStore = atom<boolean>(false);
 
-// Action: Verify and set admin status
-export async function verifyAndSetAdmin(key: string | null) {
-    if (!key) {
+// 管理员 Key（用于 API 请求）
+export const adminKeyStore = atom<string | null>(null);
+
+// 任务状态摘要（用于 MANAGE 按钮指示器）
+export interface TaskStatus {
+    hasRunning: boolean;
+    hasFailed: boolean;
+    hasQueued: boolean;
+}
+export const taskStatusStore = atom<TaskStatus>({
+    hasRunning: false,
+    hasFailed: false,
+    hasQueued: false
+});
+
+// ========== Actions ==========
+
+// 更新任务状态（由 useAdminTasks 调用）
+export function updateTaskStatus(tasks: { status: string }[]) {
+    taskStatusStore.set({
+        hasRunning: tasks.some(t => t.status === 'running'),
+        hasFailed: tasks.some(t => t.status === 'failed'),
+        hasQueued: tasks.some(t => t.status === 'queued')
+    });
+}
+
+// 登录并设置 HttpOnly Cookie
+export async function login(key: string): Promise<boolean> {
+    try {
+        await apiFetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key }),
+            credentials: 'include' // 接收 Set-Cookie
+        });
+        isAdminStore.set(true);
+        adminKeyStore.set(key);
+        return true;
+    } catch {
         isAdminStore.set(false);
+        adminKeyStore.set(null);
         return false;
     }
+}
 
+// 验证当前 Cookie 是否有效
+export async function checkAuth(): Promise<boolean> {
     try {
-        await apiFetch('/api/auth/check', { token: key });
+        await apiFetch('/api/auth/check', { credentials: 'include' });
         isAdminStore.set(true);
         return true;
     } catch {
@@ -22,25 +63,23 @@ export async function verifyAndSetAdmin(key: string | null) {
     }
 }
 
-// Initial hydration and cross-tab sync
+// 从 SSR 数据初始化（页面加载时调用）
+export function initFromSSR(adminData: { isAdmin: boolean; adminKey: string; tasks: { status: string }[] } | null) {
+    if (adminData?.isAdmin) {
+        isAdminStore.set(true);
+        adminKeyStore.set(adminData.adminKey);
+        updateTaskStatus(adminData.tasks);
+    } else {
+        isAdminStore.set(false);
+        adminKeyStore.set(null);
+    }
+}
+
+// ========== 初始化 ==========
+
+// 客户端挂载时验证 Cookie
 onMount(isAdminStore, () => {
     if (typeof window === 'undefined') return;
-
-    const checkStatus = async () => {
-        const key = localStorage.getItem(ADMIN_KEY_STORAGE);
-        await verifyAndSetAdmin(key);
-    };
-
-    // Run on initial mount
-    checkStatus();
-
-    // Listen for storage changes (cross-tab sync)
-    const handleStorage = (e: StorageEvent) => {
-        if (e.key === ADMIN_KEY_STORAGE) {
-            checkStatus();
-        }
-    };
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    checkAuth();
 });
+

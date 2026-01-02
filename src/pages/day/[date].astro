@@ -29,6 +29,9 @@ let wordData: { new_words: string[]; review_words: string[]; new_count: number; 
     review_count: 0
 };
 
+// 管理员数据（从 Cookie 获取）
+let adminData: { isAdmin: boolean; adminKey: string; tasks: any[] } | null = null;
+
 try {
     const daysResponse = await apiFetch<{ days: string[] }>('/api/days');
     publishedDays = daysResponse.days || [];
@@ -58,6 +61,28 @@ try {
 } catch (e) {
     console.error(`[SSR] Failed to fetch word data for ${date}:`, e);
 }
+
+// 预取管理员数据（从 HttpOnly Cookie）
+const adminKey = Astro.cookies.get('admin_key')?.value;
+if (adminKey) {
+    try {
+        // 验证 Cookie 有效性
+        await apiFetch('/api/auth/check', { token: adminKey });
+        // 获取任务数据
+        const taskResponse = await apiFetch<{ tasks: any[] }>(
+            `/api/tasks?task_date=${encodeURIComponent(date)}`,
+            { token: adminKey }
+        );
+        adminData = {
+            isAdmin: true,
+            adminKey,
+            tasks: taskResponse.tasks || []
+        };
+    } catch (e) {
+        // Cookie 无效，忽略
+        console.error("[SSR] Admin auth failed:", e);
+    }
+}
 ---
 
 <Layout title={`${date} - Aperture Daily`}>
@@ -77,8 +102,15 @@ try {
                 transition:animate="slide"
             >
                 <!-- 文章列表 - React 组件 (支持 SSR) -->
-                <DayFeed client:load date={date} initialArticles={dayData.articles} wordData={wordData} />
+                <DayFeed 
+                    client:load 
+                    date={date} 
+                    initialArticles={dayData.articles} 
+                    wordData={wordData}
+                    adminData={adminData}
+                />
             </div>
         </div>
     </div>
 </Layout>
+

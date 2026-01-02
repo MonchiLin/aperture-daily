@@ -1,18 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../api';
 import { type TaskRow } from '../../components/admin/shared';
+import { updateTaskStatus } from '../store/adminStore';
 
 interface UseAdminTasksProps {
     date: string;
     adminKey: string | null;
+    initialTasks?: TaskRow[]; // SSR 预取的任务数据
     onSucceeded?: () => void;
 }
 
-export function useAdminTasks({ date, adminKey, onSucceeded }: UseAdminTasksProps) {
-    const [tasks, setTasks] = useState<TaskRow[]>([]);
+export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: UseAdminTasksProps) {
+    const [tasks, setTasks] = useState<TaskRow[]>(initialTasks || []);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const tasksRef = useRef<TaskRow[]>([]);
+    const tasksRef = useRef<TaskRow[]>(initialTasks || []);
 
     const onSucceededRef = useRef(onSucceeded);
     useEffect(() => {
@@ -38,6 +40,7 @@ export function useAdminTasks({ date, adminKey, onSucceeded }: UseAdminTasksProp
             );
 
             setTasks(newTasks);
+            updateTaskStatus(newTasks); // 更新全局任务状态
 
             if (hasNewSucceeded && onSucceededRef.current) {
                 onSucceededRef.current();

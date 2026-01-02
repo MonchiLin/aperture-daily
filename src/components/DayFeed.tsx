@@ -4,6 +4,7 @@
 import React, { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import { articlesStore, setArticles, type Article } from '../lib/store/articlesStore';
+import { initFromSSR } from '../lib/store/adminStore';
 import WordsDrawer from './WordsDrawer';
 import AdminDrawer from './AdminDrawer';
 
@@ -14,21 +15,32 @@ interface WordData {
     review_count: number;
 }
 
+// SSR 预取的管理员数据
+interface AdminData {
+    isAdmin: boolean;
+    adminKey: string;
+    tasks: any[];
+}
+
 interface Props {
     date: string;
     initialArticles: Article[];
     wordData?: WordData;
+    adminData?: AdminData | null;
 }
 
-export default function DayFeed({ date, initialArticles, wordData }: Props) {
+export default function DayFeed({ date, initialArticles, wordData, adminData }: Props) {
     const { articles, date: storeDate, loading } = useStore(articlesStore);
 
-    // 同步 SSR 数据到全局状态 (仅在日期变化或初始加载时)
+    // 同步 SSR 数据到全局状态
     useEffect(() => {
+        // 同步文章数据
         if (storeDate !== date) {
             setArticles(date, initialArticles);
         }
-    }, [date, initialArticles, storeDate]);
+        // 同步管理员数据
+        initFromSSR(adminData || null);
+    }, [date, initialArticles, storeDate, adminData]);
 
     // 使用当前生效的数据 (Store 优先)
     const displayArticles = storeDate === date ? articles : initialArticles;
@@ -48,7 +60,7 @@ export default function DayFeed({ date, initialArticles, wordData }: Props) {
                 </h2>
                 <div className="flex items-center gap-4">
                     <WordsDrawer date={date} wordData={wordData} />
-                    <AdminDrawer date={date} />
+                    <AdminDrawer date={date} initialTasks={adminData?.tasks} />
                 </div>
             </div>
 

@@ -10,7 +10,7 @@ import { tasksRoutes } from './routes/tasks';
 import { wordsRoutes } from './routes/words';
 import { contentRoutes } from './routes/content';
 import { articlesRoutes } from './routes/articles';
-import { authRoutes } from './routes/auth';
+import { authRoutes, getAdminKey } from './routes/auth';
 import { profilesRoutes } from './routes/profiles';
 import { highlightsRoutes } from './routes/highlights';
 import { adminRoutes } from './routes/admin';
@@ -44,7 +44,7 @@ const app = new Elysia()
     }))
     .use(healthRoutes)
     .use(authRoutes)
-    // --- Admin Protection Middleware ---
+    // --- Admin Protection Middleware (支持 header 和 cookie) ---
     .onBeforeHandle(({ request, set }) => {
         const path = new URL(request.url).pathname;
         const isProtected = path.startsWith('/api/admin') ||
@@ -57,10 +57,10 @@ const app = new Elysia()
 
         if (!isProtected) return;
 
-        const key = request.headers.get('x-admin-key');
+        const key = getAdminKey(request);
         if (key !== env.ADMIN_KEY) {
             set.status = 401;
-            return { error: "Unauthorized: Admin key required" };
+            return { error: 'Unauthorized: Admin key required' };
         }
     })
     // ------------------------------------

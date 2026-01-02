@@ -1,7 +1,8 @@
 export const API_BASE = import.meta.env.PUBLIC_API_BASE;
 
 type FetchOptions = RequestInit & {
-    token?: string | null; // For x-admin-key
+    token?: string | null; // For x-admin-key header
+    credentials?: RequestCredentials; // For cookie auth
 };
 
 /**
@@ -10,7 +11,7 @@ type FetchOptions = RequestInit & {
  * Parses JSON response automatically and throws error on non-2xx status.
  */
 export async function apiFetch<T = any>(path: string, options: FetchOptions = {}): Promise<T> {
-    const { token, ...init } = options;
+    const { token, credentials, ...init } = options;
 
     // Clean up path to ensure exactly one slash between base and path
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
@@ -21,7 +22,7 @@ export async function apiFetch<T = any>(path: string, options: FetchOptions = {}
         headers.set('x-admin-key', token);
     }
 
-    const res = await fetch(url, { ...init, headers });
+    const res = await fetch(url, { ...init, headers, credentials });
 
     // Handle empty responses (like 204 No Content)
     const text = await res.text();

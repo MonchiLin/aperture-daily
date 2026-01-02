@@ -1,46 +1,34 @@
+/**
+ * AdminDayPanel - 管理面板内容
+ * 
+ * 包含 AdminActions（操作按钮）和 TaskQueueList（任务队列）。
+ * 权限验证由父组件（AdminDrawer）处理，此组件只关注业务逻辑。
+ */
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { message } from 'antd';
+import { useStore } from '@nanostores/react';
 import AdminActions from './admin/AdminActions';
 import TaskQueueList from './admin/TaskQueueList';
-import { apiFetch } from '../lib/api';
 import { refreshArticles } from '../lib/store/articlesStore';
+import { adminKeyStore, isAdminStore } from '../lib/store/adminStore';
 import { useAdminTasks } from '../lib/hooks/useAdminTasks';
 
-const ADMIN_KEY_STORAGE = 'aperture-daily_admin_key';
+interface Props {
+	date: string;
+	onRefreshRequest?: () => void;
+	isDrawerMode?: boolean;
+	initialTasks?: any[]; // SSR 预取的任务数据
+}
 
-export default function AdminDayPanel(props: { date: string; onRefreshRequest?: () => void; isDrawerMode?: boolean }) {
-	const [adminKey, setAdminKey] = useState<string | null>(null);
-	const [isAdmin, setIsAdmin] = useState(false);
+export default function AdminDayPanel(props: Props) {
 	const [collapsed, setCollapsed] = useState(!props.isDrawerMode);
 
-	// 权限校验
-	useEffect(() => {
-		try {
-			const key = localStorage.getItem(ADMIN_KEY_STORAGE);
-			setAdminKey(key && key.trim() ? key.trim() : null);
-		} catch {
-			setAdminKey(null);
-		}
-	}, []);
+	// 从全局 store 获取权限信息
+	const isAdmin = useStore(isAdminStore);
+	const adminKey = useStore(adminKeyStore);
 
-	useEffect(() => {
-		if (!adminKey) return;
-		let canceled = false;
-		(async () => {
-			try {
-				await apiFetch('/api/auth/check', { token: adminKey });
-				if (!canceled) setIsAdmin(true);
-			} catch {
-				if (!canceled) setIsAdmin(false);
-			}
-		})();
-		return () => {
-			canceled = true;
-		};
-	}, [adminKey]);
-
-	// 使用拆分后的 Hook
+	// 使用任务管理 Hook
 	const {
 		tasks,
 		loading,
@@ -51,15 +39,15 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 		deleteTask
 	} = useAdminTasks({
 		date: props.date,
-		adminKey: isAdmin ? adminKey : null,
+		adminKey,
+		initialTasks: props.initialTasks,
 		onSucceeded: () => {
-			// 任务成功后的响应式刷新
 			refreshArticles(props.date);
 			if (props.onRefreshRequest) props.onRefreshRequest();
 		}
 	});
 
-	// 强制展开如果是在 Drawer 模式
+	// Drawer 模式强制展开
 	useEffect(() => {
 		if (props.isDrawerMode) setCollapsed(false);
 	}, [props.isDrawerMode]);
@@ -95,6 +83,7 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 		}
 	};
 
+	// 非管理员不渲染（双重保险，虽然 AdminDrawer 已经判断过）
 	if (!isAdmin) return null;
 
 	const content = (
@@ -154,3 +143,4 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 		</div>
 	);
 }
+
