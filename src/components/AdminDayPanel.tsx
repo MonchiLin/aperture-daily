@@ -64,10 +64,12 @@ export default function AdminDayPanel(props: { date: string; onRefreshRequest?: 
 		if (props.isDrawerMode) setCollapsed(false);
 	}, [props.isDrawerMode]);
 
-	const handleGenerate = async () => {
+	const handleGenerate = async (count: number = 1) => {
 		try {
-			await generate();
-			await refreshArticles(props.date); // 手动触发后的立即刷新指令
+			for (let i = 0; i < count; i++) {
+				await generate();
+			}
+			await refreshArticles(props.date);
 			setCollapsed(false);
 		} catch (e) {
 			console.error(e);

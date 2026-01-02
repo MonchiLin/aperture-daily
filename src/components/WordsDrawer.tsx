@@ -31,7 +31,7 @@ export default function WordsDrawer({ date, wordData }: { date: string; wordData
             <>
                 <button
                     onClick={() => setOpen(true)}
-                    className="flex items-center gap-1 text-[10px] font-bold tracking-[0.15em] uppercase text-stone-400 hover:text-amber-700 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] font-bold tracking-[0.15em] uppercase text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
                 >
                     <BookOpen size={12} />
                     WORDS

@@ -28,7 +28,7 @@ export default function AdminDrawer({ date }: { date: string }) {
             <>
                 <button
                     onClick={() => setOpen(true)}
-                    className="flex items-center gap-1 text-[10px] font-bold tracking-[0.15em] uppercase text-stone-400 hover:text-slate-900 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] font-bold tracking-[0.15em] uppercase text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
                 >
                     <Settings size={12} />
                     MANAGE
