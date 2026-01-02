@@ -19,69 +19,65 @@ if (!date || !dateRegex.test(date)) {
     return Astro.redirect('/');
 }
 
-// 服务端预取数据
-let publishedDays: string[] = [];
-let dayData: { articles: any[] } = { articles: [] };
-let wordData: { new_words: string[]; review_words: string[]; new_count: number; review_count: number } = {
-    new_words: [],
-    review_words: [],
-    new_count: 0,
-    review_count: 0
-};
-
-// 管理员数据（从 Cookie 获取）
-let adminData: { isAdmin: boolean; adminKey: string; tasks: any[] } | null = null;
-
-try {
-    const daysResponse = await apiFetch<{ days: string[] }>('/api/days');
-    publishedDays = daysResponse.days || [];
-} catch (e) {
+// 服务端并发预取数据
+const fetchDays = () => apiFetch<{ days: string[] }>('/api/days').catch(e => {
     console.error("[SSR] Failed to fetch days:", e);
-}
+    return { days: [] };
+});
 
-try {
-    dayData = await apiFetch(`/api/day/${date}`);
-    // 只有在有内容时才启用缓存
-    if (dayData.articles?.length > 0) {
-        // 有文章发布，启用 Cloudflare 边缘缓存 (5分钟)
-        Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
-    } else {
-        // 无内容（任务可能执行中），禁止缓存
-        Astro.response.headers.set('Cache-Control', 'no-store');
-    }
-} catch (e) {
+const fetchDayData = () => apiFetch(`/api/day/${date}`).catch(e => {
     console.error(`[SSR] Failed to fetch day data for ${date}:`, e);
-    // 错误情况，禁止缓存
-    Astro.response.headers.set('Cache-Control', 'no-store');
-}
+    return { articles: [] };
+});
 
-// 预取单词数据（SSR，长期缓存）
-try {
-    wordData = await apiFetch(`/api/day/${date}/words`);
-} catch (e) {
+const fetchWordData = () => apiFetch(`/api/day/${date}/words`).catch(e => {
     console.error(`[SSR] Failed to fetch word data for ${date}:`, e);
-}
+    return { new_words: [], review_words: [], new_count: 0, review_count: 0 };
+});
 
-// 预取管理员数据（从 HttpOnly Cookie）
+// Admin fetching logic
 const adminKey = Astro.cookies.get('admin_key')?.value;
-if (adminKey) {
+const fetchAdminData = async () => {
+    if (!adminKey) return null;
     try {
-        // 验证 Cookie 有效性
         await apiFetch('/api/auth/check', { token: adminKey });
-        // 获取任务数据
         const taskResponse = await apiFetch<{ tasks: any[] }>(
             `/api/tasks?task_date=${encodeURIComponent(date)}`,
             { token: adminKey }
         );
-        adminData = {
+        return {
             isAdmin: true,
             adminKey,
             tasks: taskResponse.tasks || []
         };
     } catch (e) {
-        // Cookie 无效，忽略
         console.error("[SSR] Admin auth failed:", e);
+        return null;
     }
+};
+
+// 执行并行请求
+const [daysStats, dayDataResult, wordDataStats, adminDataResult] = await Promise.all([
+    fetchDays(),
+    fetchDayData(),
+    fetchWordData(),
+    fetchAdminData()
+]);
+
+// 处理数据
+const publishedDays = daysStats?.days || [];
+const dayData = dayDataResult || { articles: [] };
+const wordData = wordDataStats || { new_words: [], review_words: [], new_count: 0, review_count: 0 };
+const adminData = adminDataResult;
+
+// 设置缓存策略 (仅在有内容且非 Admin 登录状态下严格缓存?? 其实 Admin 状态下为了实时性可能不想缓存，但这里主要看有没有文章)
+// 注意：如果 adminData 存在，可能是管理员在查看，管理员可能希望能看到实时数据? 
+// 但目前的逻辑是根据 articles 来定。
+if (dayData.articles?.length > 0) {
+    // 5分钟新鲜度，1小时宽容度 (提升并行效率后，即使回源也很快)
+    Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+} else {
+    Astro.response.headers.set('Cache-Control', 'no-store');
 }
 ---
 
