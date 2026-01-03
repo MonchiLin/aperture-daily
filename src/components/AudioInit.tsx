@@ -5,12 +5,16 @@ interface AudioInitProps {
     allContent: { level: number, content: string }[];
 }
 
+/**
+ * 音频初始化组件
+ * 监听难度切换并将当前难度的文章内容分割为播放列表同步至全局 Store
+ */
 export default function AudioInit({ allContent }: AudioInitProps) {
     // 默认 Level 1 (从 LocalStorage 同步读取以避免 Flash)
     const [currentLevel, setCurrentLevel] = useState(() => {
         if (typeof window !== 'undefined') {
             try {
-                const saved = localStorage.getItem('luma-words_preferred_level');
+                const saved = localStorage.getItem('aperture-daily_preferred_level');
                 return parseInt(saved || '1') || 1;
             } catch {
                 return 1;
@@ -55,11 +59,6 @@ export default function AudioInit({ allContent }: AudioInitProps) {
 
         // 初始化 playlist
         setPlaylist(paragraphs);
-
-        // 任何时候重置播放列表，最好重置索引 (可选)
-        // audioState.setKey('currentIndex', 0);
-        // audioState.setKey('charIndex', 0);
-
     }, [allContent, currentLevel]);
 
     return null;

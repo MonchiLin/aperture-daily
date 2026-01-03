@@ -78,6 +78,10 @@ function useSettings() {
 	};
 }
 
+/**
+ * 设置面板主组件
+ * 管理 Modal 状态并分发不同 Tab 的渲染
+ */
 export default function SettingsPanel() {
 	const [open, setOpen] = useState(false);
 	const {
