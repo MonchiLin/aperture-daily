@@ -5,79 +5,17 @@
  * 纯服务端渲染，零 JavaScript。
  * 所有交互都通过 <a> 标签实现，配合 View Transitions 提供平滑体验。
  */
+import { getCalendarState } from '../lib/calendar';
+
 interface Props {
     publishedDays: string[];
     selectedDate: string;
 }
 
 const { publishedDays, selectedDate } = Astro.props;
+const state = getCalendarState(selectedDate, publishedDays);
 
-// 日期工具函数
-function parseDate(dateStr: string): Date {
-    return new Date(dateStr + 'T00:00:00');
-}
-
-function formatDate(date: Date): string {
-    // 使用本地时间格式化，避免 UTC 时区转换导致日期偏移
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function getMonthStart(dateStr: string): Date {
-    const date = parseDate(dateStr);
-    return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function addMonths(date: Date, months: number): Date {
-    return new Date(date.getFullYear(), date.getMonth() + months, 1);
-}
-
-// 计算当前月份
-const currentMonth = getMonthStart(selectedDate);
-const currentYear = currentMonth.getFullYear();
-const currentMonthNum = currentMonth.getMonth();
-const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
-
-// 计算上个月和下个月的第一天
-const prevMonthDate = addMonths(currentMonth, -1);
-const nextMonthDate = addMonths(currentMonth, 1);
-const prevMonthStr = formatDate(prevMonthDate);
-const nextMonthStr = formatDate(nextMonthDate);
-
-// 今天
-const today = formatDate(new Date());
-
-// 生成日历网格（42天 = 6周）
-function generateCalendarDays(monthStart: Date): string[] {
-    const days: string[] = [];
-    
-    // 找到第一周的周一
-    let dayOfWeek = monthStart.getDay();
-    if (dayOfWeek === 0) dayOfWeek = 7; // 周日 = 7
-    
-    const startDate = new Date(monthStart);
-    startDate.setDate(startDate.getDate() - (dayOfWeek - 1));
-    
-    // 生成42天
-    for (let i = 0; i < 42; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + i);
-        days.push(formatDate(d));
-    }
-    
-    return days;
-}
-
-const days = generateCalendarDays(currentMonth);
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-// 检查日期是否在当前月
-function isCurrentMonth(dateStr: string): boolean {
-    const date = parseDate(dateStr);
-    return date.getMonth() === currentMonthNum && date.getFullYear() === currentYear;
-}
 ---
 
 <div class="flex flex-col w-full font-serif text-slate-900">
@@ -85,17 +23,17 @@ function isCurrentMonth(dateStr: string): boolean {
     <header class="flex items-center justify-between py-4 mb-2">
         <div class="flex flex-col">
             <span class="text-sm font-bold tracking-widest uppercase text-stone-500 mb-1">
-                {currentYear}
+                {state.currentYear}
             </span>
             <h2 class="text-4xl font-black tracking-tight font-serif text-slate-900/90 leading-none">
-                {monthName}
+                {state.monthName}
             </h2>
         </div>
 
         <div class="flex items-center gap-1">
             <div class="flex items-center border border-stone-200 rounded-sm">
                 <a 
-                    href={`/day/${prevMonthStr}`} 
+                    href={`/day/${state.prevMonthStr}`} 
                     class="p-1 hover:bg-stone-100 transition-colors"
                     aria-label="Previous Month"
                 >
@@ -105,7 +43,7 @@ function isCurrentMonth(dateStr: string): boolean {
                 </a>
                 <div class="w-px h-4 bg-stone-200"></div>
                 <a 
-                    href={`/day/${nextMonthStr}`}
+                    href={`/day/${state.nextMonthStr}`}
                     class="p-1 hover:bg-stone-100 transition-colors"
                     aria-label="Next Month"
                 >
@@ -115,7 +53,7 @@ function isCurrentMonth(dateStr: string): boolean {
                 </a>
             </div>
             <a
-                href={`/day/${today}`}
+                href={`/day/${state.todayStr}`}
                 class="ml-2 px-3 py-1 text-xs font-bold uppercase tracking-widest border border-stone-200 hover:bg-stone-100 transition-colors rounded-sm"
             >
                 Today
@@ -134,33 +72,28 @@ function isCurrentMonth(dateStr: string): boolean {
 
     <!-- 日期网格 -->
     <div class="grid grid-cols-7 gap-y-4 gap-x-1">
-        {days.map(dateStr => {
-            const inCurrentMonth = isCurrentMonth(dateStr);
-            const isToday = dateStr === today;
-            const isPublished = publishedDays.includes(dateStr);
-            const isSelected = dateStr === selectedDate;
-            
+        {state.days.map(day => {
             return (
                 <a
-                    href={`/day/${dateStr}`}
+                    href={`/day/${day.dateStr}`}
                     class:list={[
                         "relative group flex flex-col items-center justify-center h-10 w-10 mx-auto transition-all rounded-full",
-                        !inCurrentMonth && "opacity-20",
-                        inCurrentMonth && "opacity-100",
-                        isSelected && "bg-slate-900 text-[#F3F2EE]",
-                        !isSelected && "hover:bg-stone-200",
-                        isToday && !isSelected && "ring-2 ring-slate-400"
+                        !day.isCurrentMonth && "opacity-20",
+                        day.isCurrentMonth && "opacity-100",
+                        day.isSelected && "bg-slate-900 text-[#F3F2EE]",
+                        !day.isSelected && "hover:bg-stone-200",
+                        day.isToday && !day.isSelected && "ring-2 ring-slate-400"
                     ]}
                 >
                     <span class:list={[
                         "text-base font-serif font-medium",
-                        isSelected && "font-bold"
+                        day.isSelected && "font-bold"
                     ]}>
-                        {parseDate(dateStr).getDate()}
+                        {day.dayNumber}
                     </span>
                     
                     {/* 已发布标记 */}
-                    {isPublished && !isSelected && (
+                    {day.isPublished && !day.isSelected && (
                         <div class="absolute bottom-1.5 w-1 h-1 rounded-full bg-red-800" />
                     )}
                 </a>

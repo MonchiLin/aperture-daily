@@ -9,7 +9,7 @@ const result1 = parseInlineTags(input1);
 console.log("Input:", input1);
 console.log("Plain text:", result1.plainText);
 console.log("Structures:", JSON.stringify(result1.structures, null, 2));
-console.log("Validation:", validateParseResult(result1));
+console.log("Validation:", validateParseResult(result1, input1));
 console.log();
 
 // Test 2: Nested tags
@@ -19,7 +19,7 @@ const result2 = parseInlineTags(input2);
 console.log("Input:", input2);
 console.log("Plain text:", result2.plainText);
 console.log("Structures:", JSON.stringify(result2.structures, null, 2));
-console.log("Validation:", validateParseResult(result2));
+console.log("Validation:", validateParseResult(result2, input2));
 console.log();
 
 // Test 3: Connective

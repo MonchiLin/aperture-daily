@@ -6,27 +6,28 @@ import { clsx } from 'clsx';
 import { isAdminStore, adminKeyStore, login } from '../lib/store/adminStore';
 import { useStore } from '@nanostores/react';
 
-export default function SettingsPanel() {
-	const [open, setOpen] = useState(false);
+const VOICES = [
+	{ id: 'en-US-GuyNeural', name: 'Guy (Male, Default)' },
+	{ id: 'en-US-JennyNeural', name: 'Jenny (Female)' },
+	{ id: 'en-US-AriaNeural', name: 'Aria (Female)' },
+	{ id: 'en-US-ChristopherNeural', name: 'Christopher (Male)' },
+	{ id: 'en-US-EricNeural', name: 'Eric (Male)' },
+	{ id: 'en-US-MichelleNeural', name: 'Michelle (Female)' },
+];
+
+/**
+ * SettingsPanel 的业务逻辑 Hook
+ */
+function useSettings() {
 	const [adminKey, setAdminKey] = useState('');
 	const [savedAt, setSavedAt] = useState<number | null>(null);
-	const isAdmin = useStore(isAdminStore);
 	const [voice, setVoiceSettings] = useState('en-US-GuyNeural');
 	const [tab, setTab] = useState<'general' | 'audio' | 'profiles'>('general');
 
-	const hasKey = useMemo(() => adminKey.trim().length > 0, [adminKey]);
-
-	const voices = [
-		{ id: 'en-US-GuyNeural', name: 'Guy (Male, Default)' },
-		{ id: 'en-US-JennyNeural', name: 'Jenny (Female)' },
-		{ id: 'en-US-AriaNeural', name: 'Aria (Female)' },
-		{ id: 'en-US-ChristopherNeural', name: 'Christopher (Male)' },
-		{ id: 'en-US-EricNeural', name: 'Eric (Male)' },
-		{ id: 'en-US-MichelleNeural', name: 'Michelle (Female)' },
-	];
-
-	// 从 store 读取 adminKey（如果已登录）
+	const isAdmin = useStore(isAdminStore);
 	const storedAdminKey = useStore(adminKeyStore);
+
+	const hasKey = useMemo(() => adminKey.trim().length > 0, [adminKey]);
 
 	useEffect(() => {
 		if (storedAdminKey) setAdminKey(storedAdminKey);
@@ -58,10 +59,40 @@ export default function SettingsPanel() {
 		setSavedAt(Date.now());
 	}
 
-	// 清除 key（仅清除本地状态，Cookie 需要重新登录覆盖）
 	function clearKey() {
 		setAdminKey('');
 	}
+
+	return {
+		adminKey,
+		setAdminKey,
+		savedAt,
+		isAdmin,
+		voice,
+		setVoiceSettings,
+		tab,
+		setTab,
+		hasKey,
+		save,
+		clearKey
+	};
+}
+
+export default function SettingsPanel() {
+	const [open, setOpen] = useState(false);
+	const {
+		adminKey,
+		setAdminKey,
+		savedAt,
+		isAdmin,
+		voice,
+		setVoiceSettings,
+		tab,
+		setTab,
+		hasKey,
+		save,
+		clearKey
+	} = useSettings();
 
 	return (
 		<>
@@ -124,142 +155,172 @@ export default function SettingsPanel() {
 				</div>
 
 				{tab === 'general' ? (
-					<div className="space-y-6">
-						<div className="space-y-2">
-							<label className="block text-sm font-serif font-bold text-stone-800">
-								Admin Key
-							</label>
-							<input
-								type="text"
-								placeholder="Enter Admin Key (Stored locally)"
-								value={adminKey}
-								onChange={(e) => setAdminKey(e.target.value)}
-								className="w-full px-4 py-2 bg-white border border-stone-300 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 text-stone-900 placeholder:text-stone-400 text-sm"
-							/>
-							<div className="flex items-center justify-between mt-1">
-								<span className="text-xs text-stone-500 font-serif italic">
-									Status: {hasKey ? 'Configured' : 'Not Configured'}
-								</span>
-								<button
-									type="button"
-									onClick={clearKey}
-									disabled={!hasKey}
-									className="text-xs text-stone-400 hover:text-red-600 disabled:opacity-30 underline decoration-dotted underline-offset-4"
-								>
-									Clear Key
-								</button>
-							</div>
-						</div>
-
-						{savedAt && (
-							<div className="text-xs text-stone-400 font-serif italic">
-								Last saved: {new Date(savedAt).toLocaleTimeString()}
-							</div>
-						)}
-
-						<div className="flex justify-end pt-4 border-t border-stone-200">
-							<button
-								onClick={save}
-								className="px-6 py-2 bg-stone-900 !text-white text-sm font-bold rounded-sm hover:bg-stone-700"
-							>
-								Save Changes
-							</button>
-						</div>
-					</div>
+					<GeneralTab
+						adminKey={adminKey}
+						setAdminKey={setAdminKey}
+						hasKey={hasKey}
+						clearKey={clearKey}
+						savedAt={savedAt}
+						save={save}
+					/>
 				) : tab === 'audio' ? (
-					<div className="space-y-6">
-						<div className="space-y-3">
-							<label className="block text-sm font-serif font-bold text-stone-800">
-								TTS Voice (Speaker)
-							</label>
-
-							<div className="border border-stone-200 rounded-lg divide-y divide-stone-100 bg-white">
-								{voices.map(v => (
-									<div
-										key={v.id}
-										className={clsx(
-											"flex items-center justify-between px-4 py-3 transition-colors cursor-pointer hover:bg-stone-50",
-											voice === v.id ? "bg-stone-50/80" : ""
-										)}
-										onClick={() => setVoiceSettings(v.id)}
-									>
-										<div className="flex items-center gap-3">
-											<div className={clsx(
-												"w-4 h-4 rounded-full border flex items-center justify-center",
-												voice === v.id ? "border-slate-900" : "border-stone-300"
-											)}>
-												{voice === v.id && <div className="w-2 h-2 rounded-full bg-slate-900" />}
-											</div>
-											<span className={clsx("text-sm", voice === v.id ? "font-bold text-slate-900" : "text-stone-600")}>
-												{v.name}
-											</span>
-										</div>
-
-										<button
-											type="button"
-											onClick={async (e) => {
-												e.stopPropagation();
-												const btn = e.currentTarget;
-												const originalContent = btn.innerHTML;
-
-												try {
-													// Set Loading State
-													btn.disabled = true;
-													btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-
-													// Dynamic import to avoid SSR issues
-													const { EdgeTTSClient } = await import('../lib/tts/edge-client');
-													const client = new EdgeTTSClient(v.id);
-													const result = await client.synthesize("Hello, this is a test of my voice.", 1.0);
-
-													const audio = new Audio(URL.createObjectURL(result.audioBlob));
-													audio.play();
-
-													// Wait for audio to finish roughly (or just reset after a few seconds)
-													audio.onended = () => {
-														btn.disabled = false;
-														btn.innerHTML = originalContent;
-													};
-												} catch (err) {
-													console.error(err);
-													btn.disabled = false;
-													btn.innerHTML = originalContent;
-												}
-											}}
-											className="p-1.5 rounded-full hover:bg-stone-200 text-stone-400 hover:text-slate-900 transition-all ml-4"
-											title="Preview Voice"
-										>
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-												<path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-											</svg>
-										</button>
-									</div>
-								))}
-							</div>
-							<div className="text-xs text-stone-500 font-serif italic mt-1 px-1">
-								Choose a speaker. Click the play button to preview their voice.
-							</div>
-						</div>
-
-						{savedAt && (
-							<div className="text-xs text-stone-400 font-serif italic">
-								Last saved: {new Date(savedAt).toLocaleTimeString()}
-							</div>
-						)}
-
-						<div className="flex justify-end pt-4 border-t border-stone-200">
-							<button
-								onClick={save}
-								className="px-6 py-2 bg-stone-900 !text-white text-sm font-bold rounded-sm hover:bg-stone-700"
-							>
-								Save Changes
-							</button>
-						</div>
-					</div>
+					<AudioTab
+						voices={VOICES}
+						voice={voice}
+						setVoiceSettings={setVoiceSettings}
+						savedAt={savedAt}
+						save={save}
+					/>
 				) : (
 					isAdmin && <ProfilesPanel adminKey={adminKey.trim()} />
 				)}
 			</Modal>
 		</>
+	);
+}
+
+/**
+ * 子组件: General Tab
+ */
+function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, savedAt, save }: any) {
+	return (
+		<div className="space-y-6">
+			<div className="space-y-2">
+				<label className="block text-sm font-serif font-bold text-stone-800">
+					Admin Key
+				</label>
+				<input
+					type="text"
+					placeholder="Enter Admin Key (Stored locally)"
+					value={adminKey}
+					onChange={(e) => setAdminKey(e.target.value)}
+					className="w-full px-4 py-2 bg-white border border-stone-300 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 text-stone-900 placeholder:text-stone-400 text-sm"
+				/>
+				<div className="flex items-center justify-between mt-1">
+					<span className="text-xs text-stone-500 font-serif italic">
+						Status: {hasKey ? 'Configured' : 'Not Configured'}
+					</span>
+					<button
+						type="button"
+						onClick={clearKey}
+						disabled={!hasKey}
+						className="text-xs text-stone-400 hover:text-red-600 disabled:opacity-30 underline decoration-dotted underline-offset-4"
+					>
+						Clear Key
+					</button>
+				</div>
+			</div>
+
+			{savedAt && (
+				<div className="text-xs text-stone-400 font-serif italic">
+					Last saved: {new Date(savedAt).toLocaleTimeString()}
+				</div>
+			)}
+
+			<div className="flex justify-end pt-4 border-t border-stone-200">
+				<button
+					onClick={save}
+					className="px-6 py-2 bg-stone-900 !text-white text-sm font-bold rounded-sm hover:bg-stone-700"
+				>
+					Save Changes
+				</button>
+			</div>
+		</div>
+	);
+}
+
+/**
+ * 子组件: Audio Tab
+ */
+function AudioTab({ voices, voice, setVoiceSettings, savedAt, save }: any) {
+	async function previewVoice(e: any, voiceId: string) {
+		e.stopPropagation();
+		const btn = e.currentTarget;
+		const originalContent = btn.innerHTML;
+
+		try {
+			btn.disabled = true;
+			btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+
+			const { EdgeTTSClient } = await import('../lib/tts/edge-client');
+			const client = new EdgeTTSClient(voiceId);
+			const result = await client.synthesize("Hello, this is a test of my voice.", 1.0);
+
+			const audio = new Audio(URL.createObjectURL(result.audioBlob));
+			audio.play();
+
+			audio.onended = () => {
+				btn.disabled = false;
+				btn.innerHTML = originalContent;
+			};
+		} catch (err) {
+			console.error(err);
+			btn.disabled = false;
+			btn.innerHTML = originalContent;
+		}
+	}
+
+	return (
+		<div className="space-y-6">
+			<div className="space-y-3">
+				<label className="block text-sm font-serif font-bold text-stone-800">
+					TTS Voice (Speaker)
+				</label>
+
+				<div className="border border-stone-200 rounded-lg divide-y divide-stone-100 bg-white">
+					{voices.map((v: any) => (
+						<div
+							key={v.id}
+							className={clsx(
+								"flex items-center justify-between px-4 py-3 transition-colors cursor-pointer hover:bg-stone-50",
+								voice === v.id ? "bg-stone-50/80" : ""
+							)}
+							onClick={() => setVoiceSettings(v.id)}
+						>
+							<div className="flex items-center gap-3">
+								<div className={clsx(
+									"w-4 h-4 rounded-full border flex items-center justify-center",
+									voice === v.id ? "border-slate-900" : "border-stone-300"
+								)}>
+									{voice === v.id && <div className="w-2 h-2 rounded-full bg-slate-900" />}
+								</div>
+								<span className={clsx("text-sm", voice === v.id ? "font-bold text-slate-900" : "text-stone-600")}>
+									{v.name}
+								</span>
+							</div>
+
+							<button
+								type="button"
+								onClick={(e) => previewVoice(e, v.id)}
+								className="p-1.5 rounded-full hover:bg-stone-200 text-stone-400 hover:text-slate-900 transition-all ml-4"
+								title="Preview Voice"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+									<path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+								</svg>
+							</button>
+						</div>
+					))}
+				</div>
+				<div className="text-xs text-stone-500 font-serif italic mt-1 px-1">
+					Choose a speaker. Click the play button to preview their voice.
+				</div>
+			</div>
+
+			{savedAt && (
+				<div className="text-xs text-stone-400 font-serif italic">
+					Last saved: {new Date(savedAt).toLocaleTimeString()}
+				</div>
+			)}
+
+			<div className="flex justify-end pt-4 border-t border-stone-200">
+				<button
+					onClick={save}
+					className="px-6 py-2 bg-stone-900 !text-white text-sm font-bold rounded-sm hover:bg-stone-700"
+				>
+					Save Changes
+				</button>
+			</div>
+		</div>
 	);
 }
