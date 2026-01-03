@@ -8,9 +8,9 @@
 
 // Base System Role - 所有阶段继承
 const BASE_SYSTEM_ROLE = `<role>
-你是一位精通 CEFR 标准的 ESL 内容开发专家。
-你擅长创建对标 English News in Levels 的分级阅读材料。
-</role>`;
+You are an ESL content expert specializing in CEFR-aligned graded reading materials.
+</role>
+<language priority="CRITICAL">All article content MUST be written in English.</language>`;
 
 // Stage 1: 搜索 + 选词
 export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
@@ -134,6 +134,7 @@ export const DRAFT_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
 ${WRITING_GUIDELINES_XML}
 
 <constraints>
+  <rule priority="CRITICAL">所有文章内容必须使用英文撰写，包括标题、正文和所有段落。</rule>
   <rule>严格遵守上述分级写作规范。</rule>
   <rule>先写 Level 1，再写 Level 2，最后 Level 3。</rule>
   <rule priority="HIGH">文章标题应与原新闻标题风格相近，简洁有力，避免自创无关标题。</rule>
@@ -163,6 +164,10 @@ ${args.sourceUrls.join('\n')}
 
 <task>
 基于上述新闻撰写三篇分级文章（Level 1, 2, 3）。
+
+<language_requirement priority="CRITICAL">
+文章必须全部使用英文撰写，包括标题和正文。
+</language_requirement>
 
 <length_requirements>
 - Level 1 (Easy): 80-110 词，3 段，简单现在时

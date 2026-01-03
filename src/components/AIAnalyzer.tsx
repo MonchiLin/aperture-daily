@@ -4,7 +4,7 @@
  * 监听用户选择文本，提供"Ask AI"按钮来分析选中的内容。
  * Refactor: Using Ant Design Popover for better positioning.
  */
-import { useEffect, useState, useRef, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Popover, Button, ConfigProvider, theme } from 'antd';
 
@@ -159,7 +159,7 @@ export default function AIAnalyzer({ articleContent }: AIAnalyzerProps) {
                         placement="top"
                         arrow={false}
                         destroyOnHidden
-                        overlayInnerStyle={{ padding: 0, backgroundColor: 'transparent', boxShadow: 'none' }}
+                        styles={{ content: { padding: 0, backgroundColor: 'transparent', boxShadow: 'none' } }}
                         // Force z-index high
                         zIndex={1000}
                     >

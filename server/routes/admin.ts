@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
 import { TaskQueue } from '../src/services/tasks/TaskQueue';
 
-export const adminRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api/admin' })
+export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/admin' })
     .post('/tasks/retry-failed', async ({ body }: any) => {
         try {
             const date = body?.task_date;

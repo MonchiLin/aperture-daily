@@ -132,7 +132,7 @@ export default function MemorySpirit() {
                 open={open && hasData && !!rect}
                 content={content}
                 placement="top"
-                overlayClassName="memory-spirit-popover"
+                rootClassName="memory-spirit-popover"
                 trigger={[]}
             >
                 {/* Virtual Anchor */}

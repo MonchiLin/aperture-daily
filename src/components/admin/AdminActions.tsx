@@ -30,32 +30,38 @@ export default function AdminActions({ loading, onFetchWords, onGenerate }: Admi
                 <FileDown size={14} />
                 Fetch Words
             </button>
-            <button
-                onClick={() => onGenerate(generateCount)}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-stone-600 bg-white border border-stone-300 hover:border-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-all disabled:opacity-50"
+            <div
+                className="flex items-center overflow-hidden bg-white border border-stone-300 rounded-sm hover:border-orange-600 transition-all group"
             >
-                <Play size={14} className="text-orange-600 fill-orange-600" />
-                Generate
-                <span
-                    className="inline-flex items-center ml-1 text-orange-600"
+                <button
+                    onClick={() => onGenerate(generateCount)}
+                    disabled={loading}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-orange-700 hover:bg-orange-50 transition-all disabled:opacity-50 border-r border-stone-100"
+                >
+                    <Play size={14} className="text-orange-600 fill-orange-600" />
+                    Generate
+                </button>
+                <div
+                    className="flex items-center px-1 bg-stone-50/50 select-none"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <button
                         onClick={decrement}
-                        className="w-5 h-5 flex items-center justify-center hover:bg-orange-100 rounded transition-colors"
+                        disabled={loading}
+                        className="w-6 h-8 flex items-center justify-center hover:bg-orange-100 text-stone-400 hover:text-orange-600 transition-colors disabled:opacity-30"
                     >
-                        <Minus size={10} />
+                        <Minus size={12} />
                     </button>
-                    <span className="w-5 text-center font-mono text-xs">{generateCount}</span>
+                    <span className="w-6 text-center font-mono text-xs font-bold text-orange-700">{generateCount}</span>
                     <button
                         onClick={increment}
-                        className="w-5 h-5 flex items-center justify-center hover:bg-orange-100 rounded transition-colors"
+                        disabled={loading}
+                        className="w-6 h-8 flex items-center justify-center hover:bg-orange-100 text-stone-400 hover:text-orange-600 transition-colors disabled:opacity-30"
                     >
-                        <Plus size={10} />
+                        <Plus size={12} />
                     </button>
-                </span>
-            </button>
+                </div>
+            </div>
         </div>
     );
 }

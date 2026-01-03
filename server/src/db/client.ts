@@ -19,7 +19,7 @@ if (!ACCOUNT_ID || !DATABASE_ID || !API_TOKEN) {
  * 
  * NOTE: This introduces network latency for each query.
  */
-export const db = drizzle(async (sql, params, method) => {
+export const db = drizzle(async (sql, params) => {
     const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${DATABASE_ID}/query`;
 
     try {

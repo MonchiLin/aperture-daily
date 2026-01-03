@@ -1,7 +1,6 @@
 import { Elysia } from 'elysia';
 import { db } from '../src/db/client';
 import * as schema from '../db/schema';
-import { sql } from 'drizzle-orm';
 import { env } from '../config/env';
 
 export const healthRoutes = new Elysia()

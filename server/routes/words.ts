@@ -1,5 +1,4 @@
 import { Elysia } from 'elysia';
-import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
 import { fetchAndStoreDailyWords } from '../src/services/dailyWords';
 import { getBusinessDate } from '../src/lib/time';
