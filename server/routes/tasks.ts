@@ -18,11 +18,12 @@ export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
         return { status: "ok", tasks };
     })
     .get('/tasks', async ({ query: { task_date } }) => {
-        console.log(`[GET /api/tasks] Request for date: ${task_date}`);
+        const start = performance.now();
+        console.log(`[API-PERF] /api/tasks?task_date=${task_date}: start`);
         if (!task_date) throw AppError.badRequest("Missing task_date");
 
         const results = await db.all(sql`SELECT * FROM tasks WHERE task_date = ${task_date} ORDER BY created_at DESC`);
-        console.log(`[GET /api/tasks] Found ${results.length} tasks`);
+        console.log(`[API-PERF] /api/tasks?task_date=${task_date}: ${(performance.now() - start).toFixed(2)}ms (${results.length} tasks)`);
         return { tasks: results };
     })
     .get('/tasks/:id', async ({ params: { id } }) => {

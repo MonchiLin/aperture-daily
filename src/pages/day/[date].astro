@@ -19,38 +19,66 @@ if (!date || !dateRegex.test(date)) {
     return Astro.redirect('/');
 }
 
+// 性能计时辅助函数
+const timedFetch = async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+    const start = performance.now();
+    try {
+        const result = await fn();
+        console.log(`[SSR-PERF] ${name}: ${(performance.now() - start).toFixed(2)}ms`);
+        return result;
+    } catch (e) {
+        console.error(`[SSR-PERF] ${name}: ${(performance.now() - start).toFixed(2)}ms (FAILED)`, e);
+        throw e;
+    }
+};
+
+const ssrStartTime = performance.now();
+console.log(`[SSR-PERF] ========== Start SSR for /day/${date} ==========`);
+
 // 服务端并发预取数据
-const fetchDays = () => apiFetch<{ days: string[] }>('/api/days').catch(e => {
-    console.error("[SSR] Failed to fetch days:", e);
+const fetchDays = () => timedFetch('fetchDays (/api/days)', () => 
+    apiFetch<{ days: string[] }>('/api/days')
+).catch(e => {
     return { days: [] };
 });
 
-const fetchDayData = () => apiFetch(`/api/day/${date}`).catch(e => {
-    console.error(`[SSR] Failed to fetch day data for ${date}:`, e);
+const fetchDayData = () => timedFetch(`fetchDayData (/api/day/${date})`, () =>
+    apiFetch(`/api/day/${date}`)
+).catch(e => {
     return { articles: [] };
 });
 
-const fetchWordData = () => apiFetch(`/api/day/${date}/words`).catch(e => {
-    console.error(`[SSR] Failed to fetch word data for ${date}:`, e);
+const fetchWordData = () => timedFetch(`fetchWordData (/api/day/${date}/words)`, () =>
+    apiFetch(`/api/day/${date}/words`)
+).catch(e => {
     return { new_words: [], review_words: [], new_count: 0, review_count: 0 };
 });
 
 // Admin fetching logic
 const adminKey = Astro.cookies.get('admin_key')?.value;
 const fetchAdminData = async () => {
-    if (!adminKey) return null;
+    if (!adminKey) {
+        console.log(`[SSR-PERF] fetchAdminData: skipped (no admin key)`);
+        return null;
+    }
+    const adminStart = performance.now();
     try {
-        await apiFetch('/api/auth/check', { token: adminKey });
-        const taskResponse = await apiFetch<{ tasks: any[] }>(
-            `/api/tasks?task_date=${encodeURIComponent(date)}`,
-            { token: adminKey }
+        await timedFetch('authCheck (/api/auth/check)', () =>
+            apiFetch('/api/auth/check', { token: adminKey })
         );
+        const taskResponse = await timedFetch(`fetchTasks (/api/tasks?task_date=${date})`, () =>
+            apiFetch<{ tasks: any[] }>(
+                `/api/tasks?task_date=${encodeURIComponent(date)}`,
+                { token: adminKey }
+            )
+        );
+        console.log(`[SSR-PERF] fetchAdminData (total): ${(performance.now() - adminStart).toFixed(2)}ms`);
         return {
             isAdmin: true,
             tasks: taskResponse.tasks || []
         };
     } catch (e) {
-        console.error("[SSR] Admin auth failed:", e);
+        console.error(`[SSR-PERF] fetchAdminData: ${(performance.now() - adminStart).toFixed(2)}ms (FAILED)`, e);
         return null;
     }
 };
@@ -62,6 +90,8 @@ const [daysStats, dayDataResult, wordDataStats, adminDataResult] = await Promise
     fetchWordData(),
     fetchAdminData()
 ]);
+
+console.log(`[SSR-PERF] ========== Total SSR time: ${(performance.now() - ssrStartTime).toFixed(2)}ms ==========`);
 
 // 处理数据
 const publishedDays = daysStats?.days || [];
