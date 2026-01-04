@@ -26,5 +26,8 @@ jobs:
           git config --global user.name "GitHub Action"
           
           # Force push only the server directory to the root of the HF Space
-          # Note: New HF Spaces use 'main' as default. Using 'git push' with simple auth.
-          git push --force "https://user:$HF_TOKEN@huggingface.co/spaces/$HF_SPACE_NAME" master:main
+          # 1. Create a branch 'hf-deploy' containing ONLY the contents of 'server/' folder
+          git subtree split --prefix server -b hf-deploy
+          
+          # 2. Push this branch to the HF 'main' branch
+          git push --force "https://user:$HF_TOKEN@huggingface.co/spaces/$HF_SPACE_NAME" hf-deploy:main
