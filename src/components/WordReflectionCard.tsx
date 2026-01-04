@@ -43,7 +43,9 @@ export default function WordReflectionCard({ word, phonetic, definitions }: Prop
 
     return (
         <div
-            className={`group pb-4 border-b border-stone-100 last:border-0 last:pb-0 cursor-pointer -mx-2 px-3 pt-1.5 pb-4.5 rounded-xl transition-all duration-500 ${isActive ? 'bg-white shadow-xl ring-1 ring-stone-100 scale-[1.02] z-10' : 'hover:bg-stone-50/50'
+            className={`group pb-4 border-l-2 border-b border-stone-100 last:border-b-0 last:pb-0 cursor-pointer -mx-2 px-3 pt-1.5 pb-4.5 transition-all duration-300 ${isActive
+                ? 'border-l-stone-500 bg-gradient-to-r from-stone-100/60 to-transparent'
+                : 'border-l-transparent hover:border-l-stone-200 hover:bg-stone-50/30'
                 }`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}

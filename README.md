@@ -95,16 +95,4 @@ docker-compose up -d
 后端服务将在端口 3000 运行。前端页面 (Cloudflare Pages) 需要配置反向代理或直接请求该 IP (注意 CORS)。
 
 
-## AGENT 索引
-- 目标与原则：`AGENT.md`
-- 定时窗口与流程：`server/index.ts` (Worker Loop)
-- 抓词与入库：`server/src/services/dailyWords.ts`
-- 任务编排与队列：`server/src/services/tasks/TaskQueue.ts`
-- LLM 多阶段与结构化校验：`server/src/services/llm/openaiCompatible.ts`
-- Prompt 规范：`server/src/services/llm/openaiPrompts.ts`
-- G1/S1 Prompt: `src/lib/prompts/dailyNews.ts` (Frontend/Legacy)
-- SRS 规则：`src/lib/srs.ts`
-- 鉴权边界：`src/lib/admin.ts` (Frontend Auth)
-- DB 结构：`db/schema.ts`
-- 高亮与 DOM 稳定性：`src/components/ArticleTabs.tsx`
-
+IPA 音标
