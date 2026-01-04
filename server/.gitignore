@@ -1,7 +1,7 @@
 # System
 .DS_Store
 node_modules/
-bun.lock
+
 
 # Environment & Secrets
 .env
