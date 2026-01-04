@@ -5,12 +5,11 @@ import { updateTaskStatus } from '../store/adminStore';
 
 interface UseAdminTasksProps {
     date: string;
-    adminKey: string | null;
     initialTasks?: TaskRow[]; // SSR 预取的任务数据
     onSucceeded?: () => void;
 }
 
-export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: UseAdminTasksProps) {
+export function useAdminTasks({ date, initialTasks, onSucceeded }: UseAdminTasksProps) {
     const [tasks, setTasks] = useState<TaskRow[]>(initialTasks || []);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -26,11 +25,10 @@ export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: Use
     }, [tasks]);
 
     const refresh = useCallback(async (showLoading = true) => {
-        if (!adminKey) return;
         if (showLoading && tasksRef.current.length === 0) setLoading(true);
         setError(null);
         try {
-            const data = await apiFetch<{ tasks?: TaskRow[] }>(`/api/tasks?task_date=${encodeURIComponent(date)}`, { token: adminKey });
+            const data = await apiFetch<{ tasks?: TaskRow[] }>(`/api/tasks?task_date=${encodeURIComponent(date)}`);
             const newTasks = data?.tasks ?? [];
 
             // 检测状态转换：从非成功变为成功
@@ -50,19 +48,17 @@ export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: Use
         } finally {
             setLoading(false);
         }
-    }, [date, adminKey]); // Removed onSucceeded
+    }, [date]);
 
     // 初始加载
     useEffect(() => {
-        if (adminKey) {
+        if (date) {
             refresh();
         }
-    }, [adminKey, date, refresh]);
+    }, [date, refresh]);
 
     // 自动轮询
     useEffect(() => {
-        if (!adminKey) return;
-
         const hasActiveTasks = tasks.some(t => t.status === 'running' || t.status === 'queued');
         if (!hasActiveTasks) return;
 
@@ -71,16 +67,14 @@ export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: Use
         }, 10000);
 
         return () => clearInterval(timer);
-    }, [adminKey, tasks.length > 0, tasks.some(t => t.status === 'running' || t.status === 'queued'), refresh]);
+    }, [tasks.length > 0, tasks.some(t => t.status === 'running' || t.status === 'queued'), refresh]);
 
     const generate = async () => {
-        if (!adminKey) return;
         setLoading(true);
         setError(null);
         try {
             await apiFetch('/api/generate', {
                 method: 'POST',
-                token: adminKey,
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ task_date: date })
             });
@@ -94,13 +88,11 @@ export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: Use
     };
 
     const fetchWords = async () => {
-        if (!adminKey) return;
         setLoading(true);
         setError(null);
         try {
             await apiFetch('/api/words/fetch', {
                 method: 'POST',
-                token: adminKey,
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ task_date: date }),
             });
@@ -113,13 +105,11 @@ export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: Use
     };
 
     const deleteTask = async (taskId: string) => {
-        if (!adminKey) return;
         setLoading(true);
         setError(null);
         try {
             await apiFetch(`/api/tasks/${taskId}`, {
                 method: 'DELETE',
-                token: adminKey,
                 headers: { 'content-type': 'application/json' },
                 body: '{}'
             });
@@ -142,3 +132,4 @@ export function useAdminTasks({ date, adminKey, initialTasks, onSucceeded }: Use
         deleteTask
     };
 }
+

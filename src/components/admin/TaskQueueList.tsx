@@ -9,20 +9,19 @@ type TaskQueueListProps = {
     loading?: boolean;
     onRefresh: () => void;
     onDelete: (id: string) => void;
-    adminKey?: string | null;
     taskDate?: string;
 };
 
-export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, taskDate }: TaskQueueListProps) {
+export default function TaskQueueList({ tasks, onRefresh, onDelete, taskDate }: TaskQueueListProps) {
     const [deleting, setDeleting] = useState(false);
     const [retrying, setRetrying] = useState(false);
     const failedTasks = tasks.filter(t => t.status === 'failed');
 
     async function deleteAllFailed() {
-        if (!adminKey || failedTasks.length === 0) return;
+        if (failedTasks.length === 0) return;
         setDeleting(true);
         try {
-            await fetchJson('/api/admin/tasks/delete-failed', adminKey, {
+            await fetchJson('/api/admin/tasks/delete-failed', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ task_date: taskDate })
@@ -37,10 +36,10 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, adminKey, ta
     }
 
     async function retryAllFailed() {
-        if (!adminKey || failedTasks.length === 0) return;
+        if (failedTasks.length === 0) return;
         setRetrying(true);
         try {
-            await fetchJson('/api/admin/tasks/retry-failed', adminKey, {
+            await fetchJson('/api/admin/tasks/retry-failed', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ task_date: taskDate })

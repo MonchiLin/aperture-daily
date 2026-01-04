@@ -47,7 +47,6 @@ const fetchAdminData = async () => {
         );
         return {
             isAdmin: true,
-            adminKey,
             tasks: taskResponse.tasks || []
         };
     } catch (e) {

@@ -11,7 +11,7 @@ import { useStore } from '@nanostores/react';
 import AdminActions from './admin/AdminActions';
 import TaskQueueList from './admin/TaskQueueList';
 import { refreshArticles } from '../lib/store/articlesStore';
-import { adminKeyStore, isAdminStore } from '../lib/store/adminStore';
+import { isAdminStore } from '../lib/store/adminStore';
 import { useAdminTasks } from '../lib/hooks/useAdminTasks';
 
 interface Props {
@@ -26,7 +26,6 @@ export default function AdminDayPanel(props: Props) {
 
 	// 从全局 store 获取权限信息
 	const isAdmin = useStore(isAdminStore);
-	const adminKey = useStore(adminKeyStore);
 
 	// 使用任务管理 Hook
 	const {
@@ -39,7 +38,6 @@ export default function AdminDayPanel(props: Props) {
 		deleteTask
 	} = useAdminTasks({
 		date: props.date,
-		adminKey,
 		initialTasks: props.initialTasks,
 		onSucceeded: () => {
 			refreshArticles(props.date);
@@ -104,7 +102,6 @@ export default function AdminDayPanel(props: Props) {
 				tasks={tasks}
 				onRefresh={() => refresh()}
 				onDelete={handleDeleteTask}
-				adminKey={adminKey!}
 				taskDate={props.date}
 			/>
 		</div>

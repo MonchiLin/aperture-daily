@@ -18,13 +18,10 @@ export type TaskRow = {
 import { apiFetch } from '../../lib/api';
 
 /**
- * 带 admin key 的 API 调用（复用 apiFetch）
+ * API 调用（使用 Cookie 鉴权）
  */
-export async function fetchJson<T = unknown>(url: string, adminKey: string, init?: RequestInit): Promise<T> {
-    return apiFetch<T>(url, {
-        ...init,
-        token: adminKey
-    });
+export async function fetchJson<T = unknown>(url: string, init?: RequestInit): Promise<T> {
+    return apiFetch<T>(url, init);
 }
 
 import dayjs from 'dayjs';
@@ -37,3 +34,4 @@ export function formatTime(iso: string | null | undefined): string {
         return iso;
     }
 }
+

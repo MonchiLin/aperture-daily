@@ -24,12 +24,11 @@ interface ProfileEditorProps {
     open: boolean;
     mode: 'create' | 'edit';
     initialDraft: ProfileDraft;
-    adminKey: string;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export default function ProfileEditor({ open, mode, initialDraft, adminKey, onClose, onSuccess }: ProfileEditorProps) {
+export default function ProfileEditor({ open, mode, initialDraft, onClose, onSuccess }: ProfileEditorProps) {
     const [draft, setDraft] = useState<ProfileDraft>(initialDraft);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -66,14 +65,12 @@ export default function ProfileEditor({ open, mode, initialDraft, adminKey, onCl
             if (mode === 'create') {
                 await apiFetch('/api/profiles', {
                     method: 'POST',
-                    token: adminKey,
                     headers: { 'content-type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
             } else if (draft.id) {
                 await apiFetch(`/api/profiles/${encodeURIComponent(draft.id)}`, {
                     method: 'PUT',
-                    token: adminKey,
                     headers: { 'content-type': 'application/json' },
                     body: JSON.stringify(payload)
                 });

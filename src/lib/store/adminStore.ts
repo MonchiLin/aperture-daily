@@ -6,9 +6,6 @@ import { apiFetch } from '../api';
 // 是否是管理员
 export const isAdminStore = atom<boolean>(false);
 
-// 管理员 Key（用于 API 请求）
-export const adminKeyStore = atom<string | null>(null);
-
 // 任务状态摘要（用于 MANAGE 按钮指示器）
 export interface TaskStatus {
     hasRunning: boolean;
@@ -42,11 +39,9 @@ export async function login(key: string): Promise<boolean> {
             credentials: 'include' // 接收 Set-Cookie
         });
         isAdminStore.set(true);
-        adminKeyStore.set(key);
         return true;
     } catch {
         isAdminStore.set(false);
-        adminKeyStore.set(null);
         return false;
     }
 }
@@ -64,14 +59,12 @@ export async function checkAuth(): Promise<boolean> {
 }
 
 // 从 SSR 数据初始化（页面加载时调用）
-export function initFromSSR(adminData: { isAdmin: boolean; adminKey: string; tasks: { status: string }[] } | null) {
+export function initFromSSR(adminData: { isAdmin: boolean; tasks: { status: string }[] } | null) {
     if (adminData?.isAdmin) {
         isAdminStore.set(true);
-        adminKeyStore.set(adminData.adminKey);
         updateTaskStatus(adminData.tasks);
     } else {
         isAdminStore.set(false);
-        adminKeyStore.set(null);
     }
 }
 

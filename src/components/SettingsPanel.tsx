@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ProfilesPanel from './ProfilesPanel';
 import Modal from './ui/Modal';
 import { clsx } from 'clsx';
-import { isAdminStore, adminKeyStore, login } from '../lib/store/adminStore';
+import { isAdminStore, login } from '../lib/store/adminStore';
 import { useStore } from '@nanostores/react';
 
 const VOICES = [
@@ -25,17 +25,15 @@ function useSettings() {
 	const [tab, setTab] = useState<'general' | 'audio' | 'profiles'>('general');
 
 	const isAdmin = useStore(isAdminStore);
-	const storedAdminKey = useStore(adminKeyStore);
 
 	const hasKey = useMemo(() => adminKey.trim().length > 0, [adminKey]);
 
 	useEffect(() => {
-		if (storedAdminKey) setAdminKey(storedAdminKey);
 		try {
 			const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
 			if (storedVoice) setVoiceSettings(storedVoice);
 		} catch { /* ignore */ }
-	}, [storedAdminKey]);
+	}, []);
 
 	useEffect(() => {
 		if (!isAdmin && tab === 'profiles') setTab('general');
@@ -176,7 +174,7 @@ export default function SettingsPanel() {
 						save={save}
 					/>
 				) : (
-					isAdmin && <ProfilesPanel adminKey={adminKey.trim()} />
+					isAdmin && <ProfilesPanel />
 				)}
 			</Modal>
 		</>

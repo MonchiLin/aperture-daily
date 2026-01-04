@@ -31,9 +31,7 @@ function draftFromProfile(p: GenerationProfile): ProfileDraft {
     };
 }
 
-export default function ProfilesPanel(props: { adminKey: string }) {
-    const adminKey = props.adminKey;
-
+export default function ProfilesPanel() {
     const [profiles, setProfiles] = useState<GenerationProfile[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -48,7 +46,7 @@ export default function ProfilesPanel(props: { adminKey: string }) {
         setLoading(true);
         setError(null);
         try {
-            const data = await apiFetch<GenerationProfile[]>('/api/profiles', { token: adminKey });
+            const data = await apiFetch<GenerationProfile[]>('/api/profiles');
             setProfiles(data || []);
         } catch (e) {
             setError((e as Error).message);
@@ -58,9 +56,8 @@ export default function ProfilesPanel(props: { adminKey: string }) {
     }
 
     useEffect(() => {
-        if (!adminKey) return;
         void refresh();
-    }, [adminKey]);
+    }, []);
 
     function openCreate() {
         setEditorMode('create');
@@ -79,8 +76,7 @@ export default function ProfilesPanel(props: { adminKey: string }) {
         setError(null);
         try {
             await apiFetch(`/api/profiles/${encodeURIComponent(id)}`, {
-                method: 'DELETE',
-                token: adminKey
+                method: 'DELETE'
             });
             await refresh();
         } catch (e) {
@@ -199,7 +195,6 @@ export default function ProfilesPanel(props: { adminKey: string }) {
                 open={editorOpen}
                 mode={editorMode}
                 initialDraft={currentDraft}
-                adminKey={adminKey}
                 onClose={() => setEditorOpen(false)}
                 onSuccess={() => void refresh()}
             />

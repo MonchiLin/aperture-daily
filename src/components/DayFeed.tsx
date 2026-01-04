@@ -18,7 +18,6 @@ interface WordData {
 // SSR 预取的管理员数据
 interface AdminData {
     isAdmin: boolean;
-    adminKey: string;
     tasks: any[];
 }
 

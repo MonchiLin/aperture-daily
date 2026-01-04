@@ -17,8 +17,6 @@ interface HighlightUpdateBody {
     note?: string;
 }
 
-import { AppError } from '../src/errors/AppError';
-
 // ... interfaces ...
 
 export const highlightsRoutes = new Elysia({ prefix: '/api' })
