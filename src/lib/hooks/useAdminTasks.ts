@@ -25,9 +25,11 @@ export function useAdminTasks({ date, initialTasks, onSucceeded }: UseAdminTasks
     }, [tasks]);
 
     const refresh = useCallback(async (showLoading = true) => {
+        console.log('[useAdminTasks] refresh called', { date, showLoading, tasksCount: tasksRef.current.length });
         if (showLoading && tasksRef.current.length === 0) setLoading(true);
         setError(null);
         try {
+            console.log('[useAdminTasks] Fetching tasks...');
             const data = await apiFetch<{ tasks?: TaskRow[] }>(`/api/tasks?task_date=${encodeURIComponent(date)}`);
             const newTasks = data?.tasks ?? [];
 

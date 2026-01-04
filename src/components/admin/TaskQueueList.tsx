@@ -88,7 +88,7 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, taskDate }: 
                         </>
                     )}
                 </div>
-                <button onClick={onRefresh} className="text-stone-400 hover:text-stone-900 transition-colors" title="Refresh">
+                <button onClick={() => { console.log('[TaskQueueList] Refresh button clicked'); onRefresh(); }} className="text-stone-400 hover:text-stone-900 transition-colors" title="Refresh">
                     <RotateCw size={12} />
                 </button>
             </div>
