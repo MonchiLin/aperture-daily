@@ -95,9 +95,9 @@ export function createGeminiClient(env: GeminiEnv) {
                 }
 
                 return data;
-            } catch (e: any) {
+            } catch (e) {
                 clearTimeout(timeoutId);
-                if (e.name === 'AbortError') {
+                if (e instanceof Error && e.name === 'AbortError') {
                     throw new Error(`Gemini Timeout: Request timed out after ${GEMINI_TIMEOUT_MS / 1000 / 60} minutes.`);
                 }
                 throw e;
@@ -173,12 +173,13 @@ export async function safeGeminiCall<T>(
         const elapsedMs = Date.now() - callStartTime;
         console.log(`[${operationName}] DONE in ${(elapsedMs / 1000).toFixed(1)}s`);
         return result;
-    } catch (e: any) {
+    } catch (e) {
         const elapsedMs = Date.now() - callStartTime;
         const elapsedMinutes = (elapsedMs / 1000 / 60).toFixed(2);
+        const message = e instanceof Error ? e.message : 'Unknown error';
 
-        console.error(`[${operationName}] FAILED after ${elapsedMinutes} min (started: ${callStartISO}):`, e.message);
+        console.error(`[${operationName}] FAILED after ${elapsedMinutes} min (started: ${callStartISO}):`, message);
 
-        throw new Error(`Gemini Error: ${operationName} failed after ${elapsedMinutes} min - ${e.message}`);
+        throw new Error(`Gemini Error: ${operationName} failed after ${elapsedMinutes} min - ${message}`);
     }
 }

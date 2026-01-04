@@ -10,7 +10,7 @@ export const cronRoutes = (queue: TaskQueue) => new Elysia()
         try {
             const res = await executeCronLogic(taskDate, '[API Cron Trigger]', queue);
             return res;
-        } catch (e: any) {
-            return { status: "error", message: e.message };
+        } catch (e) {
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     });

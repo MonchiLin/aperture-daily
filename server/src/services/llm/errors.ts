@@ -17,7 +17,7 @@ export async function safeLLMCall<T>(
     const callStartISO = new Date().toISOString();
     try {
         return await call();
-    } catch (e: any) {
+    } catch (e) {
         const elapsedMs = Date.now() - callStartTime;
         const elapsedMinutes = (elapsedMs / 1000 / 60).toFixed(2);
         if (e instanceof APIConnectionTimeoutError) {

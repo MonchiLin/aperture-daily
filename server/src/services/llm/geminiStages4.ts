@@ -1,5 +1,5 @@
 
-import { type GeminiClient, type GeminiRequest, extractGeminiText, safeGeminiCall } from './geminiClient';
+import { type GeminiClient, type GeminiRequest, type GeminiResponse, extractGeminiText, safeGeminiCall } from './geminiClient';
 import type { GeminiStructureData } from './types';
 import { parseInlineTags, validateParseResult } from './parseInlineTags';
 
@@ -25,8 +25,12 @@ interface XRayAnalysisInput {
     articles: ArticleItem[];
 }
 
-export async function runGeminiGrammarAnalysis(args: XRayAnalysisInput): Promise<{ articles: ArticleItem[], usage: any }> {
-    const usageAccumulator: any = {};
+interface UsageAccumulator {
+    [key: string]: GeminiResponse['usageMetadata'];
+}
+
+export async function runGeminiGrammarAnalysis(args: XRayAnalysisInput): Promise<{ articles: ArticleItem[], usage: UsageAccumulator }> {
+    const usageAccumulator: UsageAccumulator = {};
     const results: ArticleItem[] = [];
 
     for (const article of args.articles) {
@@ -123,9 +127,10 @@ ${plainText}
                 structure: parseResult.structures
             });
 
-        } catch (e: any) {
+        } catch (e) {
             console.error(`[Stage 4] Failed for Level ${article.level}:`, e);
-            throw new Error(`Stage 4 (Structure Analysis) failed for Level ${article.level}: ${e.message}`);
+            const message = e instanceof Error ? e.message : 'Unknown error';
+            throw new Error(`Stage 4 (Structure Analysis) failed for Level ${article.level}: ${message}`);
         }
     }
 

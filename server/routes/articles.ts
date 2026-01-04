@@ -13,8 +13,8 @@ export const articlesRoutes = new Elysia({ prefix: '/api/articles' })
             const task = taskRows.length > 0 ? taskRows[0] : null;
 
             return { articles: article, tasks: task };
-        } catch (e: any) {
-            return { status: "error", message: e.message };
+        } catch (e) {
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
     .delete('/:id', async ({ params: { id } }) => {

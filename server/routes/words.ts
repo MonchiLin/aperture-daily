@@ -4,10 +4,13 @@ import { fetchAndStoreDailyWords } from '../src/services/dailyWords';
 import { getBusinessDate } from '../src/lib/time';
 import { env } from '../config/env';
 
+interface FetchBody { task_date?: string; date?: string; }
+
 export const wordsRoutes = new Elysia({ prefix: '/api/words' })
-    .post('/fetch', async ({ body }: { body: any }) => {
-        console.log("Receive fetch words request:", body);
-        const date = body.task_date || body.date || getBusinessDate();
+    .post('/fetch', async ({ body }) => {
+        const b = body as FetchBody;
+        console.log("Receive fetch words request:", b);
+        const date = b.task_date || b.date || getBusinessDate();
         const cookie = env.SHANBAY_COOKIE;
 
         console.log(`[Fetch Words] Using Env Cookie. Length: ${cookie.length}`);
@@ -17,13 +20,13 @@ export const wordsRoutes = new Elysia({ prefix: '/api/words' })
         }
 
         try {
-            const result = await fetchAndStoreDailyWords(db as any, {
+            const result = await fetchAndStoreDailyWords(db, {
                 taskDate: date,
                 shanbayCookie: cookie
             });
             return { status: "ok", result };
-        } catch (e: any) {
+        } catch (e) {
             console.error("Fetch words error:", e);
-            return { status: "error", message: e.message };
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     });

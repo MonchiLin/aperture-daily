@@ -19,10 +19,11 @@ function getAdminKey(request: Request): string | null {
 
 export const authRoutes = new Elysia({ prefix: '/api/auth' })
     // 登录端点 - 设置 HttpOnly Cookie
-    .post('/login', ({ body, set, error }: any) => {
-        const key = body?.key;
+    .post('/login', ({ body, set }) => {
+        const key = (body as { key?: string })?.key;
         if (key !== env.ADMIN_KEY) {
-            return error(401, { error: 'Unauthorized' });
+            set.status = 401;
+            return { error: 'Unauthorized' };
         }
 
         // 设置 HttpOnly Cookie
@@ -37,10 +38,11 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
         return { success: true };
     })
     // 验证端点 - 同时支持 header 和 cookie
-    .get('/check', ({ request, error }: any) => {
+    .get('/check', ({ request, set }) => {
         const key = getAdminKey(request);
         if (key === env.ADMIN_KEY) return { status: 'ok' };
-        return error(401, { error: 'Unauthorized' });
+        set.status = 401;
+        return { error: 'Unauthorized' };
     });
 
 // 导出工具函数供其他模块使用

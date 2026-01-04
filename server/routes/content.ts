@@ -2,14 +2,17 @@ import { Elysia } from 'elysia';
 import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
 
+interface TaskRow { id: string; task_date: string; }
+interface DailyWordsRow { new_words_json: string; review_words_json: string; }
+
 export const contentRoutes = new Elysia({ prefix: '/api' })
     .get('/days', async () => {
         try {
             const result = await db.all(sql`SELECT DISTINCT task_date FROM tasks WHERE status = 'succeeded' ORDER BY task_date DESC`);
-            return { days: result.map((r: any) => r.task_date) };
-        } catch (e: any) {
+            return { days: (result as TaskRow[]).map((r) => r.task_date) };
+        } catch (e) {
             console.error("API Error /api/days:", e);
-            return { error: e.message };
+            return { error: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
     .get('/day/:date', async ({ params: { date } }) => {
@@ -20,26 +23,24 @@ export const contentRoutes = new Elysia({ prefix: '/api' })
                 ORDER BY finished_at
             `);
 
-            const taskIds = taskRows.map((t: any) => t.id);
-            let articles: any[] = [];
+            const taskIds = (taskRows as TaskRow[]).map((t) => t.id);
+            let articles: unknown[] = [];
 
             if (taskIds.length > 0) {
-                // Fetch articles for these tasks
-                // Order by generation_task_id to group by task time roughly, then by model for consistency
                 const sqlQuery = `SELECT * FROM articles WHERE generation_task_id IN (${taskIds.map(id => `'${id}'`).join(',')}) ORDER BY created_at ASC`;
                 articles = await db.all(sql.raw(sqlQuery));
             }
 
             return { articles };
-        } catch (e: any) {
+        } catch (e) {
             console.error(`[GET /api/day/${date}] Error:`, e);
-            return { status: "error", message: e.message };
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
     .get('/day/:date/words', async ({ params: { date }, set }) => {
         try {
             const rows = await db.all(sql`SELECT * FROM daily_words WHERE date = ${date} LIMIT 1`);
-            const row: any = rows[0];
+            const row = rows[0] as DailyWordsRow | undefined;
             if (!row) {
                 return { date, words: [], word_count: 0 };
             }
@@ -49,7 +50,6 @@ export const contentRoutes = new Elysia({ prefix: '/api' })
             const newList = Array.isArray(newWords) ? newWords : [];
             const reviewList = Array.isArray(reviewWords) ? reviewWords : [];
 
-            // 单词数据拉取后永不变更，启用超长期缓存（1年）
             set.headers['Cache-Control'] = 'public, s-maxage=31536000, immutable';
 
             return {
@@ -60,8 +60,8 @@ export const contentRoutes = new Elysia({ prefix: '/api' })
                 review_count: reviewList.length,
                 word_count: newList.length + reviewList.length
             };
-        } catch (e: any) {
+        } catch (e) {
             console.error(`[GET /api/day/${date}/words] Error:`, e);
-            return { status: "error", message: e.message };
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     });

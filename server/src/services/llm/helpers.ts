@@ -1,4 +1,5 @@
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
+import type { GeminiMessage, GeminiResponse } from './geminiClient';
 import { WORD_SELECTION_MAX_WORDS } from './limits';
 
 // 确保文章内容有正确的段落分隔
@@ -181,9 +182,10 @@ export async function resolveRedirectUrls(urls: string[]): Promise<string[]> {
 }
 
 // 将响应输出追加到历史（多轮对话）
-export function appendResponseToHistory(history: any[], response: any): any[] {
+export function appendResponseToHistory(history: GeminiMessage[], response: GeminiResponse): GeminiMessage[] {
+    const parts = response.candidates?.[0]?.content?.parts ?? [];
     return [
         ...history,
-        ...response.output.map(({ id, ...rest }: any) => rest)
+        ...parts.filter(p => p.text && !p.thought).map(p => ({ role: 'model' as const, parts: [{ text: p.text! }] }))
     ];
 }

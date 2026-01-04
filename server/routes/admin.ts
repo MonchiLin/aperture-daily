@@ -3,10 +3,14 @@ import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
 import { TaskQueue } from '../src/services/tasks/TaskQueue';
 
+interface IdRow { id: string; }
+interface AdminBody { task_date?: string; }
+
 export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/admin' })
-    .post('/tasks/retry-failed', async ({ body }: any) => {
+    .post('/tasks/retry-failed', async ({ body }) => {
         try {
-            const date = body?.task_date;
+            const b = body as AdminBody;
+            const date = b?.task_date;
 
             let queryStr = "SELECT id FROM tasks WHERE status = 'failed'";
             if (date) {
@@ -16,7 +20,7 @@ export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/adm
             const failedTasks = await db.all(sql.raw(queryStr));
             if (failedTasks.length === 0) return { status: "ok", count: 0 };
 
-            const taskIds = failedTasks.map((t: any) => t.id);
+            const taskIds = (failedTasks as IdRow[]).map((t) => t.id);
             const inClause = taskIds.map(id => `'${id}'`).join(',');
 
             await db.run(sql.raw(`
@@ -31,13 +35,14 @@ export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/adm
             `));
 
             return { status: "ok", count: taskIds.length };
-        } catch (e: any) {
-            return { status: "error", message: e.message };
+        } catch (e) {
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
-    .post('/tasks/delete-failed', async ({ body }: any) => {
+    .post('/tasks/delete-failed', async ({ body }) => {
         try {
-            const date = body?.task_date;
+            const b = body as AdminBody;
+            const date = b?.task_date;
 
             let queryStr = "SELECT id FROM tasks WHERE status = 'failed'";
             if (date) {
@@ -47,13 +52,13 @@ export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/adm
             const failedTasks = await db.all(sql.raw(queryStr));
             if (failedTasks.length === 0) return { status: "ok", count: 0 };
 
-            const taskIds = failedTasks.map((t: any) => t.id);
+            const taskIds = (failedTasks as IdRow[]).map((t) => t.id);
             let deletedCount = 0;
 
             for (const taskId of taskIds) {
                 try {
                     const articles = await db.all(sql`SELECT id FROM articles WHERE generation_task_id = ${taskId}`);
-                    const articleIds = articles.map((a: any) => a.id);
+                    const articleIds = (articles as IdRow[]).map((a) => a.id);
 
                     if (articleIds.length > 0) {
                         const articleIdList = articleIds.map(id => `'${id}'`).join(',');
@@ -64,13 +69,13 @@ export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/adm
 
                     await db.run(sql`DELETE FROM tasks WHERE id = ${taskId}`);
                     deletedCount++;
-                } catch (e: any) {
-                    console.error(`Failed to delete task ${taskId}:`, e.message);
+                } catch (e) {
+                    console.error(`Failed to delete task ${taskId}:`, e instanceof Error ? e.message : e);
                 }
             }
 
             return { status: "ok", count: deletedCount, totalFound: taskIds.length };
-        } catch (e: any) {
-            return { status: "error", message: e.message };
+        } catch (e) {
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     });

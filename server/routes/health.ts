@@ -10,7 +10,7 @@ export const healthRoutes = new Elysia()
         try {
             const result = await db.select({ count: schema.tasks.id }).from(schema.tasks).limit(1);
             return { status: "connected", result };
-        } catch (e: any) {
-            return { status: "error", error: e.message };
+        } catch (e) {
+            return { status: "error", error: e instanceof Error ? e.message : 'Unknown error' };
         }
     });

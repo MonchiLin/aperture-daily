@@ -47,11 +47,15 @@ async function getWordsInPage(cookie: string, page: number, materialbookId: stri
     return decodeShanbayData(json.data);
 }
 
+interface DecodedData {
+    objects?: unknown[];
+}
+
 async function getWordsAll(cookie: string, materialbookId: string, typeOf: 'NEW' | 'REVIEW') {
     const out: unknown[] = [];
     for (let page = 1; ; page++) {
         const decoded = await getWordsInPage(cookie, page, materialbookId, typeOf);
-        const objects = (decoded as any)?.objects;
+        const objects = (decoded as DecodedData)?.objects;
         if (!Array.isArray(objects)) {
             throw new Error(`Shanbay: unexpected payload shape (${typeOf} page ${page})`);
         }
@@ -61,10 +65,14 @@ async function getWordsAll(cookie: string, materialbookId: string, typeOf: 'NEW'
     return out;
 }
 
+interface WordItem {
+    vocab_with_senses?: { word?: string };
+}
+
 function toWordList(items: unknown[]) {
-    return items
-        .map((x: any) => x?.vocab_with_senses?.word)
-        .filter((w: unknown) => typeof w === 'string' && w.length > 0) as string[];
+    return (items as WordItem[])
+        .map((x) => x?.vocab_with_senses?.word)
+        .filter((w): w is string => typeof w === 'string' && w.length > 0);
 }
 
 export type ShanbayTodayWords = {

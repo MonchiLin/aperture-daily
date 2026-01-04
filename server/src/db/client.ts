@@ -1,5 +1,9 @@
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
+import type { SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy';
 import * as schema from '../../db/schema';
+
+// Re-export the database type for use across the app
+export type AppDatabase = SqliteRemoteDatabase<typeof schema>;
 
 // Configuration from env
 const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -8,6 +12,12 @@ const API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
 if (!ACCOUNT_ID || !DATABASE_ID || !API_TOKEN) {
     throw new Error("Missing Cloudflare D1 credentials. STRICT MODE: Local DB is disabled.");
+}
+
+interface D1Response {
+    success: boolean;
+    errors?: Array<{ message: string }>;
+    result?: Array<{ results: unknown[] }>;
 }
 
 /**
@@ -19,7 +29,7 @@ if (!ACCOUNT_ID || !DATABASE_ID || !API_TOKEN) {
  * 
  * NOTE: This introduces network latency for each query.
  */
-export const db = drizzle(async (sql, params) => {
+export const db: AppDatabase = drizzle(async (sql, params) => {
     const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${DATABASE_ID}/query`;
 
     try {
@@ -36,7 +46,7 @@ export const db = drizzle(async (sql, params) => {
         });
 
         const text = await response.text();
-        let data: any;
+        let data: D1Response;
         try {
             data = JSON.parse(text);
         } catch (e) {
@@ -49,7 +59,7 @@ export const db = drizzle(async (sql, params) => {
         }
 
         const firstResult = data.result?.[0];
-        const rows = firstResult?.results || [];
+        const rows = (firstResult?.results || []) as Record<string, unknown>[];
 
         return { rows };
     } catch (e) {

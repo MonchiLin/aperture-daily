@@ -3,6 +3,14 @@ import { Elysia, t } from 'elysia';
 import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
 
+interface MemoryEntry {
+    snippet: string;
+    articleTitle: string;
+    articleId: string;
+    date: string;
+    timeAgo: string;
+}
+
 export const contextRoutes = new Elysia({ prefix: '/api/context' })
     .post('/batch', async ({ body }: { body: { words: string[], exclude_article_id?: string } }) => {
         const { words, exclude_article_id } = body;
@@ -111,7 +119,7 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
                 task_date: string;
             }[];
 
-            const memories: Record<string, any[]> = {};
+            const memories: Record<string, MemoryEntry[]> = {};
 
             for (const row of results) {
                 if (!memories[row.word]) memories[row.word] = [];
@@ -131,9 +139,9 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
             console.log(`[Context Batch] Found memories for ${Object.keys(memories).length} words.`);
             return { memories };
 
-        } catch (e: any) {
+        } catch (e) {
             console.error("[Context Batch] Error:", e);
-            return { memories: {}, error: e.message };
+            return { memories: {}, error: e instanceof Error ? e.message : 'Unknown error' };
         }
     }, {
         body: t.Object({

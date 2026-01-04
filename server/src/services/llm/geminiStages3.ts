@@ -70,7 +70,14 @@ export async function runGeminiSearchAndSelection(args: {
 
     if (!responseText) throw new Error('Gemini returned empty search+selection response');
 
-    let parsed: any;
+    interface SearchSelectionResponse {
+        selected_words: unknown[];
+        news_summary?: string;
+        source?: string;
+        sources?: unknown[];
+    }
+
+    let parsed: SearchSelectionResponse;
     try {
         parsed = JSON.parse(responseText);
     } catch (e) {

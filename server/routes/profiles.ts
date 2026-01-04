@@ -2,6 +2,13 @@ import { Elysia } from 'elysia';
 import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
 
+interface ProfileBody {
+    name: string;
+    topicPreference?: string;
+    concurrency?: number | string;
+    timeoutMs?: number | string;
+}
+
 export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
     .get('/', async () => {
         return await db.all(sql`SELECT * FROM generation_profiles ORDER BY updated_at DESC`);
@@ -14,38 +21,42 @@ export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
         }
         return res[0];
     })
-    .post('/', async ({ body, error }: any) => {
+    .post('/', async ({ body, set }) => {
         try {
+            const b = body as ProfileBody;
             const id = crypto.randomUUID();
             const now = new Date().toISOString();
             await db.run(sql`
                 INSERT INTO generation_profiles (id, name, topic_preference, concurrency, timeout_ms, created_at, updated_at)
-                VALUES (${id}, ${body.name}, ${body.topicPreference || ""}, ${Number(body.concurrency) || 1}, ${Number(body.timeoutMs) || 60000}, ${now}, ${now})
+                VALUES (${id}, ${b.name}, ${b.topicPreference || ""}, ${Number(b.concurrency) || 1}, ${Number(b.timeoutMs) || 60000}, ${now}, ${now})
             `);
             return { status: "ok", id };
-        } catch (e: any) {
-            return error(500, e.message);
+        } catch (e) {
+            set.status = 500;
+            return { error: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
-    .put('/:id', async ({ params: { id }, body, error }: any) => {
+    .put('/:id', async ({ params: { id }, body, set }) => {
         try {
+            const b = body as ProfileBody;
             await db.run(sql`
                 UPDATE generation_profiles 
-                SET name = ${body.name}, 
-                    topic_preference = ${body.topicPreference}, 
-                    concurrency = ${Number(body.concurrency)}, 
-                    timeout_ms = ${Number(body.timeoutMs)}, 
+                SET name = ${b.name}, 
+                    topic_preference = ${b.topicPreference}, 
+                    concurrency = ${Number(b.concurrency)}, 
+                    timeout_ms = ${Number(b.timeoutMs)}, 
                     updated_at = ${new Date().toISOString()}
                 WHERE id = ${id}
             `);
             return { status: "ok" };
-        } catch (e: any) {
-            return error(500, e.message);
+        } catch (e) {
+            set.status = 500;
+            return { error: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
     .delete('/:id', async ({ params: { id } }) => {
         const profileTasks = await db.all(sql`SELECT id FROM tasks WHERE profile_id = ${id}`);
-        const taskIds = profileTasks.map((t: any) => t.id);
+        const taskIds = (profileTasks as { id: string }[]).map((t) => t.id);
 
         if (taskIds.length > 0) {
             const inClause = taskIds.map(tid => `'${tid}'`).join(',');

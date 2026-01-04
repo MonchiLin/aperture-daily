@@ -4,16 +4,19 @@ import { db } from '../src/db/client';
 import { TaskQueue } from '../src/services/tasks/TaskQueue';
 import { getBusinessDate } from '../src/lib/time';
 
+interface GenerateBody { task_date?: string; date?: string; }
+
 export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
-    .post('/generate', async ({ body }: { body: any }) => {
-        console.log("Receive generation request:", body);
-        const date = body.task_date || body.date || getBusinessDate();
+    .post('/generate', async ({ body }) => {
+        const b = body as GenerateBody;
+        console.log("Receive generation request:", b);
+        const date = b.task_date || b.date || getBusinessDate();
 
         try {
             const tasks = await queue.enqueue(date, 'manual');
             return { status: "ok", tasks };
-        } catch (e: any) {
-            return { status: "error", message: e.message };
+        } catch (e) {
+            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
         }
     })
     .get('/tasks', async ({ query: { task_date } }) => {
@@ -23,9 +26,10 @@ export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
             const results = await db.all(sql`SELECT * FROM tasks WHERE task_date = ${task_date} ORDER BY created_at DESC`);
             console.log(`[GET /api/tasks] Found ${results.length} tasks`);
             return { tasks: results };
-        } catch (e: any) {
+        } catch (e) {
             console.error(`[GET /api/tasks] Error:`, e);
-            return { status: "error", message: e.message, stack: e.stack };
+            const err = e instanceof Error ? e : { message: 'Unknown error', stack: '' };
+            return { status: "error", message: err.message, stack: err.stack };
         }
     })
     .get('/tasks/:id', async ({ params: { id } }) => {

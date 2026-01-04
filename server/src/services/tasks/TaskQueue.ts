@@ -2,16 +2,12 @@ import { sql } from 'drizzle-orm';
 import { generateDailyNews3StageWithGemini } from '../llm/geminiPipeline3';
 import type { CandidateWord, GeminiCheckpoint3 } from '../llm/types';
 import { indexArticleWords } from '../wordIndexer';
-
-// Interface for loose typing since we are using raw SQL
-interface Db {
-    all: (query: any) => Promise<any[]>;
-    run: (query: any) => Promise<any>;
-}
+import type { AppDatabase } from '../../db/client';
+import type { TaskRow, ProfileRow, DailyWordsRow, IdRow, ArticleRow } from '../../types/models';
 
 export type TaskEnv = {
     GEMINI_API_KEY: string;
-    GEMINI_BASE_URL: string;  // Always has a value (defaults to empty string)
+    GEMINI_BASE_URL: string;
     LLM_MODEL_DEFAULT: string;
 };
 
@@ -22,9 +18,9 @@ function uniqueStrings(input: string[]) {
 /**
  * Get words that have already been used in articles today
  */
-async function getUsedWordsToday(db: Db, taskDate: string): Promise<Set<string>> {
+async function getUsedWordsToday(db: AppDatabase, taskDate: string): Promise<Set<string>> {
     // Get task IDs for date
-    const todaysTasks = await db.all(sql`SELECT id FROM tasks WHERE task_date = ${taskDate}`);
+    const todaysTasks = await db.all(sql`SELECT id FROM tasks WHERE task_date = ${taskDate}`) as IdRow[];
     if (todaysTasks.length === 0) return new Set();
 
     const taskIds = todaysTasks.map((t) => t.id);
@@ -35,7 +31,7 @@ async function getUsedWordsToday(db: Db, taskDate: string): Promise<Set<string>>
     const inClause = taskIds.map(id => `'${id}'`).join(',');
 
     // Fetch article content
-    const taskArticles = await db.all(sql.raw(`SELECT content_json FROM articles WHERE generation_task_id IN (${inClause})`));
+    const taskArticles = await db.all(sql.raw(`SELECT content_json FROM articles WHERE generation_task_id IN (${inClause})`)) as { content_json: string }[];
 
     const usedWords = new Set<string>();
     for (const article of taskArticles) {
@@ -88,13 +84,13 @@ function buildCandidateWords(
  * Reliable Task Queue with optimistic locking (Raw SQL Version)
  */
 export class TaskQueue {
-    constructor(private db: Db) { }
+    constructor(private db: AppDatabase) { }
 
     /**
      * Enqueue a new task for each profile
      */
     async enqueue(taskDate: string, triggerSource: 'manual' | 'cron' = 'manual') {
-        const profiles = await this.db.all(sql`SELECT * FROM generation_profiles`);
+        const profiles = await this.db.all(sql`SELECT * FROM generation_profiles`) as ProfileRow[];
 
         if (profiles.length === 0) {
             // If no profiles exist, create a default one
@@ -107,7 +103,7 @@ export class TaskQueue {
             `);
         }
 
-        const activeProfiles = await this.db.all(sql`SELECT * FROM generation_profiles`);
+        const activeProfiles = await this.db.all(sql`SELECT * FROM generation_profiles`) as ProfileRow[];
 
         const dailyRow = await this.db.all(sql`SELECT * FROM daily_words WHERE date = ${taskDate} LIMIT 1`);
         if (dailyRow.length === 0) {
@@ -122,10 +118,10 @@ export class TaskQueue {
                     SELECT id, status FROM tasks 
                     WHERE task_date = ${taskDate} AND profile_id = ${profile.id} 
                     LIMIT 1
-                `);
+                `) as Pick<TaskRow, 'id' | 'status'>[];
 
                 if (existing.length > 0) {
-                    console.log(`[TaskQueue][Cron] Task exists for ${profile.name} (${existing[0].status}), skipping.`);
+                    console.log(`[TaskQueue][Cron] Task exists for ${profile.name} (${existing[0]!.status}), skipping.`);
                     continue;
                 }
             }
@@ -154,9 +150,9 @@ export class TaskQueue {
      * 
      * This ensures multiple workers (or threads) never pick up the same task.
      */
-    async claimTask(): Promise<any | null> {
+    async claimTask(): Promise<TaskRow | null> {
         // [Optimization] Fast-exit if queue is busy (Concurrency Control)
-        const runningCountRes = await this.db.all(sql`SELECT count(*) as count FROM tasks WHERE status = 'running'`);
+        const runningCountRes = await this.db.all(sql`SELECT count(*) as count FROM tasks WHERE status = 'running'`) as { count: number }[];
         const runningCount = runningCountRes[0]?.count || 0;
 
         if (runningCount > 0) return null;
@@ -167,11 +163,11 @@ export class TaskQueue {
             WHERE status = 'queued' 
             ORDER BY created_at ASC 
             LIMIT 1
-        `);
+        `) as TaskRow[];
 
         if (candidates.length === 0) return null;
 
-        const candidate = candidates[0];
+        const candidate = candidates[0]!;
         const now = new Date().toISOString();
 
         // Attempt optimistic lock update
@@ -196,19 +192,19 @@ export class TaskQueue {
             SELECT * FROM tasks 
             WHERE id = ${candidate.id} AND status = 'running' AND started_at = ${now}
             LIMIT 1
-        `);
+        `) as TaskRow[];
 
         if (updated.length === 0) {
             // Update failed (race condition).
             // Check if queue busy now
-            const currentRunningRes = await this.db.all(sql`SELECT count(*) as count FROM tasks WHERE status = 'running'`);
+            const currentRunningRes = await this.db.all(sql`SELECT count(*) as count FROM tasks WHERE status = 'running'`) as { count: number }[];
             if ((currentRunningRes[0]?.count || 0) > 0) return null;
 
             // Try again
             return this.claimTask();
         }
 
-        return updated[0];
+        return updated[0] ?? null;
     }
 
     async complete(taskId: string, resultJson: string) {
@@ -244,10 +240,10 @@ export class TaskQueue {
         // We need to parse ISO dates in JS to compare, or trust SQL comparison if formats match.
         // Let's filter in JS to be safe with string dates.
 
-        const runningTasks = await this.db.all(sql`SELECT id, started_at FROM tasks WHERE status = 'running'`);
+        const runningTasks = await this.db.all(sql`SELECT id, started_at FROM tasks WHERE status = 'running'`) as Pick<TaskRow, 'id' | 'started_at'>[];
         const nowMs = Date.now();
 
-        const stuckTasks = runningTasks.filter((t: any) => {
+        const stuckTasks = runningTasks.filter((t) => {
             if (!t.started_at) return false;
             const started = new Date(t.started_at).getTime();
             return (nowMs - started) > stuckTimeout;
@@ -281,22 +277,22 @@ export class TaskQueue {
             try {
                 // Must map snake_case task props to camelCase if needed by logic?
                 // Or just update internal logic to use snake_case task properties. 
-                // Let's coerce task to any for easy access.
                 await this.executeTask(env, task);
-            } catch (err: any) {
-                console.error(`[TaskQueue] Task ${task.id} failed:`, err.message);
-                await this.fail(task.id, err.message, { stage: 'execution' });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'Unknown error';
+                console.error(`[TaskQueue] Task ${task.id} failed:`, message);
+                await this.fail(task.id, message, { stage: 'execution' });
             }
         }
     }
 
-    private async executeTask(env: TaskEnv, task: any) {
-        const profileRes = await this.db.all(sql`SELECT * FROM generation_profiles WHERE id = ${task.profile_id} LIMIT 1`);
+    private async executeTask(env: TaskEnv, task: TaskRow) {
+        const profileRes = await this.db.all(sql`SELECT * FROM generation_profiles WHERE id = ${task.profile_id} LIMIT 1`) as ProfileRow[];
         const profile = profileRes[0];
 
         if (!profile) throw new Error(`Profile not found: ${task.profile_id}`);
 
-        const dailyRowRes = await this.db.all(sql`SELECT * FROM daily_words WHERE date = ${task.task_date} LIMIT 1`);
+        const dailyRowRes = await this.db.all(sql`SELECT * FROM daily_words WHERE date = ${task.task_date} LIMIT 1`) as DailyWordsRow[];
         const dailyRow = dailyRowRes[0];
 
         if (!dailyRow) throw new Error('No daily words found');
@@ -346,7 +342,7 @@ export class TaskQueue {
             env: { GEMINI_API_KEY: env.GEMINI_API_KEY, GEMINI_BASE_URL: env.GEMINI_BASE_URL },
             model,
             currentDate: task.task_date,
-            topicPreference: profile.topic_preference,
+            topicPreference: profile.topic_preference || '',
             candidateWords: candidateWordStrings,
             checkpoint,
             onCheckpoint: async (cp) => {
@@ -388,7 +384,7 @@ export class TaskQueue {
         `);
 
         if (existingArticles.length > 0) {
-            const articleIds = existingArticles.map(a => `'${a.id}'`).join(',');
+            const articleIds = (existingArticles as IdRow[]).map(a => `'${a.id}'`).join(',');
 
             // 2. Delete dependencies first (Foreign Key Constraints)
             await this.db.run(sql.raw(`DELETE FROM highlights WHERE article_id IN (${articleIds})`));

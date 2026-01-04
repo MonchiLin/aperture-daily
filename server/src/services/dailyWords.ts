@@ -1,16 +1,13 @@
-import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
-import * as schema from '../../db/schema';
+import type { AppDatabase } from '../db/client';
 import { dailyWords, words } from '../../db/schema';
 import { fetchShanbayTodayWords } from './shanbay';
-
-type Db = BunSQLiteDatabase<typeof schema>;
 
 function uniqueStrings(input: string[]) {
     return Array.from(new Set(input.filter((x) => typeof x === 'string' && x.length > 0)));
 }
 
 export async function fetchAndStoreDailyWords(
-    db: Db,
+    db: AppDatabase,
     args: {
         taskDate: string;
         shanbayCookie: string;

@@ -13,6 +13,11 @@ import {
     runGeminiJsonConversion,
 } from './geminiStages3';
 import { runGeminiGrammarAnalysis } from './geminiStages4';
+import type { GeminiResponse } from './geminiClient';
+
+interface UsageRecord {
+    [key: string]: GeminiResponse['usageMetadata'] | null | UsageRecord;
+}
 
 export async function generateDailyNews3StageWithGemini(args: {
     env: GeminiEnv;
@@ -22,14 +27,14 @@ export async function generateDailyNews3StageWithGemini(args: {
     candidateWords: string[];
     checkpoint?: GeminiCheckpoint3 | null;
     onCheckpoint?: (checkpoint: GeminiCheckpoint3) => Promise<void>;
-}): Promise<{ output: DailyNewsOutput; selectedWords: string[]; usage: unknown, structure: any[] }> {
+}): Promise<{ output: DailyNewsOutput; selectedWords: string[]; usage: unknown, structure: unknown[] }> {
     const client = createGeminiClient(args.env);
 
     let selectedWords = args.checkpoint?.selectedWords || [];
     let newsSummary = args.checkpoint?.newsSummary || '';
     let sourceUrls = args.checkpoint?.sourceUrls || [];
     let draftText = args.checkpoint?.draftText || '';
-    let usage: any = args.checkpoint?.usage || {};
+    let usage: UsageRecord = (args.checkpoint?.usage as UsageRecord) || {};
 
     const currentStage = args.checkpoint?.stage || 'start';
 
@@ -102,7 +107,7 @@ export async function generateDailyNews3StageWithGemini(args: {
     });
 
     console.log(`[Pipeline 3-Stage] Stage 3 (Conversion) Complete. Title: ${generation.output.title}`);
-    usage.conversion = generation.usage;
+    usage.conversion = generation.usage as UsageRecord['conversion'];
 
     if (args.onCheckpoint) {
         await args.onCheckpoint({
@@ -123,11 +128,11 @@ export async function generateDailyNews3StageWithGemini(args: {
         const xrayRes = await runGeminiGrammarAnalysis({
             client,
             model: args.model,
-            articles: generation.output.articles as any // Cast for mismatching inferred schema if needed
+            articles: generation.output.articles as Parameters<typeof runGeminiGrammarAnalysis>[0]['articles']
         });
 
         // In-place update of articles with structure
-        generation.output.articles = xrayRes.articles as any;
+        generation.output.articles = xrayRes.articles as typeof generation.output.articles;
         usage.grammar_analysis = xrayRes.usage;
 
         console.log(`[Pipeline 3-Stage] Stage 4 Complete.`);

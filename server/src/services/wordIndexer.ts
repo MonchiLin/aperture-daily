@@ -2,6 +2,33 @@ import { sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { articleWordIndex } from '../../db/schema';
 
+interface InputWords {
+    selected?: string[];
+    new?: string[];
+    review?: string[];
+}
+
+interface ArticleContent {
+    content: string;
+    word_count?: number;
+}
+
+interface ContentJson {
+    input_words?: InputWords;
+    result?: {
+        articles?: ArticleContent[];
+    };
+}
+
+interface WordIndexEntry {
+    id: string;
+    word: string;
+    articleId: string;
+    contextSnippet: string;
+    role: 'keyword' | 'entity';
+    createdAt: string;
+}
+
 // Helper to sanitize words for indexing
 function sanitizeWord(w: string) {
     return w.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -21,7 +48,7 @@ function splitIntoSentences(text: string): string[] {
  * @param articleId The UUID of the article
  * @param contentJson The parsed content JSON of the article
  */
-export async function indexArticleWords(articleId: string, contentJson: any) {
+export async function indexArticleWords(articleId: string, contentJson: ContentJson) {
     if (!contentJson || !contentJson.result || !contentJson.result.articles) {
         console.warn(`[WordIndexer] Invalid content JSON for article ${articleId}`);
         return;
@@ -44,7 +71,7 @@ export async function indexArticleWords(articleId: string, contentJson: any) {
     console.log(`[WordIndexer] Indexing ${targets.size} words for article ${articleId}`);
 
     // 2. Prepare content for searching
-    const articles = contentJson.result.articles as any[];
+    const articles = contentJson.result.articles as ArticleContent[];
     // Use the longest article part (highest word count / level) to find context
     const mainArticle = articles.sort((a, b) => (b.word_count || 0) - (a.word_count || 0))[0];
 
@@ -54,7 +81,7 @@ export async function indexArticleWords(articleId: string, contentJson: any) {
     }
 
     const sentences = splitIntoSentences(mainArticle.content);
-    const entriesToInsert: any[] = [];
+    const entriesToInsert: WordIndexEntry[] = [];
 
     // 3. Find unique context for each target word
     for (const rawWord of targets) {
