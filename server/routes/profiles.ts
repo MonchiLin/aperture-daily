@@ -55,6 +55,11 @@ export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
                 WHERE article_id IN (SELECT id FROM articles WHERE generation_task_id IN (${inClause}))
             `));
 
+            await db.run(sql.raw(`
+                DELETE FROM article_word_index 
+                WHERE article_id IN (SELECT id FROM articles WHERE generation_task_id IN (${inClause}))
+            `));
+
             await db.run(sql.raw(`DELETE FROM articles WHERE generation_task_id IN (${inClause})`));
             await db.run(sql.raw(`DELETE FROM tasks WHERE id IN (${inClause})`));
         }

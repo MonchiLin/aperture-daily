@@ -58,6 +58,7 @@ export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/adm
                     if (articleIds.length > 0) {
                         const articleIdList = articleIds.map(id => `'${id}'`).join(',');
                         await db.run(sql.raw(`DELETE FROM highlights WHERE article_id IN (${articleIdList})`));
+                        await db.run(sql.raw(`DELETE FROM article_word_index WHERE article_id IN (${articleIdList})`));
                         await db.run(sql`DELETE FROM articles WHERE generation_task_id = ${taskId}`);
                     }
 

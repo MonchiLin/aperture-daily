@@ -35,6 +35,7 @@ export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
     })
     .delete('/tasks/:id', async ({ params: { id } }) => {
         await db.run(sql`DELETE FROM highlights WHERE article_id IN (SELECT id FROM articles WHERE generation_task_id = ${id})`);
+        await db.run(sql`DELETE FROM article_word_index WHERE article_id IN (SELECT id FROM articles WHERE generation_task_id = ${id})`);
         await db.run(sql`DELETE FROM articles WHERE generation_task_id = ${id}`);
         await db.run(sql`DELETE FROM tasks WHERE id = ${id}`);
         return { status: "ok" };

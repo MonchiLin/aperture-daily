@@ -115,7 +115,7 @@ export const articles = sqliteTable(
         id: text('id').primaryKey(),
         generationTaskId: text('generation_task_id')
             .notNull()
-            .references(() => tasks.id),
+            .references(() => tasks.id, { onDelete: 'cascade' }),
 
         model: text('model').notNull(),
         variant: integer('variant').notNull(),
@@ -144,7 +144,7 @@ export const highlights = sqliteTable(
         id: text('id').primaryKey(),
         articleId: text('article_id')
             .notNull()
-            .references(() => articles.id),
+            .references(() => articles.id, { onDelete: 'cascade' }),
         actor: text('actor').notNull(),
         startMetaJson: text('start_meta_json').notNull(),
         endMetaJson: text('end_meta_json').notNull(),
@@ -176,7 +176,7 @@ export const articleWordIndex = sqliteTable(
         word: text('word').notNull(),
         articleId: text('article_id')
             .notNull()
-            .references(() => articles.id),
+            .references(() => articles.id, { onDelete: 'cascade' }),
         contextSnippet: text('context_snippet').notNull(),
         role: text('role', { enum: ['keyword', 'entity'] }).notNull(),
         createdAt: text('created_at')

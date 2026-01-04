@@ -19,6 +19,7 @@ export const articlesRoutes = new Elysia({ prefix: '/api/articles' })
     })
     .delete('/:id', async ({ params: { id } }) => {
         await db.run(sql`DELETE FROM highlights WHERE article_id = ${id}`);
+        await db.run(sql`DELETE FROM article_word_index WHERE article_id = ${id}`);
         await db.run(sql`DELETE FROM articles WHERE id = ${id}`);
         return { status: "ok" };
     });
