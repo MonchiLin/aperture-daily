@@ -5,6 +5,8 @@ import Modal from './ui/Modal';
 import { clsx } from 'clsx';
 import { isAdminStore, login } from '../lib/store/adminStore';
 import { useStore } from '@nanostores/react';
+import Toggle from './ui/Toggle';
+import { settingsStore, updateSetting } from '../lib/store/settingsStore';
 
 const VOICES = [
 	{ id: 'en-US-GuyNeural', name: 'Guy (Male, Default)' },
@@ -213,6 +215,20 @@ function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, savedAt, save }: 
 				</div>
 			</div>
 
+			<div className="space-y-4 pt-4 border-t border-stone-200">
+				<div className="flex items-center justify-between">
+					<div className="space-y-0.5">
+						<label className="text-sm font-bold text-stone-800 block">
+							Smart Copy
+						</label>
+						<p className="text-xs text-stone-500 font-serif italic">
+							Automatically copy text to clipboard when selecting a sentence.
+						</p>
+					</div>
+					<SmartCopyToggle />
+				</div>
+			</div>
+
 			{savedAt && (
 				<div className="text-xs text-stone-400 font-serif italic">
 					Last saved: {new Date(savedAt).toLocaleTimeString()}
@@ -324,5 +340,20 @@ function AudioTab({ voices, voice, setVoiceSettings, savedAt, save }: any) {
 				</button>
 			</div>
 		</div>
+	);
+}
+
+/**
+ * Smart Copy Toggle - Uses settingsStore
+ */
+function SmartCopyToggle() {
+	const settings = useStore(settingsStore);
+
+	return (
+		<Toggle
+			checked={settings.autoCopy}
+			onChange={(val) => updateSetting('autoCopy', val)}
+			label="Smart Copy"
+		/>
 	);
 }

@@ -13,7 +13,7 @@ import VisualTether from "@/components/VisualTether";
 import AudioPlayer from "@/components/AudioPlayer";
 import AudioInit from "@/components/AudioInit";
 import MemorySpirit from "@/components/MemorySpirit";
-import AIAnalyzer from "@/components/AIAnalyzer";
+
 import { apiFetch } from "@/lib/api";
 import {
     extractSources,
@@ -234,11 +234,7 @@ const readLevels = row?.articles?.read_levels || 0;
                     memoriesMap={initialMemories}
                 />
                 
-                <!-- AI 选词分析器 -->
-                <AIAnalyzer 
-                    client:idle 
-                    articleContent={sortedArticles[0]?.content || ''} 
-                />
+
             </main>
             
             <!-- 侧边栏 - 音频 + 词汇 -->
@@ -372,7 +368,7 @@ const readLevels = row?.articles?.read_levels || 0;
         // Threshold: 50% of estimated time, minimum 10 seconds
         const threshold = Math.max(10000, minutes * 30 * 1000); 
         
-        readTimer = setTimeout(async () => {
+        readTimer = window.setTimeout(async () => {
             try {
                 await fetch(`/api/articles/${articleId}/read`, {
                     method: 'PATCH',

@@ -21,9 +21,6 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.1.0",
-    "@ant-design/x": "^2.1.1",
-    "@ant-design/x-markdown": "^2.1.1",
     "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/react": "^4.4.2",
     "@astrojs/sitemap": "^3.6.0",
@@ -41,7 +38,6 @@
     "lucide-react": "^0.562.0",
     "nanostores": "^1.1.0",
     "nprogress": "^0.2.0",
-    "openai": "^4.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tailwind-merge": "^3.4.0",

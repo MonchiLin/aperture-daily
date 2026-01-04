@@ -33,12 +33,7 @@ export default defineConfig({
         "@": path.resolve(dirname, "./src")
       }
     },
-    // openai SDK 用于客户端 AI Chat，需要在 SSR 构建时排除
-    build: {
-      rollupOptions: {
-        external: ['openai']
-      }
-    },
+
     // @ts-ignore
     test: {
       projects: [
