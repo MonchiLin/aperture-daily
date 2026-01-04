@@ -3,6 +3,7 @@ import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import { db } from './src/db/client';
 import { TaskQueue } from './src/services/tasks/TaskQueue';
+import { AppError, formatErrorResponse } from './src/errors/AppError';
 
 // Import routes
 import { healthRoutes } from './routes/health';
@@ -31,12 +32,43 @@ const queue = new TaskQueue(db);
 startTaskWorker(queue);
 startCronScheduler(queue);
 
+// Elysia 内置错误码到 HTTP 状态码映射
+const errorCodeToStatus: Record<string, number> = {
+    'NOT_FOUND': 404,
+    'VALIDATION': 400,
+    'PARSE': 400,
+    'UNKNOWN': 500,
+    'INTERNAL_SERVER_ERROR': 500
+};
+
 // Assemble Application
 const app = new Elysia()
     .use(cors({
         origin: true,       // 允许所有来源
         credentials: true   // 允许携带 Cookie
     }))
+    // --- 全局错误处理器 (统一响应格式) ---
+    .onError(({ code, error, set }) => {
+        // 处理自定义 AppError
+        if (error instanceof AppError) {
+            set.status = error.statusCode;
+            if (error.statusCode >= 500) {
+                console.error(`[AppError] Code: ${error.code}`, error);
+            }
+            return formatErrorResponse(error);
+        }
+
+        // 处理 Elysia 内置错误
+        const status = (typeof code === 'string' ? errorCodeToStatus[code] : undefined) || 500;
+        set.status = status;
+
+        if (status >= 500) {
+            console.error(`[ServerError] Code: ${code}`, error);
+        }
+
+        return formatErrorResponse(error, String(code));
+    })
+    // ------------------------------------
     .use(swagger({
         documentation: {
             info: {
@@ -49,7 +81,7 @@ const app = new Elysia()
     .use(healthRoutes)
     .use(authRoutes)
     // --- Admin Protection Middleware (支持 header 和 cookie) ---
-    .onBeforeHandle(({ request, set }) => {
+    .onBeforeHandle(({ request }) => {
         const path = new URL(request.url).pathname;
         const isProtected = path.startsWith('/api/admin') ||
             path.startsWith('/api/tasks') ||
@@ -63,8 +95,7 @@ const app = new Elysia()
 
         const key = getAdminKey(request);
         if (key !== env.ADMIN_KEY) {
-            set.status = 401;
-            return { error: 'Unauthorized: Admin key required' };
+            throw AppError.unauthorized('Admin key required');
         }
     })
     // ------------------------------------

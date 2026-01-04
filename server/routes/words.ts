@@ -4,6 +4,8 @@ import { fetchAndStoreDailyWords } from '../src/services/dailyWords';
 import { getBusinessDate } from '../src/lib/time';
 import { env } from '../config/env';
 
+import { AppError } from '../src/errors/AppError';
+
 interface FetchBody { task_date?: string; date?: string; }
 
 export const wordsRoutes = new Elysia({ prefix: '/api/words' })
@@ -16,17 +18,12 @@ export const wordsRoutes = new Elysia({ prefix: '/api/words' })
         console.log(`[Fetch Words] Using Env Cookie. Length: ${cookie.length}`);
 
         if (!cookie) {
-            return { status: "error", message: "Missing SHANBAY_COOKIE in .env" };
+            throw AppError.internal("Missing SHANBAY_COOKIE in .env");
         }
 
-        try {
-            const result = await fetchAndStoreDailyWords(db, {
-                taskDate: date,
-                shanbayCookie: cookie
-            });
-            return { status: "ok", result };
-        } catch (e) {
-            console.error("Fetch words error:", e);
-            return { status: "error", message: e instanceof Error ? e.message : 'Unknown error' };
-        }
+        const result = await fetchAndStoreDailyWords(db, {
+            taskDate: date,
+            shanbayCookie: cookie
+        });
+        return { status: "ok", result };
     });

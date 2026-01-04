@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { AppError } from '../src/errors/AppError';
 import { env } from '../config/env';
 
 // Cookie 配置常量
@@ -22,8 +23,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
     .post('/login', ({ body, set }) => {
         const key = (body as { key?: string })?.key;
         if (key !== env.ADMIN_KEY) {
-            set.status = 401;
-            return { error: 'Unauthorized' };
+            throw AppError.unauthorized();
         }
 
         // 设置 HttpOnly Cookie (跨域需要 SameSite=None + Secure)
@@ -39,11 +39,10 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
         return { success: true };
     })
     // 验证端点 - 同时支持 header 和 cookie
-    .get('/check', ({ request, set }) => {
+    .get('/check', ({ request }) => {
         const key = getAdminKey(request);
         if (key === env.ADMIN_KEY) return { status: 'ok' };
-        set.status = 401;
-        return { error: 'Unauthorized' };
+        throw AppError.unauthorized();
     });
 
 // 导出工具函数供其他模块使用
