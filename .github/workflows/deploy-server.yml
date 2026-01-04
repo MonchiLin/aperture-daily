@@ -1,0 +1,29 @@
+name: Sync Server to Hugging Face Hub
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'server/**'
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # 替换为你的 Hugging Face 用户名和 Space 名称
+          # Example: user/space-name
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }} 
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          
+          # Force push only the server directory to the root of the HF Space
+          git subtree push --prefix server https://kiki:$HF_TOKEN@huggingface.co/spaces/$HF_SPACE_NAME master
