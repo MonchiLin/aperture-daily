@@ -96,3 +96,13 @@ docker-compose up -d
 
 
 IPA 音标
+
+## HF Space 保活 (Keep-Alive)
+
+Hugging Face 免费 Space 在 48 小时无访问后会休眠。使用 [UptimeRobot](https://uptimerobot.com) 定期 ping 可防止休眠：
+
+1.  注册 UptimeRobot (免费)。
+2.  添加新 Monitor，类型选 **HTTP(s)**。
+3.  URL 填：`https://hf2025-aperturedailyserver.hf.space/api/health`
+4.  间隔设 5-60 分钟均可。
+
