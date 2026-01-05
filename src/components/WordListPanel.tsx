@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Tabs, Tag, Spin, Empty } from 'antd';
 import { apiFetch } from '../lib/api';
 
+
 interface WordData {
     new_words: string[];
     review_words: string[];
@@ -25,14 +26,12 @@ export default function WordListPanel({ date, initialData }: WordListPanelProps)
     const [data, setData] = useState<WordData | null>(initialData || null);
     const [error, setError] = useState<string | null>(null);
 
-    // 仅在没有初始数据时才发起请求（降级方案）
+    // Effect handles both initial load (if no data) and refresh events
     useEffect(() => {
-        if (initialData) return;
-
-        let canceled = false;
-        setLoading(true);
+        if (!data) setLoading(true); // Only show spinner if we have no data at all
         setError(null);
 
+        let canceled = false;
         apiFetch<WordData>(`/api/day/${date}/words`)
             .then((res) => {
                 if (!canceled) setData(res);
@@ -45,7 +44,7 @@ export default function WordListPanel({ date, initialData }: WordListPanelProps)
             });
 
         return () => { canceled = true; };
-    }, [date, initialData]);
+    }, [date]);
 
     if (loading) {
         return (

@@ -1,6 +1,7 @@
 import type { AppDatabase } from '../db/client';
-import { dailyWords, words } from '../../db/schema';
+import { words, dailyWordReferences } from '../../db/schema';
 import { fetchShanbayTodayWords } from './shanbay';
+import { sql } from 'drizzle-orm';
 
 function uniqueStrings(input: string[]) {
     return Array.from(new Set(input.filter((x) => typeof x === 'string' && x.length > 0)));
@@ -26,23 +27,7 @@ export async function fetchAndStoreDailyWords(
     }
 
     const now = new Date().toISOString();
-    await db
-        .insert(dailyWords)
-        .values({
-            date: args.taskDate,
-            newWordsJson: JSON.stringify(newWords),
-            reviewWordsJson: JSON.stringify(reviewWords),
-            createdAt: now,
-            updatedAt: now
-        })
-        .onConflictDoUpdate({
-            target: dailyWords.date,
-            set: {
-                newWordsJson: JSON.stringify(newWords),
-                reviewWordsJson: JSON.stringify(reviewWords),
-                updatedAt: now
-            }
-        });
+
 
     // 写入 words 表（幂等）
     const allWords = [...new Set([...newWords, ...reviewWords])];
@@ -54,6 +39,20 @@ export async function fetchAndStoreDailyWords(
             .insert(words)
             .values(chunk.map((w) => ({ word: w, origin: 'shanbay' as const })))
             .onConflictDoNothing();
+    }
+
+    // 写入 daily_word_references (Normalized)
+    // Delete existing references for this date to support idempotency/updates
+    await db.delete(dailyWordReferences).where(sql`${dailyWordReferences.date} = ${args.taskDate}`);
+
+    const references = [
+        ...newWords.map(w => ({ id: crypto.randomUUID(), date: args.taskDate, word: w, type: 'new' as const })),
+        ...reviewWords.map(w => ({ id: crypto.randomUUID(), date: args.taskDate, word: w, type: 'review' as const }))
+    ];
+
+    const REF_CHUNK = 50;
+    for (let i = 0; i < references.length; i += REF_CHUNK) {
+        await db.insert(dailyWordReferences).values(references.slice(i, i + REF_CHUNK)).onConflictDoNothing();
     }
 
     return {

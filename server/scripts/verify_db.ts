@@ -5,8 +5,9 @@ import { db } from '../src/db/client';
 async function verify() {
     console.log("Verifying articles table columns...");
     try {
-        const result = await db.run(sql`PRAGMA table_info(articles)`);
-        const columns = result.rows || [];
+        const result: any = await db.all(sql`PRAGMA table_info(articles)`);
+        const columns = Array.isArray(result) ? result : (result.rows || []);
+
         const hasReadLevels = columns.some((col: any) => col.name === 'read_levels');
 
         console.log("Columns found:", columns.map((c: any) => c.name).join(', '));

@@ -7,6 +7,6 @@ export const healthRoutes = new Elysia()
     .get('/', () => `Hello Elysia from Aperture Daily backend! (Build: ${env.BUILD_TIME})`)
     .get('/health', () => ({ status: "ok", timestamp: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) }))
     .get('/db-check', async () => {
-        const result = await db.select({ count: schema.tasks.id }).from(schema.tasks).limit(1);
+        const result = await db.select().from(schema.tasks).limit(1);
         return { status: "connected", result };
     });

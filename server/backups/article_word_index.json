@@ -1,0 +1,3746 @@
+[
+  {
+    "id": "0e6d011e-54ab-4d5c-ab1a-e6c19e419b8c",
+    "word": "testwrite_768",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "Test snippet",
+    "role": "keyword",
+    "created_at": "2026-01-02T21:05:25.218Z"
+  },
+  {
+    "id": "89d54f68-d8b8-4dd6-b0f1-7ab8134a7007",
+    "word": "scenery",
+    "article_id": "0b52a81d-e951-4f09-81a5-7c23db03b592",
+    "context_snippet": "People still want holiday trips and pretty scenery.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "b4531823-3299-4122-8189-349ecd811f24",
+    "word": "wilderness",
+    "article_id": "0b52a81d-e951-4f09-81a5-7c23db03b592",
+    "context_snippet": "Snow and ice hit cities and some wilderness areas.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "fc22bc0f-e5f8-4031-b088-a8b9609cb333",
+    "word": "emergency",
+    "article_id": "0b52a81d-e951-4f09-81a5-7c23db03b592",
+    "context_snippet": "New York declares an emergency, which means extra help is ready.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "9698d2a5-36b4-428f-9a82-e5a7b978be6b",
+    "word": "reality",
+    "article_id": "0b52a81d-e951-4f09-81a5-7c23db03b592",
+    "context_snippet": "This is the reality for people who fly in winter.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "b7789d6e-9c85-4140-aee7-cf699311389d",
+    "word": "outdoor",
+    "article_id": "8f871256-fef1-4bc3-8eeb-52da1450d719",
+    "context_snippet": "Many outdoor businesses use drones for work and travel.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "659b81c0-9942-4d29-981a-9d3c49d597ce",
+    "word": "survival",
+    "article_id": "8f871256-fef1-4bc3-8eeb-52da1450d719",
+    "context_snippet": "Drones can help survival in disasters and remote areas.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "632c649c-6136-4dcb-962b-a5f0db4dadc0",
+    "word": "headline",
+    "article_id": "8f871256-fef1-4bc3-8eeb-52da1450d719",
+    "context_snippet": "A new headline comes from China today about drone rules.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "381602c9-38b6-4cc6-8364-4c53d3b46df9",
+    "word": "participant",
+    "article_id": "8f871256-fef1-4bc3-8eeb-52da1450d719",
+    "context_snippet": "Each participant must follow these rules because accidents can happen.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "9b1f5273-90e0-4553-8620-d74d41f0752b",
+    "word": "dramatic",
+    "article_id": "8f871256-fef1-4bc3-8eeb-52da1450d719",
+    "context_snippet": "Some people see a dramatic change in daily drone use.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "45d4df2d-6b9c-4f0e-82ac-ac756841c56f",
+    "word": "technology",
+    "article_id": "8f871256-fef1-4bc3-8eeb-52da1450d719",
+    "context_snippet": "It controls drone technology and makes safety rules stronger.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "0293ab3d-7e8a-4179-9e44-37f4564e80b5",
+    "word": "expressway",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "Snow covers an expressway in Japan, and many cars crash.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "67cb25c8-2f73-485e-a97a-db3b21ba06a8",
+    "word": "skyscraper",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "A skyscraper is a very tall building, but small towns still matter.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "c9a0c0df-b65a-4956-8221-75a521998399",
+    "word": "delegation",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "A delegation is a group of officials, and it meets an ally to talk.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "8b8e4109-ecd6-452f-8b8c-0aede0fb1d7f",
+    "word": "scenery",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "People enjoy mountain scenery and visit a village for food.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "7625b40a-f257-4b42-b9d9-ce90c5a7c1d6",
+    "word": "village",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "People enjoy mountain scenery and visit a village for food.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "cd341f0c-8d47-4e16-b140-1064e8dd7246",
+    "word": "ally",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "A delegation is a group of officials, and it meets an ally to talk.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "721fd26b-52d2-44e3-808a-568f23438eb3",
+    "word": "survival",
+    "article_id": "8a66c49f-2b1c-4568-8a71-f258880873f5",
+    "context_snippet": "Drivers fear for survival when smoke and fire rise.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "78992d4d-677d-42ff-a835-2b3745b0b459",
+    "word": "treasure",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "Some families stay inside, but they still seek treasure moments.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "dd7b38cb-c992-431c-82fe-51aa75e68db8",
+    "word": "exploration",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "They plan exploration.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "73a45ad6-6e4f-4383-a261-425036d40df6",
+    "word": "accessible",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "Parks close, so outdoor fun becomes less accessible for travelers.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "950ea6c4-dfb7-4c03-9f69-022fb0c0b6d6",
+    "word": "league",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "In the NFL league, Houston beats Los Angeles in a close game.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "fb617ff6-542d-4061-b539-d9ebbe096b52",
+    "word": "objective",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "The main objective is safety and warm shelter for everyone.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "fc299b4c-e424-4188-8e63-b0044d233580",
+    "word": "outdoor",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "Parks close, so outdoor fun becomes less accessible for travelers.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "8be51a4e-376e-44a7-9689-75bc66018188",
+    "word": "wet",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "Many flights stop because roads turn icy and wet.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "cc7b558e-94ad-4ff3-bc04-321244d4502a",
+    "word": "seek",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "Some families stay inside, but they still seek treasure moments.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "8ae17565-7f63-4794-b92e-1dcd6636ae02",
+    "word": "shelter",
+    "article_id": "587ba1b9-b3a5-46fa-b21f-481a81c80af8",
+    "context_snippet": "The main objective is safety and warm shelter for everyone.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:03"
+  },
+  {
+    "id": "a671fffa-431e-4ae9-bb3a-c17eb2ee0936",
+    "word": "currency",
+    "article_id": "d5503517-c024-42a6-8a6a-df76392d2b46",
+    "context_snippet": "Currency means money, and it moves in markets.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "c7b67dd6-22aa-4e51-9653-3095c3823a2d",
+    "word": "media",
+    "article_id": "d5503517-c024-42a6-8a6a-df76392d2b46",
+    "context_snippet": "29, 2025, media report drills near Taiwan.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "acf53e16-33a3-46bb-8ad6-e6b354f775d0",
+    "word": "signal",
+    "article_id": "d5503517-c024-42a6-8a6a-df76392d2b46",
+    "context_snippet": "China holds live-fire exercises and calls them a strong signal.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "e06cc663-8761-497c-b408-815bce2ebdec",
+    "word": "territory",
+    "article_id": "d5503517-c024-42a6-8a6a-df76392d2b46",
+    "context_snippet": "Taiwan says the zones touch its territory and raise tension.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "3da07e8f-4614-4d5a-9c6d-a52cb2762d58",
+    "word": "highlight",
+    "article_id": "d5503517-c024-42a6-8a6a-df76392d2b46",
+    "context_snippet": "For travelers, the highlight is clear routes and calm airports.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "853701b2-f169-4c6b-b13f-2fc79c61c097",
+    "word": "scenery",
+    "article_id": "d5503517-c024-42a6-8a6a-df76392d2b46",
+    "context_snippet": "Tourists still want scenery, but they avoid risky coasts.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "d80e33b1-d24b-4d1f-862c-581514a87d05",
+    "word": "village",
+    "article_id": "41e50cad-9387-4aa0-8732-7d2142258403",
+    "context_snippet": "There is a small **village** in the mountains.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "aaf3be7c-4f46-47ea-81d2-70ce7f78c07f",
+    "word": "mobile",
+    "article_id": "41e50cad-9387-4aa0-8732-7d2142258403",
+    "context_snippet": "A new game is on **mobile** phones.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "a6f8b62f-da9b-4676-8ec6-f0b06e8ab741",
+    "word": "phenomenon",
+    "article_id": "41e50cad-9387-4aa0-8732-7d2142258403",
+    "context_snippet": "It is a big **phenomenon**.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "bc19bc3d-f0da-4e4f-9ea3-4d4670c78d11",
+    "word": "overwhelm",
+    "article_id": "41e50cad-9387-4aa0-8732-7d2142258403",
+    "context_snippet": "The crowds **overwhelm** the old streets.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "26618ac8-ee15-4404-91b8-e07e752afc11",
+    "word": "inhabitant",
+    "article_id": "41e50cad-9387-4aa0-8732-7d2142258403",
+    "context_snippet": "Every **inhabitant** sees the changes.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "70a42597-7790-4d34-b5c3-660d231d7861",
+    "word": "boom",
+    "article_id": "41e50cad-9387-4aa0-8732-7d2142258403",
+    "context_snippet": "There is a **boom** in tourism.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "6f323624-18a5-4bd0-be7f-3fc0ba922cbe",
+    "word": "participant",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "Every participant wants to win the prize.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "d3a5b2f7-14c6-4400-ae07-6e4f659b80ae",
+    "word": "compete",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "They compete against other groups day and night.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "bdff657c-7357-435c-9e62-ae80e73365f1",
+    "word": "wilderness",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "The teams walk into the deep wilderness.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "8875d8c9-d52f-4985-b13e-19bba80a4357",
+    "word": "perilous",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "The path is sometimes perilous for the runners.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "3b8a999c-405e-4606-9f37-8cc51fb00997",
+    "word": "endurance",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "It tests their endurance for a long time.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "01e90d76-c372-4128-bda6-f1d48fbbba62",
+    "word": "magnificent",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "The tall mountains are magnificent to see.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "8c38acea-5a64-4970-907a-2af0c5c99750",
+    "word": "even",
+    "article_id": "934e7118-219a-44d3-806b-cbd76e45c4f1",
+    "context_snippet": "They must keep moving even when they hurt.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "3d4407e3-8127-43f9-83fc-d3f613bba716",
+    "word": "inn",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "Travelers book an inn because roads turn icy in mountainous areas.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "d84061e1-11d3-4af8-a48e-d8434b8f49d5",
+    "word": "mountainous",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "Travelers book an inn because roads turn icy in mountainous areas.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "2a6ff166-0c94-4c41-bfb3-862500bbb51b",
+    "word": "official",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "Officials give an official warning, so people check maps for safety.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "2488ab72-d59f-441e-ba58-d2a8accceaee",
+    "word": "approval",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "The firm seeks official approval, but holiday gamers watch new hardware.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "e9da94be-19ec-4c82-adfe-10bc9d047749",
+    "word": "context",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "They visualize the storm path, and this news is the context.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "aab2575e-6c7f-497b-9af8-3a30d1f5a146",
+    "word": "visualize",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "They visualize the storm path, and this news is the context.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "fcb22f41-9aa3-455d-9a31-ffb5eabeb47e",
+    "word": "spacecraft",
+    "article_id": "f3605e81-0233-41a4-b71b-3416ce1204ea",
+    "context_snippet": "In China, LandSpace tests rockets, and a spacecraft needs careful control.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "e56c8391-4b8b-4ca6-bfaf-1260bdd1429d",
+    "word": "mechanism",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "The game uses a fun mechanism.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "14011006-bbe3-4ac8-8c86-28b8d692eac8",
+    "word": "strategy",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "His strategy is simple but good.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "f11249e5-ca48-4dbf-bb6e-22abfee2c241",
+    "word": "solid",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "It gives solid support to game makers.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "421b3cab-196f-460d-b6c4-ff838300a898",
+    "word": "engagement",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "This helps with user engagement.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "e1cbe186-3fce-4a07-86f7-1579fea2b2d6",
+    "word": "worldwide",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "This success is now worldwide.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "e81d086b-018c-47a1-bd89-2d6b8fc0fa05",
+    "word": "promotion",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "The company also does good promotion.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "8cb67a3a-7e80-4065-b0de-2ef02fd2bddc",
+    "word": "entrepreneur",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "One famous entrepreneur makes mobile games.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "759a6c6b-146a-4542-9294-5959cfb26235",
+    "word": "host",
+    "article_id": "5c35a0ed-ce3a-46dd-b490-2713e801b197",
+    "context_snippet": "They want to host big game events.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "e8a43fe5-bee4-4af6-972d-0c9e1c454e44",
+    "word": "electronics",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "The world of electronics is moving very fast.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "1f5e7116-a66e-4ff1-894f-67ff7f29ca39",
+    "word": "lag",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "New products will have a time lag before they arrive.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "780dca6f-c3fb-4045-a7d8-850fe3184cde",
+    "word": "disappointment",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "Shoppers feel some disappointment about the high cost.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "9f603fe6-9261-42ad-a943-38514b7dbf74",
+    "word": "announcement",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "Officials made an important announcement today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "7a8f1032-944a-470f-98e2-9f538113b29e",
+    "word": "cycle",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "This high demand changes the usual business cycle.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "0c682dde-15e4-4879-9a47-502f6d4e6d2e",
+    "word": "compete",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "They must compete hard to get new players.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "4f103783-fe96-432e-988b-e0bbab2f017e",
+    "word": "phenomenon",
+    "article_id": "20c094c4-d6e1-46c3-a60e-0a4419f09798",
+    "context_snippet": "It is a new global phenomenon.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:04"
+  },
+  {
+    "id": "91eb9f27-4998-4320-9562-cddb7994fe82",
+    "word": "fantastic",
+    "article_id": "6be5d122-639c-42d6-9cd5-8dbda8f35a39",
+    "context_snippet": "This event is fantastic for families and friends.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "d7f93f70-813f-4df4-8b35-ddc5bb7066d4",
+    "word": "flavour",
+    "article_id": "6be5d122-639c-42d6-9cd5-8dbda8f35a39",
+    "context_snippet": "The local meat has a special flavour.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "66558343-9537-4fbf-a217-4c5ad18e85c0",
+    "word": "inclined",
+    "article_id": "6be5d122-639c-42d6-9cd5-8dbda8f35a39",
+    "context_snippet": "Visitors are inclined to walk around the village.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "ab66d8b3-2e53-4434-bca1-34326f2dd87e",
+    "word": "appear",
+    "article_id": "6be5d122-639c-42d6-9cd5-8dbda8f35a39",
+    "context_snippet": "Many tasty dishes appear there.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "fcd49d18-ba9d-4722-aa29-6da3233eb3ce",
+    "word": "discover",
+    "article_id": "6be5d122-639c-42d6-9cd5-8dbda8f35a39",
+    "context_snippet": "You can discover how the locals live.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "6d1b4f23-a556-4c01-81f3-45f40f991c69",
+    "word": "together",
+    "article_id": "6be5d122-639c-42d6-9cd5-8dbda8f35a39",
+    "context_snippet": "Everyone smiles and laughs together.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "7cc2f6a0-928e-44a5-a9f5-112cd16c8bbb",
+    "word": "factual",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "The report shares many factual numbers.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "3ce9359a-5959-4f93-91fa-1129595774cd",
+    "word": "sociologist",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "A sociologist helped write the text.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "5ca12341-9489-4e4c-aeae-6a263a61c993",
+    "word": "disappointing",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "The progress is slow and disappointing.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "cda817b4-e6b2-4402-a3d2-6b3d65504e1f",
+    "word": "emission",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "Carbon emission levels are still high.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "571bc81b-3902-4a59-a264-ab1622702394",
+    "word": "threaten",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "High heat can threaten all people.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "cf716add-9c2c-4123-b7cc-2cb5ba7bf4f5",
+    "word": "habitat",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "They lose their natural habitat.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "1aef8734-c6b2-4c0e-8a6b-0f0d320251ad",
+    "word": "overcome",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "We must overcome this big crisis.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "58f5c7d7-2390-429b-a8b5-228c844a6c8c",
+    "word": "together",
+    "article_id": "3c82fbc3-57f1-4e4b-bd10-193d3a27cd6f",
+    "context_snippet": "This is context echo #1 for the word 'together'.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "c5c3f3fd-1b62-4125-a9cd-9af749aea2e6",
+    "word": "haul",
+    "article_id": "1e1fe066-46dc-4229-8608-3abd14d61e11",
+    "context_snippet": "This was a very big haul for them.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "e70ff9c6-3bc0-4b25-8333-292a68ee669f",
+    "word": "trafficking",
+    "article_id": "1e1fe066-46dc-4229-8608-3abd14d61e11",
+    "context_snippet": "This is called drug trafficking.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "6c898846-3cd1-42a8-9220-8afbe93d337b",
+    "word": "cargo",
+    "article_id": "1e1fe066-46dc-4229-8608-3abd14d61e11",
+    "context_snippet": "The ship had a large cargo of fuel.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "db04cb49-ed9a-4fdc-84d5-31dbd58ca9bd",
+    "word": "official",
+    "article_id": "1e1fe066-46dc-4229-8608-3abd14d61e11",
+    "context_snippet": "Every government official is happy now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "a85ae7d1-7eb7-4e28-b947-680836b77544",
+    "word": "halt",
+    "article_id": "1e1fe066-46dc-4229-8608-3abd14d61e11",
+    "context_snippet": "They work to halt these bad crimes.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "a13587ba-d3b5-45e7-a3fa-876589a14251",
+    "word": "each",
+    "article_id": "1e1fe066-46dc-4229-8608-3abd14d61e11",
+    "context_snippet": "Police in different countries helped each other.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "37975a60-ba18-437a-b028-6fd7be92ac4f",
+    "word": "mask",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "They try to mask their plan with coupons.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "28a00a40-0ec2-4795-a8fd-5654cff23096",
+    "word": "ignorant",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "They hope people stay ignorant of the facts.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "0e6f2c69-34ba-47f7-8fc2-354be46e182c",
+    "word": "compensatory",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "The company offers special compensatory tickets to its users.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "5b3ee520-1046-4746-bebe-14a5bcedc525",
+    "word": "gossip",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "There is much gossip in the city now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "2fafa187-87ae-45b5-bd98-cfe03eb0a957",
+    "word": "scandalous",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "It is a scandalous story in the country.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "b2d732b7-33bd-4d66-abd6-24cad9efeb09",
+    "word": "disappoint",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "The news does disappoint many loyal customers today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "d28b577f-b125-4fd7-a8f8-57a35c5b6cb4",
+    "word": "outrageous",
+    "article_id": "d789aa60-7eb8-46a3-9692-9947419f07bf",
+    "context_snippet": "They feel the plan is outrageous and unfair.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "1f945350-3b5c-4149-a768-96971a1ddde5",
+    "word": "corridor",
+    "article_id": "ef17dea8-a91b-420e-ba3e-9bd4be5c23f6",
+    "context_snippet": "It is a long corridor of light.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "88671c38-2ac9-4461-a957-bbbf28a288cc",
+    "word": "ugliness",
+    "article_id": "ef17dea8-a91b-420e-ba3e-9bd4be5c23f6",
+    "context_snippet": "It showed the city's ugliness.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "4cd03c60-4607-4211-aead-ae6315948589",
+    "word": "rest",
+    "article_id": "ef17dea8-a91b-420e-ba3e-9bd4be5c23f6",
+    "context_snippet": "They find a place to rest.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "57f9e9c0-3a7f-42c0-a42a-fd03ff3b55a3",
+    "word": "house",
+    "article_id": "ef17dea8-a91b-420e-ba3e-9bd4be5c23f6",
+    "context_snippet": "Every house near the road is bright.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "8cca33a7-9bc4-4303-9fdf-ad8dabcb7cfc",
+    "word": "filling",
+    "article_id": "ef17dea8-a91b-420e-ba3e-9bd4be5c23f6",
+    "context_snippet": "They are filling the night with color.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "55bb1993-e7b8-409f-82a2-3af8958f8caa",
+    "word": "decent",
+    "article_id": "ef17dea8-a91b-420e-ba3e-9bd4be5c23f6",
+    "context_snippet": "It is a decent place to live.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "ae294d74-1096-455e-a333-5796f29be817",
+    "word": "receive",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "The people receive news about this every day.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "86362583-5960-4a92-82fb-d339cf76c5c9",
+    "word": "republican",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "One group is the Republican party.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "44539f69-2e1a-4b55-99ee-559750702054",
+    "word": "declaration",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "One leader made a declaration about the vote.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "60543c55-2a55-4f00-bc1e-cf2aa888a0de",
+    "word": "team",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "They formed a team to fix the budget.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "5f02363c-a603-47be-8ec3-ba26dbb9887d",
+    "word": "congressional",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "There is a serious congressional issue in Washington.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "3302f0ef-d09c-4c35-a8a7-fcc36250dddb",
+    "word": "conflict",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "This causes a conflict between two groups.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "cffa924b-84f2-415c-9fb0-2ae6dfced2ee",
+    "word": "emergency",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "It creates an emergency for the country.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "360edf14-69b1-46a6-ad9d-daa27c243455",
+    "word": "yet",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "But they did not succeed yet.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "bee2e2d6-fd8e-4b12-9a23-9b0003581eb4",
+    "word": "together",
+    "article_id": "cae626d0-62bf-401b-8688-0acace98f1ee",
+    "context_snippet": "They tried to work together.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:05"
+  },
+  {
+    "id": "8a8826bd-e39b-49f3-b425-010c83d19780",
+    "word": "maximize",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "They want to maximize speed at work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "893c82dd-e88d-43f8-b530-98bb420a6a69",
+    "word": "perform",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "This helps them perform better logic.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "2549abba-b944-4230-bb40-dd3e864274fc",
+    "word": "enhancement",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "The models get a big enhancement often.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "0251adea-67bb-432d-8a9c-2a0200199133",
+    "word": "information",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "These systems read new information quickly.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "b46ab117-7353-4230-b661-f39363f24b80",
+    "word": "excellent",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "These models are excellent at thinking.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "a92a2175-57d8-4b07-bef6-90a0e61c328c",
+    "word": "sensible",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "Using AI is a sensible choice today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "b3858e50-f77a-4a6c-a626-4f8e889995ee",
+    "word": "highlight",
+    "article_id": "22f2bcfb-087e-4c65-abb7-438f45bacfda",
+    "context_snippet": "New reports highlight big changes in technology.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "be72da41-a472-4eac-9db2-f8ddc949f1f9",
+    "word": "yet",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "We do not know everything about it yet.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "7891c24e-e47d-4744-80a2-9957792b2d1e",
+    "word": "approximate",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "The time is an approximate 13 billion years.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "dd31f8b6-b789-4e7b-8a1d-1c1d8b8b3712",
+    "word": "conceptual",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "We have new conceptual ideas about the universe.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "e1d3ce3b-b1b8-488d-ab87-01193487a1e3",
+    "word": "immense",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "It finds immense new things in the sky.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "eff067a2-0825-44e5-ba98-4e3796e47874",
+    "word": "planetary",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "Scientists use the telescope for planetary science.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "a081f0d7-9cf7-4e0b-9837-f282edfcd39e",
+    "word": "distinguish",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "They can distinguish small details in the pictures.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "4f75ee27-abf5-45eb-b621-cf8d95d027a9",
+    "word": "distant",
+    "article_id": "f9184c10-0a81-4ac6-ad54-21947103242e",
+    "context_snippet": "The telescope also sees a very distant star.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "6bdb1f31-99bb-4a71-9c6c-6c06b15bbe53",
+    "word": "myself",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "I look at the happy crowd myself.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "da6c5b7d-54fa-43d6-9b22-1dfb9324f96a",
+    "word": "pause",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "We pause to watch them laugh and smile.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "dee3c7ff-1fd5-4bf0-86a9-cb71dbd9ed4e",
+    "word": "kid",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "Every kid helps the adults with the meal.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "5297796d-a942-4aba-ac5f-1409713e8e59",
+    "word": "peace",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "The day brings peace to everyone in the town.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "aa5c452c-f68f-4954-8e46-31a8952266e6",
+    "word": "modest",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "It is a modest event.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "d5fb82b1-6ec9-4729-9aa7-f3748f9fd697",
+    "word": "together",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "This is context echo #2 for the word 'together'.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "02484cf9-8bea-4045-8540-650807a01a67",
+    "word": "contact",
+    "article_id": "3eb13e73-23ec-446f-a778-a3d35a2ee95c",
+    "context_snippet": "They keep in contact with others.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "fcf08044-86ce-4646-8dd0-517e9cb72f23",
+    "word": "uncover",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "They uncover new life forms often.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "8986adc8-1027-4e47-8336-30234e81c1ec",
+    "word": "curiosity",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "They have great curiosity about the world.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "55511eb4-b31e-40f2-9087-a63843582ff1",
+    "word": "monitor",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "We must monitor the world.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "f6d69221-8763-4b9d-98d0-60a0813e4dbc",
+    "word": "abundant",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "Earth has abundant life everywhere.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "da53a00e-40ec-4747-8396-60e4d0ba8a47",
+    "word": "effect",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "This work has a good effect.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "a5334373-d079-4cc6-b497-4173cadbd18d",
+    "word": "creature",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "They find a new creature easily.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "03664da8-c1c0-4bed-b258-91af50c7f626",
+    "word": "demonstrate",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "Scientists demonstrate their hard work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "e8416e81-ff05-4ec1-9a18-c58130594046",
+    "word": "yet",
+    "article_id": "9fd26159-4010-4dac-b792-2b3260ada0a0",
+    "context_snippet": "We do not know many plants yet.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "d4c42707-f8ba-443e-aab8-246d366dd513",
+    "word": "story",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "The first story comes from 1925.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "ca3809c4-bf6d-4f05-aa62-90d81658be4c",
+    "word": "classic",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "This bear is a classic character.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "58a82435-4347-4fbe-b475-53c4fc9be1df",
+    "word": "appreciate",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "People appreciate him very much.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "2c8751a9-437e-4402-8518-0fa3705cc743",
+    "word": "learning",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "Children enjoy learning from Pooh.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "85f51ad1-af04-48e0-8d39-45db5778df47",
+    "word": "amuse",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "His adventures amuse boys and girls.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "f1d32d2c-6c44-48bc-afed-9eb478caa19d",
+    "word": "universal",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "The themes are universal.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "a1b3c3fe-6ef1-4570-b57e-1b67f23bef9a",
+    "word": "educational",
+    "article_id": "7e3611a2-fadd-4480-8bc2-e7b6624a097f",
+    "context_snippet": "The books are educational too.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "516e8c41-5969-4789-b28f-431b182ac187",
+    "word": "enthusiasm",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "The group has great enthusiasm for its work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "73a70131-2abd-4c16-b977-6146c8c39236",
+    "word": "rescue",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "The team does rescue work for animals.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "1355106a-cda7-4e55-9c2b-302f037c4627",
+    "word": "guidance",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "You can ask for guidance by email.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "78b53023-6299-4553-a762-57522cff6769",
+    "word": "appeal",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "They make a special appeal to people.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "47a32c19-5f5e-4655-a7d2-5c4df41eb356",
+    "word": "effective",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "It is very effective for the animals.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "a5c59e74-4ef7-43e7-b4ae-4408d538e7eb",
+    "word": "loss",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "This work stops the loss of life.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "9c89b825-150a-479e-a3d5-e5fa00d71722",
+    "word": "email",
+    "article_id": "eb7a8630-61d7-4fed-8549-6b8a5414a821",
+    "context_snippet": "You can ask for guidance by email.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "bdde61d8-dc64-4f00-b2d1-0dec5598475a",
+    "word": "grasp",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "Experts grasp the importance of this work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "3bede673-0dff-4d26-bdc8-8988508a0be6",
+    "word": "presentation",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "A special presentation lists these great things.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "b98e3f8e-9f45-4c8b-b48a-f3d6c3f41137",
+    "word": "enable",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "These new tools enable people to do more work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "6286a9f9-cd08-447c-b9d9-27abcb0c7757",
+    "word": "seemingly",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "It makes seemingly hard tasks very easy to do.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "d4dbaf49-0652-47e5-8da2-48d271e14823",
+    "word": "stimulate",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "This news helps to stimulate business growth.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "db279a3d-6442-41b7-bc88-f42f57cbf8da",
+    "word": "electronics",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "New electronics help machines fly and think.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "553c5f2c-0ad3-4627-b323-4b19e86a6a9c",
+    "word": "pioneer",
+    "article_id": "0263db58-5f34-4270-9172-32116edca718",
+    "context_snippet": "China is now a pioneer in science.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:06"
+  },
+  {
+    "id": "284c0b8f-54f2-48cd-a644-0c970879ddef",
+    "word": "odd",
+    "article_id": "a09f8615-ecaa-4490-838e-fdaaf952d164",
+    "context_snippet": "The cat looks a little odd to some people.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "631a2598-04fd-4ab0-81c4-a04f1eb69fc4",
+    "word": "frog",
+    "article_id": "a09f8615-ecaa-4490-838e-fdaaf952d164",
+    "context_snippet": "The cat catches a fish or a frog for its dinner.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "30a090da-6f21-44ae-a709-3f079d4e6891",
+    "word": "weird",
+    "article_id": "a09f8615-ecaa-4490-838e-fdaaf952d164",
+    "context_snippet": "It is a weird and special cat.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "6c8c5c95-4426-40f5-89fd-7f104db914ab",
+    "word": "intact",
+    "article_id": "a09f8615-ecaa-4490-838e-fdaaf952d164",
+    "context_snippet": "This special home must stay intact for the animals.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "3243189a-9fcc-4eb0-886d-c28b40ef8e44",
+    "word": "discover",
+    "article_id": "a09f8615-ecaa-4490-838e-fdaaf952d164",
+    "context_snippet": "Researchers discover the cat in deep, wet forests.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "dd55f0c4-e346-4237-a708-94f699c98786",
+    "word": "fox",
+    "article_id": "a75bca78-cc5c-4c0b-acb6-89d55b3e636a",
+    "context_snippet": "A red fox named Sadie lives in a zoo.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "56cac892-0fa6-4c90-86c4-b1e5d932b36d",
+    "word": "chew",
+    "article_id": "a75bca78-cc5c-4c0b-acb6-89d55b3e636a",
+    "context_snippet": "They chew on tasty treats.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "c8e8657a-7b0d-4961-a753-261168664401",
+    "word": "odorous",
+    "article_id": "a75bca78-cc5c-4c0b-acb6-89d55b3e636a",
+    "context_snippet": "The old farm was dirty and odorous.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "8e624e60-a5cf-414a-ac10-a0df79d5748c",
+    "word": "peaceful",
+    "article_id": "a75bca78-cc5c-4c0b-acb6-89d55b3e636a",
+    "context_snippet": "The zoo is a peaceful home for the pair.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "2925b650-c6cb-4e92-be38-66b1bab8482a",
+    "word": "tame",
+    "article_id": "a75bca78-cc5c-4c0b-acb6-89d55b3e636a",
+    "context_snippet": "However, Sadie and Seth are tame.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "57d554eb-75fe-431a-bf8a-a1686905411f",
+    "word": "marine",
+    "article_id": "a75bca78-cc5c-4c0b-acb6-89d55b3e636a",
+    "context_snippet": "A marine life expert helps the animals.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "9b63ee6e-2e82-4a55-bba3-43a02db364f9",
+    "word": "doctoral",
+    "article_id": "400cc9ed-8de0-4ae3-91a1-96ee8367fffd",
+    "context_snippet": "AI acts like a doctoral student.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "6c3a2846-0d7c-4d8e-838a-fc9337fd1d62",
+    "word": "educator",
+    "article_id": "400cc9ed-8de0-4ae3-91a1-96ee8367fffd",
+    "context_snippet": "A famous educator speaks about this.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "ef528860-783c-43a8-b8ed-7b4ff9df6405",
+    "word": "clarification",
+    "article_id": "400cc9ed-8de0-4ae3-91a1-96ee8367fffd",
+    "context_snippet": "People ask for a clarification of the rules.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "03a39194-7816-4cc7-85de-ca396f378045",
+    "word": "permissible",
+    "article_id": "400cc9ed-8de0-4ae3-91a1-96ee8367fffd",
+    "context_snippet": "They ask what is permissible in schools.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "40b106db-267b-47e2-a94b-5c0ae3d66816",
+    "word": "case",
+    "article_id": "400cc9ed-8de0-4ae3-91a1-96ee8367fffd",
+    "context_snippet": "This case worries many people.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "cc270303-5dd9-44d1-b3e9-6260c8fbca45",
+    "word": "factual",
+    "article_id": "400cc9ed-8de0-4ae3-91a1-96ee8367fffd",
+    "context_snippet": "He says the work is not factual.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "6e3f5feb-4304-4c61-918e-80803c733635",
+    "word": "acid",
+    "article_id": "be926c2f-4057-49c5-a3b3-088922859f2a",
+    "context_snippet": "A lot of acid spills out.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "6348961c-ea07-4860-84cc-0e6eccd0bb10",
+    "word": "fearful",
+    "article_id": "be926c2f-4057-49c5-a3b3-088922859f2a",
+    "context_snippet": "People are fearful about the dirty water.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "058fe7c5-1992-4920-9319-a3049b60a528",
+    "word": "clinic",
+    "article_id": "be926c2f-4057-49c5-a3b3-088922859f2a",
+    "context_snippet": "They go to a clinic for help.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "37914251-cbf2-4b54-b418-9837957b96b1",
+    "word": "regrettable",
+    "article_id": "be926c2f-4057-49c5-a3b3-088922859f2a",
+    "context_snippet": "It is a regrettable mistake.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "cbbccf44-4867-4ee2-b370-9b0b21ba8f7f",
+    "word": "disappointing",
+    "article_id": "be926c2f-4057-49c5-a3b3-088922859f2a",
+    "context_snippet": "This news is disappointing to the local people.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "ec8ae033-c424-4a1b-a645-14e8b53d26d5",
+    "word": "investigate",
+    "article_id": "be926c2f-4057-49c5-a3b3-088922859f2a",
+    "context_snippet": "The police investigate the accident now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "83c5053a-4460-4fe1-a673-8d6e1941d022",
+    "word": "repeatedly",
+    "article_id": "181432fd-cab6-4b23-8c9c-7edd4b46d3f5",
+    "context_snippet": "He hits the ball repeatedly for many points.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "efbbea93-b4d1-4216-8eb1-1142f5b80e22",
+    "word": "fluency",
+    "article_id": "181432fd-cab6-4b23-8c9c-7edd4b46d3f5",
+    "context_snippet": "He shows great fluency in his game.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "741774fa-9843-48d5-b780-04ed71dd5186",
+    "word": "stadium",
+    "article_id": "181432fd-cab6-4b23-8c9c-7edd4b46d3f5",
+    "context_snippet": "The match is at a big stadium in Jaipur.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "3c16dbce-1e4d-40b9-b065-008dd60e2b74",
+    "word": "recording",
+    "article_id": "181432fd-cab6-4b23-8c9c-7edd4b46d3f5",
+    "context_snippet": "A fan makes a recording of this moment.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "4bbe8c91-49cd-4a28-9425-249c6a3b8509",
+    "word": "listener",
+    "article_id": "181432fd-cab6-4b23-8c9c-7edd4b46d3f5",
+    "context_snippet": "Every listener in the crowd cheers for him loudly.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "72754ebc-5a6c-4b1b-b664-f7120dc1b71e",
+    "word": "somewhat",
+    "article_id": "181432fd-cab6-4b23-8c9c-7edd4b46d3f5",
+    "context_snippet": "The other team is somewhat new.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "e85780cd-2038-4a8f-b4ef-c381349411a7",
+    "word": "plain",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "Some lands look plain but are very pretty.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "14c57fca-5e87-450f-9240-908e6b0cec1f",
+    "word": "coast",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "The area has a long coast and big mountains.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "8df8ac21-677f-4272-a873-91b58cc107e4",
+    "word": "naturally",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "Tourists naturally love the outdoors here.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "2b716685-5537-4373-aaff-8772f1c2c5d9",
+    "word": "utmost",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "Giving the utmost care to visitors is their goal.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "564660fb-2461-4e74-aee1-54c4db38d4c2",
+    "word": "fantastic",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "People visit this fantastic spot in winter.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "c30812c1-070c-4a34-9b1c-e3a02bb99b5e",
+    "word": "priority",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "Tourism is a priority for the city leaders.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "a49e546b-7588-419e-8012-f32716047b04",
+    "word": "perform",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "They want the city to perform well.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "86bb2d63-9c0f-4ce8-8c76-8da7e4b470cc",
+    "word": "here",
+    "article_id": "32e09139-ac83-450a-8731-af607054af7f",
+    "context_snippet": "Tourists naturally love the outdoors here.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:07"
+  },
+  {
+    "id": "a14d9827-ef86-422d-8021-2ddebfc71ac8",
+    "word": "counterpart",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "They invite every foreign counterpart to the city.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "a08c4ea9-be3c-418b-b95c-452dcea0ea31",
+    "word": "preventive",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "They need preventive rules for the future.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "596cca2c-f7e9-4bcf-b4a9-27714fd4ff09",
+    "word": "persistent",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "There are persistent problems with AI safety today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "6e0abbbf-e6bb-4dc9-bb75-d1097415c92a",
+    "word": "transform",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "They want to transform how people use computers.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "f179f475-6849-4194-b4d4-bad9b1d5ac72",
+    "word": "collaboration",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "The group wants strong collaboration between nations.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "2d4ab390-f3ed-4878-9792-da410422249b",
+    "word": "declaration",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "The leaders want a new declaration about technology safety.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "512c377d-ffcf-41a3-9c49-f6f8af99f6a8",
+    "word": "compromise",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "Every country must agree on a compromise.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "289a1d10-aef8-46bd-9656-b8a122aefafe",
+    "word": "together",
+    "article_id": "872d98d9-c2dc-4d94-8a7a-c37b61c34bd3",
+    "context_snippet": "This helps everyone work together.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "59f42dc1-5e00-46bc-ae70-4b500fc89185",
+    "word": "pretend",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "You pretend to be a hero in this world.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "cde75c35-7436-482a-af7d-2d78c6d21d5c",
+    "word": "calculation",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "Every move needs careful calculation to win.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "57ba4fea-0ef1-4cb0-a455-f2b47d2ce5f4",
+    "word": "spell",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "You use a magic spell against monsters.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "e491f818-e87c-4d20-90f4-96805e426b18",
+    "word": "variant",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "You can also choose a job variant for power.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "6e7c1887-f8c5-4464-8e94-7cc1b59a9866",
+    "word": "fairy",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "It has a fairy tale look.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "5015a431-0988-4a8a-bc69-4fa6999ffbd8",
+    "word": "information",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "New information says the game is long.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "20c1e75b-f886-4891-bbdb-b8e700d12065",
+    "word": "immense",
+    "article_id": "3d984e77-93f2-43d3-99ba-cb16f5ba8366",
+    "context_snippet": "The journey feels immense and beautiful.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "8375da03-c024-47e2-95a7-90f6497aeaf4",
+    "word": "bell",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "In Asia, people ring a big bell for luck.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "2a3d45ac-de97-4b57-8531-a252cd81575c",
+    "word": "utilization",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "Cities show good utilization of lights and technology.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "f068219f-1503-49f3-95fd-f32f08d85161",
+    "word": "collective",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "This event brings a collective hope to us.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "d062e90b-d139-484d-98e4-1ef72e63bf83",
+    "word": "pause",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "We take a pause to think about our lives.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "e3bc2031-a981-4b2e-8a47-016caf4cd982",
+    "word": "occasion",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "This event is a happy occasion for families.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "22052f62-a699-4427-8108-63318327cc48",
+    "word": "gathering",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "Every gathering is full of joy today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "606e564b-7328-425b-8357-2c07a44c86d6",
+    "word": "together",
+    "article_id": "aa6311c9-95b3-41f6-8a90-7541b46a87a6",
+    "context_snippet": "We are ready for the future together.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "0fec43a5-699c-46ca-90ae-19f4b9776fdf",
+    "word": "discourage",
+    "article_id": "1a52689e-f80d-4737-b0d0-63b05ddc5882",
+    "context_snippet": "High costs discourage gifts from people.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "1f5c37cc-063d-421a-87ff-5541a6386147",
+    "word": "poll",
+    "article_id": "1a52689e-f80d-4737-b0d0-63b05ddc5882",
+    "context_snippet": "A new poll shows a hard truth.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "dea20bcb-87cd-429a-b7aa-f46c9240a0b3",
+    "word": "sadden",
+    "article_id": "1a52689e-f80d-4737-b0d0-63b05ddc5882",
+    "context_snippet": "This news might sadden the workers there.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "2131b271-25c9-472b-aa97-840e00bcb141",
+    "word": "charity",
+    "article_id": "1a52689e-f80d-4737-b0d0-63b05ddc5882",
+    "context_snippet": "A charity uses money for good deeds.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "c4230905-a394-4ef6-8d3d-8bd029920bd5",
+    "word": "sociologist",
+    "article_id": "1a52689e-f80d-4737-b0d0-63b05ddc5882",
+    "context_snippet": "A sociologist explains the reason for this.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "6c548929-15d9-475d-813e-b19029ad44bf",
+    "word": "undermine",
+    "article_id": "1a52689e-f80d-4737-b0d0-63b05ddc5882",
+    "context_snippet": "Money issues undermine the plans of groups.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "5ce381f3-fe46-4010-8341-9ca4967fed01",
+    "word": "advisable",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "It is advisable to make a new plan.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "776626fa-834d-4497-a686-5227b9523a8f",
+    "word": "seldom",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "Success seldom happens in this area.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "bcbed4e5-7bcc-4545-8eb3-4fb4d54cc7bb",
+    "word": "fruitful",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "A fruitful result is difficult to see now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "e5975ca6-4c8c-462f-a8b6-957a9cdff0c8",
+    "word": "creep",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "Bad ideas creep into the important work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "6757761d-d338-4431-bafa-8297bcacde04",
+    "word": "quotation",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "A news quotation explains the strict limits clearly.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "5fa4a9ce-ed5e-4cd8-9bca-921b61a9c04a",
+    "word": "struggle",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "Many families struggle to find food daily.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "d614eec8-e8c8-4a7c-8c37-72c43b4c972d",
+    "word": "threaten",
+    "article_id": "de7cb4db-ca60-4ede-8833-276483c159a8",
+    "context_snippet": "New rules threaten the safety of the workers.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "8ad2101a-18e5-4495-9bdc-17bdcd8b86f9",
+    "word": "thus",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "Thus the game is famous now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "c682f628-68dc-420c-a884-e8c6b1b2086f",
+    "word": "lose",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "They do not lose interest in the story.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "cbcf6395-3c7a-4065-84e5-cd9a9431522d",
+    "word": "together",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "This is context echo #3 for the word 'together'.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "10395ff2-d3c9-4eca-bdf7-114b4be3dd66",
+    "word": "enhancement",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "It shows a cultural enhancement.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "d52699e3-b0ca-4702-b6f7-eb6af55ee921",
+    "word": "originality",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "This shows its originality to the world.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "cc5a6c6f-ea4b-43ab-84ce-d3364c9f6514",
+    "word": "signature",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "The makers use a signature Chinese look.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "83ffc1ba-45da-4666-b7f5-a07bb8aa3371",
+    "word": "visual",
+    "article_id": "50789fd1-452b-4127-a5b2-b66abe7f6bf5",
+    "context_snippet": "The game has a special visual style.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:08"
+  },
+  {
+    "id": "6906dcfa-e5cb-4e10-b52d-5e7427b9d204",
+    "word": "planetary",
+    "article_id": "3877eea6-ca68-42fb-b3a5-7993239d3f5d",
+    "context_snippet": "We look at planetary health.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "32881e48-9440-42bd-ab8a-00ed760f996d",
+    "word": "coordination",
+    "article_id": "3877eea6-ca68-42fb-b3a5-7993239d3f5d",
+    "context_snippet": "Good coordination helps everyone stay safe.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "ffe8d7b5-c3cd-4de0-a759-41525361c3f5",
+    "word": "lengthy",
+    "article_id": "3877eea6-ca68-42fb-b3a5-7993239d3f5d",
+    "context_snippet": "It is a lengthy process.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "c925b350-9771-474c-9dd8-bf8e3ab07381",
+    "word": "conceptual",
+    "article_id": "3877eea6-ca68-42fb-b3a5-7993239d3f5d",
+    "context_snippet": "These are conceptual plans for the future.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "89eb45a4-a082-46c8-8104-ff09ea5da5e8",
+    "word": "sustainability",
+    "article_id": "3877eea6-ca68-42fb-b3a5-7993239d3f5d",
+    "context_snippet": "We need good space sustainability to fix it.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "dda2f046-9685-470d-a37d-afe04513bfeb",
+    "word": "exploit",
+    "article_id": "c1a1f385-627f-4c00-8f57-98b87dbf5bc6",
+    "context_snippet": "Hackers use an exploit to break into the game.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "e33cde3c-8721-4f1c-8a7f-3a8637a11dfd",
+    "word": "confident",
+    "article_id": "c1a1f385-627f-4c00-8f57-98b87dbf5bc6",
+    "context_snippet": "They are confident in their report.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "47af4411-b45a-4a8f-b287-73bbffd15411",
+    "word": "process",
+    "article_id": "c1a1f385-627f-4c00-8f57-98b87dbf5bc6",
+    "context_snippet": "The hackers follow a specific process to steal data.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "55bfa66b-a051-447f-ba8d-49faacaa9155",
+    "word": "reveal",
+    "article_id": "c1a1f385-627f-4c00-8f57-98b87dbf5bc6",
+    "context_snippet": "They reveal private information about the system.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "05db21c9-9a1f-490d-a306-c77c4c308fef",
+    "word": "consequence",
+    "article_id": "c1a1f385-627f-4c00-8f57-98b87dbf5bc6",
+    "context_snippet": "The consequence is very bad for many players.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "a9aed9bf-ce2b-4292-87eb-9e9a7ad3bdcb",
+    "word": "investigation",
+    "article_id": "c1a1f385-627f-4c00-8f57-98b87dbf5bc6",
+    "context_snippet": "An investigation begins now to fix this.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "3f2a0b46-b863-4caa-8860-73d2ae94491d",
+    "word": "kindergarten",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "The path sits next to a kindergarten.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "cfcc1afc-6904-47b2-bb89-2de212fae835",
+    "word": "gardening",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "They do the gardening work together every week.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "3c2e2d2d-7a91-4e1a-bcae-1e1851a8d7a5",
+    "word": "seasonal",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "The flowers here are seasonal and very colorful.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "319dfcc7-10b7-479d-aa33-560678c5e0fd",
+    "word": "initiative",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "This local initiative improves the old community.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "1efe2bfc-e7bb-4a89-83e8-6738503ca189",
+    "word": "household",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "Every household can see the green trees now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "8ffce730-02e0-4c60-b713-31b20dcfa839",
+    "word": "assist",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "Experts assist the residents with the plants.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "b15951a8-42f7-4aad-accb-3422ad04aba5",
+    "word": "joyful",
+    "article_id": "10c3ca39-7690-4a9b-b890-7e6e3f7692e5",
+    "context_snippet": "Residents feel joyful about this nice change.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "5a9c3a1f-3447-493f-8af1-116cac6e8437",
+    "word": "ultimate",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "His ultimate goal is a good life for everyone.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "2f130042-b24a-454c-8b6d-f9564dc3761a",
+    "word": "construct",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "Workers will construct a safe place for visitors.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "465f32af-f9c8-4b35-ba31-b6769f1b6e65",
+    "word": "gap",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "He closes a large gap in funding for childcare services.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "44e9e675-1190-4e54-913d-a850e5901bf8",
+    "word": "staple",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "Cheese is a staple food in this state.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "30729206-4d16-4aa1-9707-941d49545ea1",
+    "word": "generate",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "New car plates generate extra money for roads.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "55c79f99-2904-47c3-977a-3e775f8a7fea",
+    "word": "witness",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "The residents witness his hard work during these trips.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "bc7ca9b5-8421-4fc2-88e5-566d4a952483",
+    "word": "tower",
+    "article_id": "153c655e-6b95-47df-aebd-f82766ad37c9",
+    "context_snippet": "The governor plans to fix an old tower in a park.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "18c59705-3bf0-43cb-9dc1-b5fe82766e23",
+    "word": "stove",
+    "article_id": "65891c57-76b3-4454-b540-d1fd1fcb47e9",
+    "context_snippet": "They cook food on a hot stove.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "48fdcf6c-668d-48df-b1e9-4dd929157684",
+    "word": "gentle",
+    "article_id": "65891c57-76b3-4454-b540-d1fd1fcb47e9",
+    "context_snippet": "The cooking needs gentle heat.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "0179514d-af21-442b-848c-ee1207270348",
+    "word": "chef",
+    "article_id": "65891c57-76b3-4454-b540-d1fd1fcb47e9",
+    "context_snippet": "Each woman acts like a chef in her kitchen.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "68267719-00c4-4792-b7af-39692602c08b",
+    "word": "bake",
+    "article_id": "65891c57-76b3-4454-b540-d1fd1fcb47e9",
+    "context_snippet": "Sometimes they bake dishes in the oven.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "fe3fd61c-8323-4b29-b06e-675bce8d9e6f",
+    "word": "traditional",
+    "article_id": "65891c57-76b3-4454-b540-d1fd1fcb47e9",
+    "context_snippet": "People love this traditional food.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "ae6f7692-9931-4d2f-9e5c-f6c036bc4772",
+    "word": "rhythmic",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "Fans love the new rhythmic games there.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "d02126bf-b648-42d9-add8-7b9de26cc2c6",
+    "word": "tendency",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "This tendency shows a split in the market today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "92420cf3-a936-455f-9a31-92677728ea7d",
+    "word": "integration",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "He likes the integration of smart computer tools.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "367ef404-adc9-4f6c-b7d9-bc23204ad1f7",
+    "word": "uniform",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "He wants a uniform world for all players.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "fd985a1f-6f46-457b-ba1e-88e271d823ba",
+    "word": "principal",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "It is a principal spot for fun online.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "cb33d434-b08d-4e96-b24f-4d3d8c97ef2a",
+    "word": "remark",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "He makes a remark about the future.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "fc339b95-d46f-4dd4-a34d-8fe01c4b0d44",
+    "word": "limitation",
+    "article_id": "90e8c2dc-d010-4fd2-8d96-79cb4694c4c8",
+    "context_snippet": "But other places see a big limitation with users.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "f187c521-8a91-4374-bc45-f6b867ea8728",
+    "word": "berry",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "They try drinks with a sweet berry taste.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "662bff94-f1bc-4ddb-a9e5-f3b3cd1faec8",
+    "word": "initially",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "The festival initially starts with only locals.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "c96a09d6-46d9-45a4-8375-3ad88a84f2c0",
+    "word": "observer",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "An observer watches artists make ice art.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "9d04e345-3997-46bf-8a00-54760a860443",
+    "word": "novel",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "Now it offers a novel activity for tourists.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "2f9d97ae-b1a6-4ed0-ad0b-fad50d8f88ee",
+    "word": "northeastern",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "The northeastern United States has a big winter party.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "1ad848ed-3f8c-4f7f-8cdb-3e39f31b35f7",
+    "word": "monument",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "They build a beautiful ice monument.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "1d4b9a27-b682-4db7-8d55-6e4091c37b07",
+    "word": "winery",
+    "article_id": "67efed68-e2b9-45b8-8ac5-72c3155d57c3",
+    "context_snippet": "Visitors also go to a local winery.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:09"
+  },
+  {
+    "id": "b446f66d-fa8b-4f59-a60b-d82cbae3ded8",
+    "word": "independent",
+    "article_id": "f5ca8709-3e31-4095-8279-b0b530236c13",
+    "context_snippet": "Several independent companies build big new rockets now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "1e122141-5be3-4a1c-9682-c2c4dc12c8e1",
+    "word": "mechanize",
+    "article_id": "f5ca8709-3e31-4095-8279-b0b530236c13",
+    "context_snippet": "They plan to mechanize the heavy work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "fdf3742b-347c-4658-9df2-ae186acf43f1",
+    "word": "cosmic",
+    "article_id": "f5ca8709-3e31-4095-8279-b0b530236c13",
+    "context_snippet": "New tools also protect travelers from dangerous cosmic rays.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "e38e8c81-7fee-425a-ad41-210879250367",
+    "word": "adventurous",
+    "article_id": "f5ca8709-3e31-4095-8279-b0b530236c13",
+    "context_snippet": "Many adventurous people want to leave Earth.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "da144c63-210f-4671-9c8c-6f283359b582",
+    "word": "astonishment",
+    "article_id": "f5ca8709-3e31-4095-8279-b0b530236c13",
+    "context_snippet": "This news brings astonishment to the whole world.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "1204ae43-9bd4-4c2a-804b-db542437e23d",
+    "word": "reduce",
+    "article_id": "f5ca8709-3e31-4095-8279-b0b530236c13",
+    "context_snippet": "This helps reduce the high price of tickets.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "fcb76ac3-5892-4317-8b99-55612bf678b1",
+    "word": "river",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "It brings trouble to the Green River.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "78023af6-e386-464b-b9e5-a0a0c87f49f8",
+    "word": "livelihood",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "The water destroys the farmers' livelihood.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "5bdfa8b0-92fc-43ad-b9f1-df07d590581d",
+    "word": "asset",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "They lose every important asset.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "1a9bcebf-7ec5-4cbf-8f29-91f0bf1aeeef",
+    "word": "flood",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "A big flood hits Western Washington.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "15d0eb59-7e05-46ca-8a39-a28c8d65e828",
+    "word": "historic",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "Even a historic farm has heavy damage.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "8a766cb8-97a2-4fda-92bc-be5c6c8a4965",
+    "word": "suffer",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "Many farmers suffer from this bad event.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "7feb2754-29bb-43f8-8e80-451ed746a732",
+    "word": "below",
+    "article_id": "e6406142-be6e-44b1-b591-24e752ca2786",
+    "context_snippet": "Their fields are below fifteen feet of water.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "5ba108fd-f658-401f-bb78-b29b1fa7a40a",
+    "word": "secretive",
+    "article_id": "d68696aa-3cf3-4d69-9f5b-fdb366965bec",
+    "context_snippet": "These records remain secretive for a long time.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "7b6cb528-4a24-4575-a555-359f3621d2ee",
+    "word": "aviation",
+    "article_id": "d68696aa-3cf3-4d69-9f5b-fdb366965bec",
+    "context_snippet": "She is a famous woman in aviation history.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "804c6e0d-a704-4b03-86b3-b4e59c14c6f1",
+    "word": "uncover",
+    "article_id": "d68696aa-3cf3-4d69-9f5b-fdb366965bec",
+    "context_snippet": "Trump wants to uncover the real truth.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "5c7f3b02-8ff6-439e-baf5-478581abb644",
+    "word": "reveal",
+    "article_id": "d68696aa-3cf3-4d69-9f5b-fdb366965bec",
+    "context_snippet": "People hope the files reveal what happens.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "200730f3-9ebf-47fc-807e-f0cc7ac37570",
+    "word": "investigation",
+    "article_id": "d68696aa-3cf3-4d69-9f5b-fdb366965bec",
+    "context_snippet": "He starts a fresh investigation into the mystery.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "1a1a771d-fedb-4bcf-b88a-cc8f64ad3f8f",
+    "word": "phenomenon",
+    "article_id": "d68696aa-3cf3-4d69-9f5b-fdb366965bec",
+    "context_snippet": "Her missing plane is a strange phenomenon.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "c90449ca-7997-4a66-897c-cab1a6e943be",
+    "word": "upright",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "Some parts stand upright on the ground.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "bc8c6930-010e-483b-a574-95983456d754",
+    "word": "misty",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "The air looks misty and soft.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "3953de69-6d10-4d3e-aff2-5e97465f788b",
+    "word": "permanence",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "This place shows the idea of permanence.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "e5dcc359-601d-4090-aa46-7d6bf8d79636",
+    "word": "beam",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "A bright light beam cuts through the dark.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "32107083-fd32-4815-8045-7f45b5bc5a41",
+    "word": "musical",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "The show has a musical sound too.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "bc1976f8-2a1f-44d1-8b3f-c3b0569aa920",
+    "word": "inclusion",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "This inclusion makes the art special.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "b5741987-9df0-4c5d-ba9d-a4eae7005ed9",
+    "word": "crystal",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "Many crystal pieces hang on the trees.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "ef2fbf97-4f1e-4fe6-869f-a0cb29f642fe",
+    "word": "air",
+    "article_id": "22a14d4f-6cf4-46c8-a52d-994bcfe8bc99",
+    "context_snippet": "The air looks misty and soft.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "50a17423-3086-41a4-b4ec-26c8c3f227b6",
+    "word": "gender",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "The plan talks about gender rules.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "96be2bae-524e-4256-95e8-417e13cfb06b",
+    "word": "outsider",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "They say it makes a student feel like an outsider.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "8cd30650-40aa-4bfd-acc9-bfce1c283e9f",
+    "word": "politics",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "This group is active in local politics.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "43758e46-8f73-471e-aa92-2142034056f4",
+    "word": "hinder",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "They say the rules hinder kindness in schools.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "e4ab7fca-6843-4aab-b4f6-d2c3a7dcaa2f",
+    "word": "address",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "They address the problem now.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "d6b72660-0078-4cf3-8e74-40966e7d4674",
+    "word": "initiative",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "They have a new initiative for schools.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "1dbc5e97-6b90-47d2-9701-9c545200be38",
+    "word": "confront",
+    "article_id": "3c7e25cb-60f8-4acf-ba9e-6a13420345da",
+    "context_snippet": "Groups confront each other about the laws.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "37ba4865-4845-4412-a697-ad61cab7862f",
+    "word": "sail",
+    "article_id": "c2d3abb8-59c1-4e70-81f1-3a651bc214d2",
+    "context_snippet": "They sail on the water for a holiday.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "43d741ad-8fbd-4af8-ae20-3b782e552e9d",
+    "word": "amidst",
+    "article_id": "c2d3abb8-59c1-4e70-81f1-3a651bc214d2",
+    "context_snippet": "The world feels sad amidst this bad news.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "cdc45f41-b7f5-43b9-948f-e2462f279d9f",
+    "word": "accidental",
+    "article_id": "c2d3abb8-59c1-4e70-81f1-3a651bc214d2",
+    "context_snippet": "It is an accidental tragedy.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "253e4d97-fcef-492b-813f-f14dc9742379",
+    "word": "coast",
+    "article_id": "c2d3abb8-59c1-4e70-81f1-3a651bc214d2",
+    "context_snippet": "A boat sinks near the coast of Padar Island.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:10"
+  },
+  {
+    "id": "815e82ec-25e3-4889-844f-a7b7c77a0491",
+    "word": "supreme",
+    "article_id": "3c0c7fbc-a96d-4747-bfd1-2acd43405cfe",
+    "context_snippet": "The United States Supreme Court looks at a big new case.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "26eacb0d-fa9b-40d3-b3e8-5350bac89c37",
+    "word": "compensation",
+    "article_id": "3c0c7fbc-a96d-4747-bfd1-2acd43405cfe",
+    "context_snippet": "This money is compensation for damage to the weather and land.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "ae9c7f48-3b83-426f-a83c-1d0391655702",
+    "word": "environmentalist",
+    "article_id": "3c0c7fbc-a96d-4747-bfd1-2acd43405cfe",
+    "context_snippet": "An environmentalist group supports the city.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "0514e028-8203-43e2-91af-995fff5aaf51",
+    "word": "process",
+    "article_id": "3c0c7fbc-a96d-4747-bfd1-2acd43405cfe",
+    "context_snippet": "However, the legal process is very long.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "68391c70-6e9e-4a84-a7de-19541955468b",
+    "word": "consequence",
+    "article_id": "3c0c7fbc-a96d-4747-bfd1-2acd43405cfe",
+    "context_snippet": "This case has a big consequence for everyone.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "ca129fd3-27a2-498c-a1f1-6c92ed64c202",
+    "word": "fence",
+    "article_id": "3eeffa78-a272-4034-98d2-092fd5078617",
+    "context_snippet": "However, workers put a big fence around the hill this week.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "6fbfc4dc-1874-49b8-847a-7da6c20f6218",
+    "word": "tonight",
+    "article_id": "3eeffa78-a272-4034-98d2-092fd5078617",
+    "context_snippet": "They do not want crowds there tonight during the party.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "0a038d29-050c-4a0e-9cfa-0fc619dd20dd",
+    "word": "wrapping",
+    "article_id": "3eeffa78-a272-4034-98d2-092fd5078617",
+    "context_snippet": "They say the green wrapping on the gates looks bad.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "4a0326af-00f8-476a-b303-d14c144bba1c",
+    "word": "really",
+    "article_id": "3eeffa78-a272-4034-98d2-092fd5078617",
+    "context_snippet": "It is really ugly to see.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "83b59a35-8a8f-40ab-971e-c306ef0e980e",
+    "word": "downtown",
+    "article_id": "3eeffa78-a272-4034-98d2-092fd5078617",
+    "context_snippet": "People must go downtown to celebrate the New Year instead.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "579cdfdf-2da0-4f50-9826-cc4bd24701a2",
+    "word": "park",
+    "article_id": "3eeffa78-a272-4034-98d2-092fd5078617",
+    "context_snippet": "Primrose Hill is a popular park with a great view.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "6df6c458-c410-4aff-baf3-9656da90b72b",
+    "word": "king",
+    "article_id": "574fdebd-ca30-44c9-a82f-ec211a21e4d2",
+    "context_snippet": "King Charles sends a message for the new year.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "c082921d-0995-42d2-9d07-0d4052a5de99",
+    "word": "supper",
+    "article_id": "574fdebd-ca30-44c9-a82f-ec211a21e4d2",
+    "context_snippet": "They eat a special supper.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "be065ecb-0f28-4867-af19-a65fd1d45efa",
+    "word": "tomorrow",
+    "article_id": "574fdebd-ca30-44c9-a82f-ec211a21e4d2",
+    "context_snippet": "People look forward to tomorrow with happiness.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "f028a8a9-4b93-4505-a07d-4ed3fac81334",
+    "word": "bubble",
+    "article_id": "574fdebd-ca30-44c9-a82f-ec211a21e4d2",
+    "context_snippet": "They like the bubble in their drinks.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "9008fea6-eed2-4726-9dba-d7586cc413da",
+    "word": "teenager",
+    "article_id": "574fdebd-ca30-44c9-a82f-ec211a21e4d2",
+    "context_snippet": "A teenager is hurt in the fire.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "0c8067ee-8118-47d6-944c-9b80d4d1aee3",
+    "word": "poetic",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "Nature is very poetic in the winter.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "01630be2-4283-4136-8acb-7cbcbf185e8b",
+    "word": "gentle",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "The cold air feels gentle on the face.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "a70178ab-178e-4a67-800b-bb996ae2271e",
+    "word": "joyful",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "It is a joyful start to the new year.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "b98d676f-29f9-483f-89b2-7c2332155a99",
+    "word": "pastime",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "This activity is a fun pastime for adults.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "938e96d8-6d00-4581-abce-81e0597384ef",
+    "word": "winery",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "Visitors stop at each winery on the map.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "460ac5f3-a4d4-4645-ba83-12a837d37bda",
+    "word": "seasonal",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "This seasonal party happens on the famous Wine Road.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "35426351-955a-4073-83b4-fc3ac35c0b00",
+    "word": "air",
+    "article_id": "08e61bd0-4bcb-4131-907d-2b34cca78013",
+    "context_snippet": "The cold air feels gentle on the face.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "b149804e-424f-417c-a9f1-12907b55974f",
+    "word": "oceanic",
+    "article_id": "ade82cd1-22a7-45a9-856d-5aca4abd79c3",
+    "context_snippet": "It teaches us about the oceanic past.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "133599b7-8845-4c33-9329-ff95133a1a88",
+    "word": "haul",
+    "article_id": "ade82cd1-22a7-45a9-856d-5aca4abd79c3",
+    "context_snippet": "It carries a large haul of goods.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "fd8941b4-cf21-4fe4-8b41-4127a0ecbded",
+    "word": "witness",
+    "article_id": "ade82cd1-22a7-45a9-856d-5aca4abd79c3",
+    "context_snippet": "We witness a special moment today.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "5d1c9bb5-84cc-45cb-8020-6973654995aa",
+    "word": "novel",
+    "article_id": "ade82cd1-22a7-45a9-856d-5aca4abd79c3",
+    "context_snippet": "This is a novel event for science.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "742e90e9-9a4b-4cea-a07f-56f07c360897",
+    "word": "intact",
+    "article_id": "ade82cd1-22a7-45a9-856d-5aca4abd79c3",
+    "context_snippet": "Its body is surprisingly intact.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "99019767-ad1b-482b-b0f1-ac5e3c095048",
+    "word": "commercial",
+    "article_id": "ade82cd1-22a7-45a9-856d-5aca4abd79c3",
+    "context_snippet": "This shows old commercial trade.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "d9d3d160-8095-4be5-a31a-b59b623ed793",
+    "word": "relativity",
+    "article_id": "41f25c6b-1135-4fb6-8ee3-a44309418ad0",
+    "context_snippet": "He is famous for his work on relativity.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "5055dd06-6e9f-4b0e-a813-bd6d79718ee7",
+    "word": "virtue",
+    "article_id": "41f25c6b-1135-4fb6-8ee3-a44309418ad0",
+    "context_snippet": "It shows the virtue of Niels Bohr's work.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "3444b814-ceee-43c8-998f-b691c4134636",
+    "word": "meaning",
+    "article_id": "41f25c6b-1135-4fb6-8ee3-a44309418ad0",
+    "context_snippet": "The test gives the true meaning of reality.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "8a9ccbf9-4a0c-49d9-a067-cbbe9e26b954",
+    "word": "enlightenment",
+    "article_id": "41f25c6b-1135-4fb6-8ee3-a44309418ad0",
+    "context_snippet": "This is a moment of enlightenment for science.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "3b8e3fa2-2d08-49bd-99f8-2c510ce1ece9",
+    "word": "limitation",
+    "article_id": "41f25c6b-1135-4fb6-8ee3-a44309418ad0",
+    "context_snippet": "He saw a limitation in those old ideas.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "0f79be06-51ed-45ab-a304-f48a1f0287b7",
+    "word": "profound",
+    "article_id": "41f25c6b-1135-4fb6-8ee3-a44309418ad0",
+    "context_snippet": "The result is profound for us all.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "a492c866-6841-4546-b95a-52c01eaaff59",
+    "word": "suitcase",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "They pack a large suitcase for new trips.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "2947ae0e-c5cf-4b21-a2c9-f2201c8db0e7",
+    "word": "cliff",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "Visitors look at a tall cliff near the sea.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "4e98e56b-01b1-47aa-8646-d1996c8006a7",
+    "word": "abundant",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "There is abundant life on the islands.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "921aff2e-c3eb-45a1-9863-bfb0e1fd6980",
+    "word": "monument",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "Travelers also visit an old stone monument.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "cc859118-432a-4af0-9b67-62de751a5b8c",
+    "word": "habitat",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "Animals live in a special habitat.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "30842ca8-e587-4648-812a-1d2a2ab472b6",
+    "word": "curiosity",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "People have a big curiosity about the world.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "f74dd50b-c109-4acf-82f4-cb712293523c",
+    "word": "volcano",
+    "article_id": "1d7465aa-4f67-4360-b815-4efba2027b64",
+    "context_snippet": "Other spots have a big volcano.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:11"
+  },
+  {
+    "id": "a3845328-8889-4593-a73b-3a8db0998f19",
+    "word": "cigar",
+    "article_id": "69a6149e-b99d-493b-aa74-8e5e17c6743f",
+    "context_snippet": "He usually holds a big cigar on stage.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:12"
+  },
+  {
+    "id": "676a7847-2e95-4752-8846-d53b0b707d72",
+    "word": "drunk",
+    "article_id": "69a6149e-b99d-493b-aa74-8e5e17c6743f",
+    "context_snippet": "He was often drunk before.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:12"
+  },
+  {
+    "id": "089434e9-9c66-4383-9e0d-28ada8181f67",
+    "word": "flesh",
+    "article_id": "69a6149e-b99d-493b-aa74-8e5e17c6743f",
+    "context_snippet": "They tell stories about real flesh and blood.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:12"
+  },
+  {
+    "id": "dcf80120-9094-4586-a21c-d050e3a11386",
+    "word": "fragmentary",
+    "article_id": "69a6149e-b99d-493b-aa74-8e5e17c6743f",
+    "context_snippet": "Some memories are just fragmentary parts of time.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:12"
+  },
+  {
+    "id": "381e5682-241f-428e-90bd-12ce37f94d2b",
+    "word": "odd",
+    "article_id": "69a6149e-b99d-493b-aa74-8e5e17c6743f",
+    "context_snippet": "The books share odd stories from the past.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:12"
+  },
+  {
+    "id": "152b7aff-c2b9-4587-b07d-2072cb94fce5",
+    "word": "willpower",
+    "article_id": "69a6149e-b99d-493b-aa74-8e5e17c6743f",
+    "context_snippet": "It takes strong willpower to make this change.",
+    "role": "keyword",
+    "created_at": "2026-01-02 21:32:12"
+  },
+  {
+    "id": "13bb4749-a33d-4ba3-90be-17b638999146",
+    "word": "privacy",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "The law protects human privacy and rights.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "099a5e8a-9b5e-4dbf-ab79-685b419d4525",
+    "word": "continuous",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "The government watches the continuous growth of technology.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "e8790cca-2336-40f8-b9b6-4e95e125d219",
+    "word": "principle",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "This is the main principle of the new rule.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "877757c7-6ff6-49d4-a455-9f4df2e4b0e0",
+    "word": "initial",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "It is an initial step for a good future.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "83e8b26b-fea7-4bad-9fea-6aada53ff9eb",
+    "word": "barrier",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "This rule removes a barrier for new business ideas.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "39b48169-ab6b-4e51-b340-79cfc7f700f3",
+    "word": "prominence",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "Vietnam gains prominence in the world with this law.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "2885b3f2-00b2-462b-8e2a-7988db141df6",
+    "word": "achievement",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "This is a big achievement for the country.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "2f8d02e1-eb5f-49af-af73-cd2e1542c5ce",
+    "word": "better",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "Companies can work better now.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "4b2b179b-4299-4592-ae3c-a517fafa95ea",
+    "word": "technology",
+    "article_id": "1d26664e-6633-451b-8958-dcbb1dfacb43",
+    "context_snippet": "The government watches the continuous growth of technology.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:28:30.338Z"
+  },
+  {
+    "id": "fb610cf3-50d1-4d09-969c-811eb6c16ddc",
+    "word": "prince",
+    "article_id": "dcc126af-056b-4a89-80b1-d2f6a12cf66c",
+    "context_snippet": "Prince Harry has a famous family.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:36:49.288Z"
+  },
+  {
+    "id": "f995b63c-9bfb-4a65-8652-cdd9f0b9a1af",
+    "word": "position",
+    "article_id": "dcc126af-056b-4a89-80b1-d2f6a12cf66c",
+    "context_snippet": "They want a good position in the royal family.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:36:49.288Z"
+  },
+  {
+    "id": "24b18c8f-be6d-47de-a863-b4e72755e5db",
+    "word": "guardian",
+    "article_id": "dcc126af-056b-4a89-80b1-d2f6a12cf66c",
+    "context_snippet": "Its name is The Guardian.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:36:49.288Z"
+  },
+  {
+    "id": "a6c0ae10-930d-40b1-9e70-4afd56139b5b",
+    "word": "wander",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "Visitors wander through the busy streets.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.767Z"
+  },
+  {
+    "id": "58518a9f-290c-4522-b90a-8864a06b8025",
+    "word": "location",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "Turkey is in a great location for a trip.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.767Z"
+  },
+  {
+    "id": "879c6f4e-9ef3-4b5e-a698-ab40ebe9581f",
+    "word": "gaze",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "They gaze at the beautiful sights there.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.768Z"
+  },
+  {
+    "id": "2aea4b5a-b0a6-4177-8b17-3b25e7244c72",
+    "word": "elegant",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "The buildings look very elegant and special.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.768Z"
+  },
+  {
+    "id": "7c16eb04-926d-4a04-9324-88b12b768b4d",
+    "word": "ambassador",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "The Chinese ambassador speaks well of this rule.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.768Z"
+  },
+  {
+    "id": "df9493fe-f78e-4331-8018-4ed4635af16f",
+    "word": "passport",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "Travelers only need a valid passport for entry.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.768Z"
+  },
+  {
+    "id": "77bb3be2-90fc-4348-b62d-6ee2b01fb7e4",
+    "word": "historic",
+    "article_id": "c6c567ee-1eda-4b45-825e-6bd05f3333bc",
+    "context_snippet": "People visit many historic places easily now.",
+    "role": "keyword",
+    "created_at": "2026-01-03T15:50:26.768Z"
+  },
+  {
+    "id": "26de9101-c0c2-4574-8ef3-01feec300405",
+    "word": "existence",
+    "article_id": "b1cb2b35-349a-4fd5-906c-8d2f614d498b",
+    "context_snippet": "They look at the existence of our universe.",
+    "role": "keyword",
+    "created_at": "2026-01-03T16:05:18.478Z"
+  },
+  {
+    "id": "7f9c9518-cdcc-4286-ba22-f096047ab805",
+    "word": "assumption",
+    "article_id": "b1cb2b35-349a-4fd5-906c-8d2f614d498b",
+    "context_snippet": "However, the scientists say this is just an assumption.",
+    "role": "keyword",
+    "created_at": "2026-01-03T16:05:18.478Z"
+  },
+  {
+    "id": "0996aac1-8a60-4aab-8be1-e54ddbf4489b",
+    "word": "confuse",
+    "article_id": "b1cb2b35-349a-4fd5-906c-8d2f614d498b",
+    "context_snippet": "This news might confuse some fans of the theory.",
+    "role": "keyword",
+    "created_at": "2026-01-03T16:05:18.478Z"
+  },
+  {
+    "id": "b2c8b5a8-3bb1-434f-9daf-ad9366b1a6b4",
+    "word": "deed",
+    "article_id": "b1cb2b35-349a-4fd5-906c-8d2f614d498b",
+    "context_snippet": "This important scientific deed teaches us about reality.",
+    "role": "keyword",
+    "created_at": "2026-01-03T16:05:18.478Z"
+  },
+  {
+    "id": "0e342515-952e-40e5-8807-c72e5bfcbcd6",
+    "word": "fiction",
+    "article_id": "b1cb2b35-349a-4fd5-906c-8d2f614d498b",
+    "context_snippet": "This idea is popular in science fiction movies.",
+    "role": "keyword",
+    "created_at": "2026-01-03T16:05:18.478Z"
+  },
+  {
+    "id": "644c38a6-d36a-4eb2-bd24-7d7258e32307",
+    "word": "reality",
+    "article_id": "b1cb2b35-349a-4fd5-906c-8d2f614d498b",
+    "context_snippet": "This important scientific deed teaches us about reality.",
+    "role": "keyword",
+    "created_at": "2026-01-03T16:05:18.479Z"
+  },
+  {
+    "id": "cf225f76-8db9-4b23-8c92-7cc3347ecad5",
+    "word": "overlook",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "Hikers overlook the clouds from the top.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "1f135efb-762e-4d6c-ae0d-f882340144dc",
+    "word": "retain",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "These places retain old traditions.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "cf52a809-ff2d-4c6e-bbfc-1b48e91b328d",
+    "word": "generally",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "They generally like fun and new trips.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "fa86a05d-123c-4e39-b31d-d375d639724f",
+    "word": "north",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "People visit mountains in the north.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "e62f6e1f-736a-487c-8304-5617489a9893",
+    "word": "particular",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "Visitors like this particular style very much.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "a87b5329-e213-441b-86ae-8da64843df1c",
+    "word": "elevation",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "They climb to a high elevation.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "5d6277e4-3973-4adb-b6e2-b4fff464b9b9",
+    "word": "scenery",
+    "article_id": "4fda0b02-d589-457e-8696-9868c9a4c9aa",
+    "context_snippet": "The scenery looks white and beautiful.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:20:30.442Z"
+  },
+  {
+    "id": "3d019096-300b-4ae2-979b-c3fea2467f82",
+    "word": "technology",
+    "article_id": "9d9e9122-c0c6-4d6e-a077-de5fbfe6dbb3",
+    "context_snippet": "Mobile game technology is important.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:30:21.817Z"
+  },
+  {
+    "id": "5fc9d024-0c53-4c76-8540-2e017afd4f1a",
+    "word": "tremendous",
+    "article_id": "9d9e9122-c0c6-4d6e-a077-de5fbfe6dbb3",
+    "context_snippet": "The event also brought tremendous money to Sanya.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:30:21.817Z"
+  },
+  {
+    "id": "dbf85093-fbb4-4d7e-8239-3db537ac58ff",
+    "word": "career",
+    "article_id": "9d9e9122-c0c6-4d6e-a077-de5fbfe6dbb3",
+    "context_snippet": "This is a big step in his career.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:30:21.817Z"
+  },
+  {
+    "id": "2c886be3-6f7e-4ca6-9ca7-c42499a7cdff",
+    "word": "ambition",
+    "article_id": "9d9e9122-c0c6-4d6e-a077-de5fbfe6dbb3",
+    "context_snippet": "Many young players have ambition for this.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:30:21.817Z"
+  },
+  {
+    "id": "25b16cc8-6943-4888-9e55-99c1f221dcf2",
+    "word": "prize",
+    "article_id": "9d9e9122-c0c6-4d6e-a077-de5fbfe6dbb3",
+    "context_snippet": "This is their third big prize.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:30:21.817Z"
+  },
+  {
+    "id": "8c7dfcc6-a148-4ffd-b422-7c21dcc2bb84",
+    "word": "significant",
+    "article_id": "9d9e9122-c0c6-4d6e-a077-de5fbfe6dbb3",
+    "context_snippet": "It is a significant event for the city.",
+    "role": "keyword",
+    "created_at": "2026-01-03T19:30:21.817Z"
+  },
+  {
+    "id": "62c115ef-5dd7-4e7d-9a3f-c0f31fb8a18f",
+    "word": "inside",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "He works from inside his bedroom.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "09973579-752e-4bf5-b586-e3e3d2c9804b",
+    "word": "await",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "Many sick people await new help.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "c8b7d382-91a1-4397-99fb-589e9a000c9d",
+    "word": "require",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "Cai Lei's care require four helpers.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "989e9cfb-eec3-4f8a-867b-62487276d31a",
+    "word": "timely",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "He works for timely medicine.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "d9c66fea-0282-4003-9a55-c5f82d2b0187",
+    "word": "denial",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "He does not want denial.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "af2e5bab-69a9-4e8e-8993-e61d17648464",
+    "word": "misery",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "He wants to stop misery for many patients.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "96deb5ea-828c-4031-b190-dc67e6f379dd",
+    "word": "profound",
+    "article_id": "1234201f-cd13-431c-bcc0-98548e0ba999",
+    "context_snippet": "His work has a profound effect on fighting the illness.",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:11:35.463Z"
+  },
+  {
+    "id": "52844af7-05b5-426b-a2c1-84196dde65ee",
+    "word": "bounce",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "3509a165-4696-4a7e-a110-6d5b04607125",
+    "word": "possibly",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "3d4ecd65-34aa-4859-8efd-7c759d9ca5ee",
+    "word": "fortune",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "4d7616bb-4df5-4abc-8f79-292682e53aa7",
+    "word": "probability",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "fa5bd758-9371-4bbe-ae1a-7a96f071ba3b",
+    "word": "await",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "6f078472-6e55-4ce8-914c-54947138cb0f",
+    "word": "better",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "ba8ca8c8-3bc6-4ed3-8ed5-d47316451b48",
+    "word": "millionaire",
+    "article_id": "b1f330b3-95f5-43f0-8cb5-03356b5ad1ac",
+    "context_snippet": "《每日经济新闻》发布了一份报告。它谈论了2026年的市场。投资者await新的一年。全球经济可能改变。\n\n一些人说经济会bounce。这是因为AI技术。但也有人说AI可能possibly有问题。这会带来风险。\n\n量子计算有probability发展。这会带来新的fortune。很多人希望2026年会better。会有新的millionaire出现。",
+    "role": "keyword",
+    "created_at": "2026-01-03T20:13:15.672Z"
+  },
+  {
+    "id": "3f32bd4f-b71a-4876-bbfd-3a858cfec9d2",
+    "word": "discount",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "They give a discount.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.972Z"
+  },
+  {
+    "id": "e049274f-5cd9-4f0d-a925-7d0e5ba484d2",
+    "word": "bargain",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "People look for a good bargain.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.981Z"
+  },
+  {
+    "id": "251d5a00-0aaf-4b72-a80e-8299053b31e9",
+    "word": "efficiency",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "Stores need good efficiency.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.981Z"
+  },
+  {
+    "id": "f07016d5-382a-488c-bd74-e9c81390f879",
+    "word": "employee",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "Employee numbers change.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.981Z"
+  },
+  {
+    "id": "7179846f-51ad-4625-9c4a-86904ff6dc0b",
+    "word": "volume",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "Spending volume is low now.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.981Z"
+  },
+  {
+    "id": "4257bd8c-0723-42fd-8326-65b612d13141",
+    "word": "margin",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "Costs can hurt profit margin.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.981Z"
+  },
+  {
+    "id": "db5a7da2-50a6-43e5-a1a3-5d32f9272e48",
+    "word": "delivery",
+    "article_id": "5070461f-0846-41c8-b771-e3a8e7ef0c3a",
+    "context_snippet": "Fast delivery is important.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:08:46.981Z"
+  },
+  {
+    "id": "dbc0ed34-a58d-4bb3-9530-7e6e961929d0",
+    "word": "hunting",
+    "article_id": "eddc8874-1f7e-4559-ae39-f3d6dd01b004",
+    "context_snippet": "People were doing illegal hunting.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:10:46.890Z"
+  },
+  {
+    "id": "8eedba97-ee99-46e0-a768-2f36cee3ac72",
+    "word": "temporary",
+    "article_id": "eddc8874-1f7e-4559-ae39-f3d6dd01b004",
+    "context_snippet": "These animals are now in a temporary place.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:10:46.890Z"
+  },
+  {
+    "id": "621b8fe0-5051-4ad5-a191-cb720aefdd0b",
+    "word": "alert",
+    "article_id": "eddc8874-1f7e-4559-ae39-f3d6dd01b004",
+    "context_snippet": "Police must be alert.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:10:46.890Z"
+  },
+  {
+    "id": "f1ab4a0f-f68f-492b-8f1f-5c498062bb63",
+    "word": "environment",
+    "article_id": "eddc8874-1f7e-4559-ae39-f3d6dd01b004",
+    "context_snippet": "This protects the environment.",
+    "role": "keyword",
+    "created_at": "2026-01-04T09:10:46.890Z"
+  },
+  {
+    "id": "3e1240ab-6af3-4725-8a5a-b955c838ac6d",
+    "word": "raid",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "Players go on a new raid.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "91bac335-fae1-4dd3-87ee-92cb5d34ba10",
+    "word": "beneath",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "They go deep beneath icy mountains.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "3acab0c2-246d-40a7-9c45-277f5240bfc2",
+    "word": "hunting",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "They are hunting for rare items.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "b8d8bfe6-3b85-4ab3-817a-497470759329",
+    "word": "discount",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "The game has a discount now.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "54ea51e9-d25d-4b00-8ef7-cc397a6893c8",
+    "word": "temporary",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "This offer is temporary.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "a39974a3-7cbd-4b48-98a0-6a1fe6e719d0",
+    "word": "grab",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "Players can grab rewards.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "a56b0d91-0edd-406e-b8e7-ca6adc5d2b81",
+    "word": "recommendation",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "Many players give a recommendation to play.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.838Z"
+  },
+  {
+    "id": "c1b5b3c7-4f1f-4bca-800c-1c86efa91cd6",
+    "word": "event",
+    "article_id": "f8909340-bb6f-4f0d-a9e9-e1d8a5620340",
+    "context_snippet": "Eternia Online has a new event.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:08:01.840Z"
+  },
+  {
+    "id": "eeb3a1ae-0838-450a-bd60-516356ae475f",
+    "word": "visibility",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "This improves user visibility.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.084Z"
+  },
+  {
+    "id": "4ea1f29b-841a-4699-b9fc-bf2000c1f089",
+    "word": "recommendation",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "These apps give good recommendation for routes.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.084Z"
+  },
+  {
+    "id": "03a076ad-9212-4502-a949-6bea0e317357",
+    "word": "mobile",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "This makes it easier for them to be mobile.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.084Z"
+  },
+  {
+    "id": "412c4d15-b2e7-41a7-8ef1-dbb48d9b5432",
+    "word": "complex",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "These changes help with complex city travel.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.084Z"
+  },
+  {
+    "id": "ea3f9510-8b14-4651-95ec-af8a87c44d3d",
+    "word": "accessible",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "Transportation is now more accessible.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.084Z"
+  },
+  {
+    "id": "98b69d65-3e7e-4f2b-9e2e-d06c8c33f8af",
+    "word": "continuous",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "It is a continuous effort to make travel better.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.084Z"
+  },
+  {
+    "id": "2492596f-0698-499c-a174-f60bbecceb90",
+    "word": "better",
+    "article_id": "156079e6-0c74-4764-8738-4507f79c9153",
+    "context_snippet": "It is a continuous effort to make travel better.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:11:11.085Z"
+  },
+  {
+    "id": "a7569536-d2a6-407b-a749-9c023326e926",
+    "word": "option",
+    "article_id": "93a47992-7caf-41b7-b3c4-961be18ca3f4",
+    "context_snippet": "This is a new option.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:13:27.707Z"
+  },
+  {
+    "id": "b425f81e-c123-416d-9d76-033f3d56ecfe",
+    "word": "dull",
+    "article_id": "93a47992-7caf-41b7-b3c4-961be18ca3f4",
+    "context_snippet": "Travelers do not want dull trips.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:13:27.707Z"
+  },
+  {
+    "id": "ee10ee6c-531c-45ea-95b9-97209fdd107f",
+    "word": "tangible",
+    "article_id": "93a47992-7caf-41b7-b3c4-961be18ca3f4",
+    "context_snippet": "They want tangible good.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:13:27.707Z"
+  },
+  {
+    "id": "1562fff4-d3e8-4e97-9b2c-033154b43d8a",
+    "word": "encouraging",
+    "article_id": "93a47992-7caf-41b7-b3c4-961be18ca3f4",
+    "context_snippet": "This change is encouraging.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:13:27.707Z"
+  },
+  {
+    "id": "806ec461-9896-4219-9423-c8d566f33beb",
+    "word": "community",
+    "article_id": "93a47992-7caf-41b7-b3c4-961be18ca3f4",
+    "context_snippet": "They help local community.",
+    "role": "keyword",
+    "created_at": "2026-01-04T14:13:27.707Z"
+  },
+  {
+    "id": "9bf04ac9-85d7-4449-ae99-8d55989191b4",
+    "word": "separate",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "So, you do not need separate devices.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "ad3ab368-8994-44ed-bdfc-1fcb8bb54dc0",
+    "word": "fluctuation",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "This is a big price fluctuation.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "bfc6b404-4a17-41dc-8a1d-a5996db77071",
+    "word": "gadget",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "Gadget prices will go up in 2026.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "4bd5d1ce-341a-4e44-a6e9-57f2f4ca1021",
+    "word": "impact",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "This causes a supply impact for other electronics.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "702f2f95-71a2-42b2-8030-e95b3169df7d",
+    "word": "sophisticated",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "AI needs many sophisticated chips.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "43293eb8-bcac-4611-9938-f8796e6dc5db",
+    "word": "retail",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "Retail stores will sell items at higher prices.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "80e89a73-2f10-4274-ab2c-2aef7a42077b",
+    "word": "enhance",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "New accessories can enhance your phone.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.491Z"
+  },
+  {
+    "id": "db856a73-8ece-41d9-a65d-bd017173dd2a",
+    "word": "electronics",
+    "article_id": "f5aa3eb0-6124-44e6-8d24-0e473e4f44a7",
+    "context_snippet": "This causes a supply impact for other electronics.",
+    "role": "keyword",
+    "created_at": "2026-01-04T21:21:11.493Z"
+  },
+  {
+    "id": "48d97992-624c-48b4-a40b-ccd7d684773b",
+    "word": "industrial",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "Large industrial buildings, like data centers, use much water.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "f05a4e1d-472c-440a-b19c-6cadc33e5373",
+    "word": "drain",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "They can drain local resources.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "7c97e2cb-0608-4fcb-924f-eedb9ab1e9fc",
+    "word": "norm",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "A new norm for child care will help children.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "be3e10ed-6fbf-4615-96b6-24a8a2c1fbca",
+    "word": "alarm",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "However, there is an alarm for nature.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "2bf75794-a57c-4966-b11b-fec37a92516a",
+    "word": "disappear",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "Many wetlands might disappear.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "e1b5faf3-9eda-4acf-87f5-51820b9abdd1",
+    "word": "tight",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "New rules will be tight.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "9777e9d1-3b91-426a-b5db-cbb3f8ed70fb",
+    "word": "sacrifice",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "This is a sacrifice for nature.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.526Z"
+  },
+  {
+    "id": "978ce2d9-8625-4c72-ba6d-4d15090b73ad",
+    "word": "north",
+    "article_id": "2960d45f-6165-41b6-81d2-aed043be6da1",
+    "context_snippet": "North Carolina is preparing for major changes in 2026.",
+    "role": "keyword",
+    "created_at": "2026-01-05T05:18:46.527Z"
+  }
+]

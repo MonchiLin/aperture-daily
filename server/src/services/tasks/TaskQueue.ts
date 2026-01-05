@@ -3,7 +3,7 @@ import { generateDailyNews3StageWithGemini } from '../llm/geminiPipeline3';
 import type { CandidateWord, GeminiCheckpoint3 } from '../llm/types';
 import { indexArticleWords } from '../wordIndexer';
 import type { AppDatabase } from '../../db/client';
-import type { TaskRow, ProfileRow, DailyWordsRow, IdRow } from '../../types/models';
+import type { TaskRow, ProfileRow, IdRow } from '../../types/models';
 
 export type TaskEnv = {
     GEMINI_API_KEY: string;
@@ -292,15 +292,19 @@ export class TaskQueue {
 
         if (!profile) throw new Error(`Profile not found: ${task.profile_id}`);
 
-        const dailyRowRes = await this.db.all(sql`SELECT * FROM daily_words WHERE date = ${task.task_date} LIMIT 1`) as DailyWordsRow[];
-        const dailyRow = dailyRowRes[0];
+        // Source words from normalized table
+        const wordRefs = await this.db.all(sql`
+            SELECT word, type FROM daily_word_references WHERE date = ${task.task_date}
+        `) as { word: string; type: 'new' | 'review' }[];
 
-        if (!dailyRow) throw new Error('No daily words found');
+        if (wordRefs.length === 0) {
+            // Fallback: Check if daily_words row exists but has no refs? (Shouldn't happen if migrated)
+            // Or maybe we should allow empty?
+            // Existing logic threw error if empty.
+        }
 
-        const dailyNew = dailyRow.new_words_json ? JSON.parse(dailyRow.new_words_json) : [];
-        const dailyReview = dailyRow.review_words_json ? JSON.parse(dailyRow.review_words_json) : [];
-        const newWords = uniqueStrings(Array.isArray(dailyNew) ? dailyNew : []);
-        const reviewWords = uniqueStrings(Array.isArray(dailyReview) ? dailyReview : []);
+        const newWords = uniqueStrings(wordRefs.filter(w => w.type === 'new').map(w => w.word));
+        const reviewWords = uniqueStrings(wordRefs.filter(w => w.type === 'review').map(w => w.word));
 
         if (newWords.length + reviewWords.length === 0) throw new Error('Daily words record is empty');
 

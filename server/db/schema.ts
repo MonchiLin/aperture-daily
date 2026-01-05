@@ -67,23 +67,24 @@ export const tasks = sqliteTable(
     ]
 );
 
-// 每日词表来源（NEW/REVIEW），用于生成流水线。
-export const dailyWords = sqliteTable(
-    'daily_words',
+export const dailyWordReferences = sqliteTable(
+    'daily_word_references',
     {
-        date: text('date').primaryKey(), // 业务日期：YYYY-MM-DD（Asia/Shanghai）
-        newWordsJson: text('new_words_json').notNull(),
-        reviewWordsJson: text('review_words_json').notNull(),
+        id: text('id').primaryKey(),
+        date: text('date').notNull(),
+        word: text('word')
+            .notNull()
+            .references(() => words.word, { onDelete: 'cascade' }),
+        type: text('type', { enum: ['new', 'review'] }).notNull(),
         createdAt: text('created_at')
             .notNull()
             .default(sql`(CURRENT_TIMESTAMP)`),
-        updatedAt: text('updated_at')
-            .notNull()
-            .default(sql`(CURRENT_TIMESTAMP)`)
     },
     (table) => [
-        check('chk_daily_words_new_words_json_valid', sql`json_valid(${table.newWordsJson})`),
-        check('chk_daily_words_review_words_json_valid', sql`json_valid(${table.reviewWordsJson})`)
+        uniqueIndex('uq_daily_word_ref').on(table.date, table.word),
+        index('idx_daily_word_ref_date').on(table.date),
+        index('idx_daily_word_ref_word').on(table.word),
+        check('chk_daily_word_ref_type_enum', sql`${table.type} IN ('new', 'review')`)
     ]
 );
 
@@ -91,6 +92,7 @@ export const words = sqliteTable(
     'words',
     {
         word: text('word').primaryKey(),
+        masteryStatus: text('mastery_status').notNull().default('unknown'),
         origin: text('origin', { enum: ['shanbay', 'article', 'manual'] }).notNull(),
         originRef: text('origin_ref'),
         createdAt: text('created_at')

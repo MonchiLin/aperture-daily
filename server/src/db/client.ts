@@ -4,6 +4,7 @@ import { Database } from 'bun:sqlite';
 import type { SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy';
 import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
 import * as schema from '../../db/schema';
+import * as path from 'path';
 
 // Re-export the database type for use across the app
 export type AppDatabase = SqliteRemoteDatabase<typeof schema> | BunSQLiteDatabase<typeof schema>;
@@ -22,14 +23,13 @@ interface D1Response {
     result?: Array<{ results: unknown[] }>;
 }
 
-/**
- * Creates either a local SQLite connection or a Cloudflare D1 HTTP Proxy connection
- */
 function createDatabase(): AppDatabase {
     if (!useD1) {
         // Local SQLite for development
-        console.log(`[DB] Using local SQLite (./local.db)`);
-        const sqlite = new Database('./local.db');
+        // Resolve absolute path to avoid CWD issues
+        const dbPath = path.resolve(import.meta.dir, '../../local.db');
+        console.log(`[DB] Using local SQLite (${dbPath})`);
+        const sqlite = new Database(dbPath);
         return drizzleBun(sqlite, { schema });
     }
 

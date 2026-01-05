@@ -54,7 +54,7 @@ export default function WordsDrawer({ date, wordData }: { date: string; wordData
                         body: { padding: '24px' }
                     }}
                 >
-                    <WordListPanel date={date} initialData={wordData} />
+                    {open && <WordListPanel date={date} initialData={wordData} />}
                 </Drawer>
             </>
         </ConfigProvider>
