@@ -31,6 +31,33 @@
     --st-color-pp-border: #cbd5e1;
     --st-color-pp-label: #475569;
 
+    /* New: Complement */
+    --st-color-cmp-bg: #ede9fe;
+    --st-color-cmp-text: #6d28d9;
+
+    /* New: Adverbial */
+    --st-color-adv-text: #0369a1;
+    --st-color-adv-border: #0ea5e9;
+
+    /* New: Appositive */
+    --st-color-app-bg: #ecfeff;
+    --st-color-app-border: #06b6d4;
+
+    /* New: Infinitive */
+    --st-color-inf-text: #be185d;
+    --st-color-inf-deco: #ec4899;
+
+    /* New: Gerund */
+    --st-color-ger-bg: #fdf2f8;
+    --st-color-ger-text: #9d174d;
+
+    /* New: Participle */
+    --st-color-ptc-text: #831843;
+    --st-color-ptc-deco: #f472b6;
+
+    /* New: Indirect Object */
+    --st-color-io-shadow: #10b981;
+
     /* --- UI States --- */
     --st-ui-active-bg: rgba(254, 243, 199, 0.5);
     /* Amber-100/50 */
@@ -132,6 +159,14 @@
     -webkit-box-decoration-break: clone;
 }
 
+/* Indirect Object -> Green Underline Shadow */
+[data-structure="io"]:has(.structure-active),
+[data-structure="indirect-object"]:has(.structure-active) {
+    box-shadow: 0 2px 0 0 var(--st-color-io-shadow);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
 /* Connective -> Dotted Underline */
 [data-structure="con"]:has(.structure-active),
 [data-structure="connective"]:has(.structure-active) {
@@ -167,6 +202,64 @@
 [data-structure="prep-phrase"]:has(.structure-active) {
     color: var(--st-color-pp-text);
     border-bottom: 1px dotted var(--st-color-pp-border);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Complement -> Purple Background */
+[data-structure="cmp"]:has(.structure-active),
+[data-structure="complement"]:has(.structure-active) {
+    background-color: var(--st-color-cmp-bg);
+    color: var(--st-color-cmp-text) !important;
+    font-weight: 500;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Adverbial -> Blue Underline */
+[data-structure="adv"]:has(.structure-active),
+[data-structure="adverbial"]:has(.structure-active) {
+    color: var(--st-color-adv-text);
+    border-bottom: 2px solid var(--st-color-adv-border);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Appositive -> Cyan Box */
+[data-structure="app"]:has(.structure-active),
+[data-structure="appositive"]:has(.structure-active) {
+    background-color: var(--st-color-app-bg);
+    border: 1px dashed var(--st-color-app-border);
+    border-radius: 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Infinitive -> Pink Dotted Underline */
+[data-structure="inf"]:has(.structure-active),
+[data-structure="infinitive"]:has(.structure-active) {
+    color: var(--st-color-inf-text) !important;
+    text-decoration: underline dotted var(--st-color-inf-deco);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Gerund -> Pink Background */
+[data-structure="ger"]:has(.structure-active),
+[data-structure="gerund"]:has(.structure-active) {
+    background-color: var(--st-color-ger-bg);
+    color: var(--st-color-ger-text) !important;
+    font-weight: 500;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Participle -> Rose Underline */
+[data-structure="ptc"]:has(.structure-active),
+[data-structure="participle"]:has(.structure-active) {
+    color: var(--st-color-ptc-text) !important;
+    text-decoration: underline wavy var(--st-color-ptc-deco);
+    font-style: italic;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
 }

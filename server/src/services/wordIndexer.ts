@@ -116,15 +116,10 @@ export async function indexArticleWords(articleId: string, contentJson: ContentJ
     // 4. Batch Insert (Upsert to avoid duplicates)
     if (entriesToInsert.length > 0) {
         try {
+            // Use onConflictDoNothing for simplicity - if word+article already exists, skip it
             await db.insert(articleWordIndex)
                 .values(entriesToInsert)
-                .onConflictDoUpdate({
-                    target: [articleWordIndex.word, articleWordIndex.articleId],
-                    set: {
-                        contextSnippet: sql`excluded.context_snippet`,
-                        createdAt: sql`CURRENT_TIMESTAMP`
-                    }
-                });
+                .onConflictDoNothing();
             console.log(`[WordIndexer] Successfully indexed ${entriesToInsert.length} words.`);
         } catch (e) {
             console.error(`[WordIndexer] Failed to insert index:`, e);

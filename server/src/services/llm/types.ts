@@ -52,11 +52,33 @@ export type GeminiCheckpoint3 = {
     usage?: Record<string, any>;
 };
 
-// Structure Data (Standoff Markup)
+// Structure Data (Standoff Markup) - Final output format
+// 14 roles for comprehensive grammar analysis
+export type StructureRole =
+    | 's'    // Subject - 主语
+    | 'v'    // Verb - 谓语动词 (complete verb phrase)
+    | 'o'    // Direct Object - 直接宾语
+    | 'io'   // Indirect Object - 间接宾语
+    | 'cmp'  // Complement - 补语
+    | 'rc'   // Relative Clause - 定语从句
+    | 'pp'   // Prepositional Phrase - 介词短语
+    | 'adv'  // Adverbial - 状语
+    | 'app'  // Appositive - 同位语
+    | 'pas'  // Passive Voice - 被动语态
+    | 'con'  // Connective - 连接词
+    | 'inf'  // Infinitive - 不定式
+    | 'ger'  // Gerund - 动名词
+    | 'ptc'; // Participle - 分词
+
 export type GeminiStructureData = Array<{
     start: number;
     end: number;
-    role: 's' | 'v' | 'o' | 'rc' | 'pp' | 'pas' | 'con';
+    role: StructureRole;
     extract?: string;
 }>;
 
+// Structure Response (LLM word-index output) - Intermediate format
+export type GeminiStructureResponse = Array<{
+    words: [number] | [number, number];  // [singleIdx] or [startIdx, endIdx]
+    role: StructureRole;
+}>;

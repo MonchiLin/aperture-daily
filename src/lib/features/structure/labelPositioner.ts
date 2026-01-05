@@ -157,13 +157,24 @@ export function clearLabels(): void {
  */
 function getLabelText(role: string): string {
     const map: Record<string, string> = {
+        // Core
         's': 'S', 'subject': 'S',
         'v': 'V', 'verb': 'V',
         'o': 'O', 'object': 'O',
-        'con': 'CON', 'connective': 'CON',
+        'io': 'IO', 'indirect-object': 'IO',
+        'cmp': 'CMP', 'complement': 'CMP',
+        // Clauses & Phrases
         'rc': 'RC', 'rel-clause': 'RC',
+        'pp': 'PP', 'prep-phrase': 'PP',
+        'adv': 'ADV', 'adverbial': 'ADV',
+        'app': 'APP', 'appositive': 'APP',
+        // Voice & Connectives
         'pas': 'PAS', 'passive': 'PAS',
-        'pp': 'PP', 'prep-phrase': 'PP'
+        'con': 'CON', 'connective': 'CON',
+        // Non-finite
+        'inf': 'INF', 'infinitive': 'INF',
+        'ger': 'GER', 'gerund': 'GER',
+        'ptc': 'PTC', 'participle': 'PTC'
     };
     return map[role] || role.toUpperCase();
 }
@@ -173,13 +184,24 @@ function getLabelText(role: string): string {
  */
 function getLabelColor(role: string): string {
     const map: Record<string, string> = {
+        // Core - same as HelpPanel colors
         's': '#1e3a8a', 'subject': '#1e3a8a',
         'v': '#991b1b', 'verb': '#991b1b',
         'o': '#065f46', 'object': '#065f46',
-        'con': '#92400e', 'connective': '#92400e',
+        'io': '#047857', 'indirect-object': '#047857',
+        'cmp': '#7c3aed', 'complement': '#7c3aed',
+        // Clauses & Phrases
         'rc': '#475569', 'rel-clause': '#475569',
+        'pp': '#64748b', 'prep-phrase': '#64748b',
+        'adv': '#0369a1', 'adverbial': '#0369a1',
+        'app': '#0891b2', 'appositive': '#0891b2',
+        // Voice & Connectives
         'pas': '#c2410c', 'passive': '#c2410c',
-        'pp': '#64748b', 'prep-phrase': '#64748b'
+        'con': '#92400e', 'connective': '#92400e',
+        // Non-finite
+        'inf': '#be185d', 'infinitive': '#be185d',
+        'ger': '#9d174d', 'gerund': '#9d174d',
+        'ptc': '#831843', 'participle': '#831843'
     };
     return map[role] || '#1e293b';
 }

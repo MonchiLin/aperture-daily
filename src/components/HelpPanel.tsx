@@ -8,13 +8,24 @@ export default function HelpPanel() {
     const [tab, setTab] = useState<'legend' | 'guide'>('legend');
 
     const symbols = [
+        // 核心成分
         { key: 'S', name: '主语 (Subject)', desc: '执行动作的人或物。', example: 'The fox jumps.', target: 'The fox', color: '#1e3a8a' },
-        { key: 'V', name: '谓语 (Verb)', desc: '动作或状态。', example: 'The fox jumps.', target: 'jumps', color: '#991b1b' },
-        { key: 'O', name: '宾语 (Object)', desc: '动作的承受者。', example: 'He eats an apple.', target: 'an apple', color: '#065f46' },
+        { key: 'V', name: '谓语 (Verb)', desc: '完整的谓语动词短语（含助动词）。', example: 'She can do it.', target: 'can do', color: '#991b1b' },
+        { key: 'O', name: '直接宾语 (Direct Object)', desc: '动作的承受者。', example: 'He eats an apple.', target: 'an apple', color: '#065f46' },
+        { key: 'IO', name: '间接宾语 (Indirect Object)', desc: '动作的接受者。', example: 'She gave him a book.', target: 'him', color: '#047857' },
+        { key: 'CMP', name: '补语 (Complement)', desc: '补充说明主语或宾语的成分。', example: 'She seems happy.', target: 'happy', color: '#7c3aed' },
+        // 从句与短语
         { key: 'PP', name: '介词短语 (Prepositional Phrase)', desc: '以介词开头的修饰短语。', example: 'In the morning, he runs.', target: 'In the morning', color: '#64748b' },
         { key: 'RC', name: '定语从句 (Relative Clause)', desc: '用来修饰名词的从句。', example: 'The man who lives here.', target: 'who lives here', color: '#475569' },
-        { key: 'PAS', name: '被动语态 (Passive Voice)', desc: '当主语是动作的承受者时使用。', example: 'The cake was eaten.', target: 'was eaten', color: '#c2410c' },
+        { key: 'ADV', name: '状语 (Adverbial)', desc: '修饰动词、形容词或整个句子。', example: 'He ran quickly.', target: 'quickly', color: '#0369a1' },
+        { key: 'APP', name: '同位语 (Appositive)', desc: '紧跟名词的解释性成分。', example: 'My friend, John, is here.', target: 'John', color: '#0891b2' },
+        // 语态与连接
+        { key: 'PAS', name: '被动语态 (Passive Voice)', desc: '主语是动作的承受者。', example: 'The cake was eaten.', target: 'was eaten', color: '#c2410c' },
         { key: 'CON', name: '连接词 (Connective)', desc: '连接句子或观点的词。', example: 'However, it rained.', target: 'However', color: '#92400e' },
+        // 非谓语动词
+        { key: 'INF', name: '不定式 (Infinitive)', desc: 'to + 动词原形，作名词、形容词或副词用。', example: 'I want to learn.', target: 'to learn', color: '#be185d' },
+        { key: 'GER', name: '动名词 (Gerund)', desc: '动词-ing形式作名词用。', example: 'Swimming is fun.', target: 'Swimming', color: '#9d174d' },
+        { key: 'PTC', name: '分词 (Participle)', desc: '现在分词或过去分词作修饰语。', example: 'The running water flows.', target: 'running', color: '#831843' },
     ];
 
     return (

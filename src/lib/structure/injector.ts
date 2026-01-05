@@ -7,10 +7,12 @@
 
 import * as cheerio from 'cheerio';
 
+export type StructureRole = 's' | 'v' | 'o' | 'io' | 'cmp' | 'rc' | 'pp' | 'adv' | 'app' | 'pas' | 'con' | 'inf' | 'ger' | 'ptc';
+
 export type StructureData = Array<{
     start: number;
     end: number;
-    role: 's' | 'v' | 'o' | 'rc' | 'pp' | 'pas' | 'con';
+    role: StructureRole;
     extract?: string;
 }>;
 
