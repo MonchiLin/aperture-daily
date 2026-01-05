@@ -96,19 +96,19 @@ export default function WordListPanel({ date, initialData }: WordListPanelProps)
             key: 'new',
             label: (
                 <span className="font-medium">
-                    新学 <span className="text-orange-500 ml-1">({data.new_count})</span>
+                    新学 <span className="text-orange-500 ml-1">({data.new_count ?? 0})</span>
                 </span>
             ),
-            children: renderWordList(data.new_words)
+            children: renderWordList(data.new_words ?? [])
         },
         {
             key: 'review',
             label: (
                 <span className="font-medium">
-                    复习 <span className="text-blue-500 ml-1">({data.review_count})</span>
+                    复习 <span className="text-blue-500 ml-1">({data.review_count ?? 0})</span>
                 </span>
             ),
-            children: renderWordList(data.review_words)
+            children: renderWordList(data.review_words ?? [])
         }
     ];
 
