@@ -1,0 +1,130 @@
+#!/usr/bin/env bun
+/**
+ * D1 Database Sync Script
+ * 
+ * Syncs data between remote Cloudflare D1 and local SQLite database.
+ * 
+ * Usage:
+ *   bun run scripts/db-sync.ts pull    # Pull remote D1 data to local.db
+ *   bun run scripts/db-sync.ts push    # Push local.db data to remote D1
+ *   bun run scripts/db-sync.ts export  # Export remote D1 to backup.sql
+ */
+
+import { $ } from "bun";
+import { Database } from "bun:sqlite";
+import * as fs from "fs";
+
+const DB_NAME = process.env.D1_DATABASE_NAME || "ApertureDailyData";
+const LOCAL_DB_PATH = "./local.db";
+const BACKUP_FILE = "./backup.sql";
+
+const command = process.argv[2];
+
+async function pull() {
+    console.log("📥 Pulling data from remote D1 to local SQLite...");
+
+    // Export from remote D1
+    console.log(`   Exporting from remote D1 (${DB_NAME})...`);
+    await $`npx wrangler d1 export ${DB_NAME} --remote --output=${BACKUP_FILE}`.quiet();
+
+    // Delete existing local.db
+    console.log(`   Recreating local SQLite (${LOCAL_DB_PATH})...`);
+    if (fs.existsSync(LOCAL_DB_PATH)) {
+        fs.unlinkSync(LOCAL_DB_PATH);
+    }
+
+    // Read backup SQL and execute using Bun's SQLite
+    console.log(`   Importing SQL to local SQLite...`);
+    const sqlContent = fs.readFileSync(BACKUP_FILE, "utf-8");
+    const db = new Database(LOCAL_DB_PATH);
+
+    // Execute the SQL statements
+    db.exec(sqlContent);
+    db.close();
+
+    // Clean up backup file
+    fs.unlinkSync(BACKUP_FILE);
+
+    console.log("✅ Pull complete! Local database synced with remote D1.");
+}
+
+async function push() {
+    console.log("📤 Pushing local SQLite data to remote D1...");
+    console.log("⚠️  WARNING: This will overwrite remote data!");
+
+    // Export local SQLite to SQL using Bun
+    console.log(`   Exporting local SQLite to SQL...`);
+    const db = new Database(LOCAL_DB_PATH);
+
+    // Get all tables
+    const tables = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as { name: string }[];
+
+    let sqlDump = "PRAGMA foreign_keys=OFF;\n";
+
+    for (const { name } of tables) {
+        // Get CREATE TABLE statement
+        const createStmt = db.query(`SELECT sql FROM sqlite_master WHERE type='table' AND name=?`).get(name) as { sql: string } | null;
+        if (createStmt?.sql) {
+            sqlDump += `${createStmt.sql};\n`;
+        }
+
+        // Get all rows
+        const rows = db.query(`SELECT * FROM "${name}"`).all();
+        for (const row of rows) {
+            const columns = Object.keys(row as object);
+            const values = Object.values(row as object).map(v =>
+                v === null ? 'NULL' : typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v
+            );
+            sqlDump += `INSERT INTO "${name}" (${columns.join(', ')}) VALUES (${values.join(', ')});\n`;
+        }
+    }
+
+    sqlDump += "PRAGMA foreign_keys=ON;\n";
+    db.close();
+
+    fs.writeFileSync(BACKUP_FILE, sqlDump);
+
+    // Import to remote D1
+    console.log(`   Importing to remote D1 (${DB_NAME})...`);
+    await $`npx wrangler d1 execute ${DB_NAME} --remote --file=${BACKUP_FILE} --yes`.quiet();
+
+    // Clean up
+    fs.unlinkSync(BACKUP_FILE);
+
+    console.log("✅ Push complete! Remote D1 synced with local database.");
+}
+
+async function exportBackup() {
+    console.log("💾 Exporting remote D1 to backup file...");
+    await $`npx wrangler d1 export ${DB_NAME} --remote --output=${BACKUP_FILE}`;
+    console.log(`✅ Export complete! Saved to ${BACKUP_FILE}`);
+}
+
+async function main() {
+    switch (command) {
+        case "pull":
+            await pull();
+            break;
+        case "push":
+            await push();
+            break;
+        case "export":
+            await exportBackup();
+            break;
+        default:
+            console.log(`
+D1 Database Sync Tool
+
+Usage:
+  bun run scripts/db-sync.ts pull    # Pull remote D1 → local.db
+  bun run scripts/db-sync.ts push    # Push local.db → remote D1
+  bun run scripts/db-sync.ts export  # Export remote D1 → backup.sql
+
+Environment Variables:
+  D1_DATABASE_NAME  Database name (default: ApertureDailyData)
+`);
+            process.exit(1);
+    }
+}
+
+main().catch(console.error);

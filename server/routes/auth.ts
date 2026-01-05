@@ -40,14 +40,8 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
     })
     // 验证端点 - 同时支持 header 和 cookie
     .get('/check', ({ request }) => {
-        const start = performance.now();
-        console.log(`[API-PERF] /api/auth/check: start`);
         const key = getAdminKey(request);
-        if (key === env.ADMIN_KEY) {
-            console.log(`[API-PERF] /api/auth/check: ${(performance.now() - start).toFixed(2)}ms`);
-            return { status: 'ok' };
-        }
-        console.log(`[API-PERF] /api/auth/check: ${(performance.now() - start).toFixed(2)}ms (UNAUTHORIZED)`);
+        if (key === env.ADMIN_KEY) return { status: 'ok' };
         throw AppError.unauthorized();
     });
 

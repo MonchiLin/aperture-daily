@@ -5,17 +5,11 @@
   "packageManager": "bun@1.1.0",
   "scripts": {
     "dev": "astro dev",
-    "dev:server": "cd server && bun run --watch index.ts",
+    "dev:server": "cd server && bun run dev",
     "build": "astro build",
     "serve": "bun run ./dist/server/entry.mjs",
     "preview": "astro preview",
     "check": "astro check",
-    "db:push": "cd server && bun drizzle-kit push",
-    "db:studio": "cd server && bun drizzle-kit studio",
-    "d1:deploy:cron": "wrangler deploy --config wrangler.cron.jsonc",
-    "d1:generate": "cd server && drizzle-kit generate",
-    "d1:migrate:remote": "wrangler d1 migrations apply DB --remote",
-    "d1:studio": "drizzle-kit studio",
     "astro": "astro",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

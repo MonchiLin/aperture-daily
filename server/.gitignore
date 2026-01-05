@@ -12,6 +12,7 @@ local.db
 local.db-journal
 *.sqlite
 *.sqlite-journal
+backup.sql
 
 # Logs
 *.log
