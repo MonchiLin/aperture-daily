@@ -317,5 +317,30 @@
 }
 
 /* --- 5. Compatibility --- */
-/* Compatibility: Removed to allow structure colors to override vocabulary highlights per user request. */
-/* .target-word:has(.structure-active) { ... } */
+/* Override target-word styles when sentence structure is active */
+.structure-active .target-word,
+.s-token.structure-active .target-word {
+    color: inherit !important;
+    border-bottom: none !important;
+    font-weight: inherit !important;
+    cursor: inherit;
+}
+
+/* Also reset the golden soul pin (history indicator) */
+.structure-active .target-word[data-has-history="true"]::after {
+    display: none;
+}
+
+/* --- 6. Interaction Helpers (Added for Rewrite v2) --- */
+.structure-label.st-hover {
+    transform: translateY(-2px) scale(1.1);
+    z-index: 200 !important;
+    filter: brightness(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-structure].st-hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    /* Subtle highlight */
+    cursor: pointer;
+}

@@ -22,7 +22,8 @@ import {
     mapToSidebarWords,
     parseArticleContent,
 } from "@/lib/articles/utils";
-import { injectStructureSpans } from "@/lib/structure/injector";
+import { StructureParser, splitASTIntoBlocks } from "@/lib/structure/parser";
+import StructuredText from "@/components/structure/StructuredText.astro";
 import type { ArticleParsedContent } from "@/lib/articles/types";
 
 const { id } = Astro.params;
@@ -62,6 +63,7 @@ try {
 // 获取三个难度级别的文章
 const articles = parsed?.result?.articles || [];
 const sortedArticles = [...articles].sort((a: any, b: any) => a.level - b.level);
+
 const title = row?.articles?.title || "Article";
 
 // 获取所有文章内容用于 AudioPlayer（按难度合并）
@@ -160,18 +162,19 @@ const readLevels = row?.articles?.read_levels || 0;
                             {sortedArticles.map((article: any) => {
                                 const stats = getReadingStats(article.content);
                                 
-                                // [Structure] Inject Standoff Markup
-                                let contentHtml = article.content || '';
-                                if (article.structure && article.structure.length > 0) {
-                                    try {
-                                        contentHtml = injectStructureSpans(article.content, article.structure);
-                                    } catch (e) {
-                                        console.error("[Structure] Injection failed:", e);
-                                    }
+                                // [Structure] AST-Based Rendering (New System)
+                                let astBlocks: any[] = [];
+                                try {
+                                    const parser = new StructureParser(article.content || '', article.structure || []);
+                                    const ast = parser.parse();
+                                    astBlocks = splitASTIntoBlocks(ast);
+                                } catch (e) {
+                                    console.error("[Structure] AST Parsing failed:", e);
+                                    // Fallback: render text as single block or split by newlines manually
+                                    // Simulating basic text block
+                                    astBlocks = [[{ type: 'text', content: article.content || '' }]]; 
                                 }
 
-                                const paragraphs = contentHtml.split('\n').filter((p: string) => p.trim()) || [];
-                                
                                 return (
                                     <div
                                         class="article-level"
@@ -179,11 +182,12 @@ const readLevels = row?.articles?.read_levels || 0;
                                         data-word-count={stats.wordCount}
                                         data-minutes={stats.minutes}
                                     >
-                                        {paragraphs.map((paragraph: string, pIndex: number) => (
+                                        {astBlocks.map((blockNodes: any[], pIndex: number) => (
                                             <p 
                                                 class={`mb-6 text-justify ${pIndex === 0 ? 'drop-cap-p' : 'indent-8'}`}
-                                                set:html={paragraph}
-                                            />
+                                            >
+                                                <StructuredText nodes={blockNodes} />
+                                            </p>
                                         ))}
                                     </div>
                                 );
