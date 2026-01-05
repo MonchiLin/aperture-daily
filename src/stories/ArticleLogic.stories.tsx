@@ -108,7 +108,7 @@ const StructureOverlapTestComponent = () => {
     }, []);
 
     return (
-        <div ref={containerRef} id="article-content" className="p-12 bg-white min-h-screen font-serif text-xl leading-loose">
+        <div ref={containerRef} id="article-content" className="p-12 bg-white min-h-screen font-serif" style={{ fontSize: '24px', lineHeight: '2.5', fontFamily: 'Georgia, serif' }}>
             <h2 className="text-2xl font-bold mb-8">Structure Label Overlap Test Suite</h2>
             <p className="text-sm text-slate-500 mb-12">Each case tests a specific overlap scenario. Labels should NOT collide.</p>
 
@@ -207,8 +207,15 @@ const StructureOverlapTestComponent = () => {
                             <span className="s-token structure-active bg-yellow-100" data-sid="5">The man</span>
                         </span>
                         <span> </span>
+                        {/* Nested RC Structure for Interaction Test */}
                         <span data-structure="rel-clause">
-                            <span className="s-token structure-active bg-yellow-100" data-sid="5">who wore a hat</span>
+                            <span className="s-token structure-active bg-yellow-100" data-sid="5">
+                                <span data-structure="subject"><span className="structure-active">who</span></span>
+                                <span> </span>
+                                <span data-structure="verb"><span className="structure-active">wore</span></span>
+                                <span> </span>
+                                <span data-structure="object"><span className="structure-active">a hat</span></span>
+                            </span>
                         </span>
                         <span> </span>
                         <span data-structure="verb">
@@ -380,6 +387,45 @@ const StructureOverlapTestComponent = () => {
                         <span data-structure="object">
                             <span className="s-token structure-active bg-yellow-100" data-sid="12">the proposal</span>
                         </span>?
+                    </p>
+                </div>
+
+                {/* Case 11: Nested Opacity Swap Interaction */}
+                <div>
+                    <h3 className="text-sm font-sans text-slate-400 mb-4 uppercase tracking-wide border-b pb-2">
+                        Case 11: Nested Opacity Swap (Hover Interaction)
+                    </h3>
+                    <p className="leading-loose">
+                        <span data-structure="s">
+                            <span className="structure-active">The CEO</span>
+                        </span>
+                        {' '}
+                        <span data-structure="v">
+                            <span className="structure-active">gave</span>
+                        </span>
+                        {' '}
+                        <span data-structure="io">
+                            <span className="structure-active">the team</span>
+                        </span>
+                        {' '}
+                        <span data-structure="rc" style={{ cursor: 'pointer' }}>
+                            <span className="structure-active">
+                                <span data-structure="s"><span className="structure-active">who</span></span>
+                                {' '}
+                                <span data-structure="adv"><span className="structure-active">successfully</span></span>
+                                {' '}
+                                <span data-structure="v"><span className="structure-active">completed</span></span>
+                                {' '}
+                                <span data-structure="o"><span className="structure-active">the project</span></span>
+                            </span>
+                        </span>
+                        {' '}
+                        <span data-structure="o">
+                            <span className="structure-active">a bonus</span>
+                        </span>.
+                    </p>
+                    <p className="text-sm text-slate-400 mt-4 italic">
+                        Hover over "who successfully completed..." to test the opacity swap.
                     </p>
                 </div>
             </div>

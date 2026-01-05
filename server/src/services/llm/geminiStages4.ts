@@ -174,11 +174,7 @@ JSON 数组，每个元素：
 
 5. 必须标注所有 S-V-O 成分，标题也标注
 
-6. 【嵌套限制】从句(RC)、介词短语(PP)、非谓语(INF/GER/PTC)内部不标注 S/V/O 等成分，只将整体标为一个单位
-   ✓ "who led the team" 整体标为 RC
-   ✗ 不要在 RC 内部再标 S/V/O
-
-7. 只输出 JSON
+6. 只输出 JSON
 </rules>
 
 <words>

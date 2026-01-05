@@ -56,7 +56,8 @@ export function injectStructureSpans(htmlContent: string, structure: StructureDa
     // Sort structure by start position
     structure.sort((a, b) => a.start - b.start);
 
-    // 3. Create Char Map with roles
+    // 3. Create Char Map with roles (Global)
+    // We use this to reliably map global offsets to per-node local offsets, handling multi-node spans.
     type CharInfo = {
         char: string;
         refNode: any;
@@ -74,14 +75,14 @@ export function injectStructureSpans(htmlContent: string, structure: StructureDa
         }
     }
 
-    // 4. Apply Tags (直接使用偏移量，不做修正)
+    // 4. Apply Tags (Global Mapping)
     for (const item of structure) {
         for (let i = Math.max(0, item.start); i < Math.min(item.end, charMap.length); i++) {
             charMap[i]!.roles.add(item.role);
         }
     }
 
-    // 5. Reconstruct Nodes
+    // 5. Reconstruct Nodes with Nested Spans
     const nodesToUpdate = new Map<any, CharInfo[]>();
     for (const c of charMap) {
         if (!nodesToUpdate.has(c.refNode)) {
@@ -90,54 +91,110 @@ export function injectStructureSpans(htmlContent: string, structure: StructureDa
         nodesToUpdate.get(c.refNode)?.push(c);
     }
 
+    // Priority for nesting (Lower index = Higher priority/Outer)
+    // Generally Scope > Core > Modifier > Particle
+    const rolePriority = ['rc', 's', 'v', 'o', 'io', 'cmp', 'pp', 'adv', 'app', 'pas', 'con', 'inf', 'ger', 'ptc'];
+
+    const getRolePriority = (r: string) => {
+        const idx = rolePriority.indexOf(r);
+        return idx === -1 ? 999 : idx;
+    };
+
     for (const [originalNode, chars] of nodesToUpdate) {
-        let replacementHtml = '';
-        let currentRoles: string = '___none___';
-        let currentBuffer = '';
+        if (chars.length === 0) continue;
 
-        const flush = () => {
-            if (!currentBuffer) return;
+        // 5a. Extract Local Ranges from Char Roles
+        // Convert the per-character sets back into intervals [start, end)
+        const ranges: { role: string; start: number; end: number; }[] = [];
+        const activeRoles = new Map<string, number>(); // role -> start index
 
-            if (currentRoles === '___none___') {
-                replacementHtml += currentBuffer;
-            } else {
-                const roleList = currentRoles.split('|').filter(r => r !== 'undefined');
-
-                // Priority Order: Outer -> Inner
-                const priority = ['rc', 'pas', 'con', 'pp', 's', 'v', 'o'];
-
-                roleList.sort((a, b) => {
-                    const idxA = priority.indexOf(a) === -1 ? 99 : priority.indexOf(a);
-                    const idxB = priority.indexOf(b) === -1 ? 99 : priority.indexOf(b);
-                    return idxA - idxB;
-                });
-
-                let fragment = currentBuffer;
-
-                // Iterate from right (Inner) to left (Outer)
-                for (let i = roleList.length - 1; i >= 0; i--) {
-                    const r = roleList[i];
-                    fragment = `<span data-structure="${r}">` + fragment + `</span>`;
+        for (let i = 0; i < chars.length; i++) {
+            const currentRoles = chars[i].roles;
+            // End roles not in current set
+            for (const [role, start] of activeRoles) {
+                if (!currentRoles.has(role)) {
+                    ranges.push({ role, start, end: i });
+                    activeRoles.delete(role);
                 }
-
-                replacementHtml += fragment;
             }
-
-            currentBuffer = '';
-        };
-
-        for (const c of chars) {
-            const signature = Array.from(c.roles).sort().join('|') || '___none___';
-
-            if (signature !== currentRoles) {
-                flush();
-                currentRoles = signature;
+            // Start new roles
+            for (const role of currentRoles) {
+                if (!activeRoles.has(role)) {
+                    activeRoles.set(role, i);
+                }
             }
-            currentBuffer += c.char;
         }
-        flush();
+        // Close remaining
+        for (const [role, start] of activeRoles) {
+            ranges.push({ role, start, end: chars.length });
+        }
 
-        $(originalNode).replaceWith(replacementHtml);
+        // 5b. Stack Reconciliation Algorithm
+        // Create atomic segments (intervals where the set of active ranges is constant)
+        const boundaries = new Set<number>([0, chars.length]);
+        ranges.forEach(r => { boundaries.add(r.start); boundaries.add(r.end); });
+        const sortedBoundaries = Array.from(boundaries).sort((a, b) => a - b);
+
+        let htmlBuffer = '';
+        let currentStack: string[] = []; // Roles currently open
+
+        for (let i = 0; i < sortedBoundaries.length - 1; i++) {
+            const start = sortedBoundaries[i];
+            const end = sortedBoundaries[i + 1];
+
+            // Find all roles active in this segment [start, end)
+            // A role is active if it covers this whole segment (i.e. r.start <= start && r.end >= end)
+            const activeInRange = ranges.filter(r => r.start <= start && r.end >= end);
+
+            // Sort active roles to define hierarchy for this segment
+            // 1. Longer duration (global length) should be outer? 
+            //    Yes, but we only have local length here. 'ranges' has local length.
+            //    Let's rely on local length + priority.
+            // 2. Priority list.
+            activeInRange.sort((a, b) => {
+                const lenA = a.end - a.start;
+                const lenB = b.end - b.start;
+                if (lenA !== lenB) return lenB - lenA; // Longer first
+                return getRolePriority(a.role) - getRolePriority(b.role);
+            });
+
+            const nextStack = activeInRange.map(r => r.role);
+
+            // Reconcile currentStack vs nextStack
+            // Find common prefix
+            let prefixLen = 0;
+            while (prefixLen < currentStack.length && prefixLen < nextStack.length) {
+                if (currentStack[prefixLen] === nextStack[prefixLen]) {
+                    prefixLen++;
+                } else {
+                    break;
+                }
+            }
+
+            // Close roles that are no longer in stack (or order changed)
+            // Reverse order (LIFO)
+            for (let j = currentStack.length - 1; j >= prefixLen; j--) {
+                htmlBuffer += '</span>';
+            }
+
+            // Open new roles
+            for (let j = prefixLen; j < nextStack.length; j++) {
+                htmlBuffer += `<span data-structure="${nextStack[j]}">`;
+            }
+
+            // Append Text Content
+            const segmentText = chars.slice(start, end).map(c => c.char).join('');
+            htmlBuffer += segmentText;
+
+            currentStack = nextStack;
+        }
+
+        // Close remaining stack
+        for (let j = currentStack.length - 1; j >= 0; j--) {
+            htmlBuffer += '</span>';
+        }
+
+        $(originalNode).replaceWith(htmlBuffer);
     }
 
     return $.html();
