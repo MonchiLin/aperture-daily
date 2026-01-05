@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { articles, articleVariants, articleVocabulary, articleVocabDefinitions } from '../../../db/schema';
 import { generateDailyNews3StageWithGemini } from '../llm/geminiPipeline3';
 import type { CandidateWord, GeminiCheckpoint3 } from '../llm/types';
 import { indexArticleWords } from '../wordIndexer';
@@ -19,36 +20,15 @@ function uniqueStrings(input: string[]) {
  * Get words that have already been used in articles today
  */
 async function getUsedWordsToday(db: AppDatabase, taskDate: string): Promise<Set<string>> {
-    // Get task IDs for date
-    const todaysTasks = await db.all(sql`SELECT id FROM tasks WHERE task_date = ${taskDate}`) as IdRow[];
-    if (todaysTasks.length === 0) return new Set();
+    const rows = await db.all(sql`
+        SELECT DISTINCT v.word 
+        FROM tasks t
+        JOIN articles a ON a.generation_task_id = t.id
+        JOIN article_vocabulary v ON v.article_id = a.id
+        WHERE t.task_date = ${taskDate}
+    `) as { word: string }[];
 
-    const taskIds = todaysTasks.map((t) => t.id);
-    // Manual IN clause for raw SQL safely
-    // Since IDs are trusted UUIDs, we can inject, but safer to use param array if possible.
-    // D1 Proxy simple mode usually requires literal injection for arrays or loops.
-    // Let's use literal injection for UUIDs as they are safe characters.
-    const inClause = taskIds.map(id => `'${id}'`).join(',');
-
-    // Fetch article content
-    const taskArticles = await db.all(sql.raw(`SELECT content_json FROM articles WHERE generation_task_id IN (${inClause})`)) as { content_json: string }[];
-
-    const usedWords = new Set<string>();
-    for (const article of taskArticles) {
-        try {
-            const content = JSON.parse(article.content_json);
-            const selected = content?.input_words?.selected;
-            if (Array.isArray(selected)) {
-                for (const word of selected) {
-                    if (typeof word === 'string') usedWords.add(word);
-                }
-            }
-        } catch (e) {
-            // ignore JSON parse error
-        }
-    }
-
-    return usedWords;
+    return new Set(rows.map(r => r.word));
 }
 
 /**
@@ -105,7 +85,7 @@ export class TaskQueue {
 
         const activeProfiles = await this.db.all(sql`SELECT * FROM generation_profiles`) as ProfileRow[];
 
-        const dailyRow = await this.db.all(sql`SELECT * FROM daily_words WHERE date = ${taskDate} LIMIT 1`);
+        const dailyRow = await this.db.all(sql`SELECT * FROM daily_word_references WHERE date = ${taskDate} LIMIT 1`);
         if (dailyRow.length === 0) {
             throw new Error(`No daily words found for ${taskDate}. Please fetch words first.`);
         }
@@ -402,10 +382,64 @@ export class TaskQueue {
 
 
 
+        const sourceUrl = output.output.sources?.[0] || null;
+
         await this.db.run(sql`
-            INSERT INTO articles (id, generation_task_id, model, variant, title, content_json, status, published_at)
-            VALUES (${articleId}, ${task.id}, ${model}, 1, ${output.output.title}, ${JSON.stringify(contentData)}, 'published', ${finishedAt})
+            INSERT INTO articles (id, generation_task_id, model, variant, title, source_url, status, published_at)
+            VALUES (${articleId}, ${task.id}, ${model}, 1, ${output.output.title}, ${sourceUrl}, 'published', ${finishedAt})
         `);
+
+        // [Normalization] Dual Write: Insert into normalized tables
+        if (output.output.articles) {
+            for (const variant of output.output.articles) {
+                await this.db.insert(articleVariants).values({
+                    id: crypto.randomUUID(),
+                    articleId: articleId,
+                    level: variant.level,
+                    levelLabel: variant.level_name || `Level ${variant.level}`,
+                    title: output.output.title,
+                    content: variant.content,
+                    structureJson: JSON.stringify(variant.structure || null)
+                });
+            }
+        }
+
+        if (output.output.word_definitions) {
+            for (const wordDef of output.output.word_definitions) {
+                const vocabId = crypto.randomUUID();
+                // Parent keys are Unique(articleId, word), use onConflictDoNothing
+                await this.db.insert(articleVocabulary).values({
+                    id: vocabId,
+                    articleId: articleId,
+                    word: wordDef.word,
+                    phonetic: wordDef.phonetic
+                }).onConflictDoNothing();
+
+                // If collision happened, we need the existing ID.
+                // But simplified: assuming generated words are unique per article in output.
+                // If LLM returned duplicates, onConflictDoNothing skips.
+                // We need the ID for child inserts.
+                // Let's query it back to be safe.
+                // Let's query it back to be safe.
+                const vocabRow = await this.db.select()
+                    .from(articleVocabulary)
+                    .where(sql`${articleVocabulary.articleId} = ${articleId} AND ${articleVocabulary.word} = ${wordDef.word}`)
+                    .limit(1);
+
+                const targetVocabId = vocabRow[0]?.id || vocabId;
+
+                if (wordDef.definitions) {
+                    for (const def of wordDef.definitions) {
+                        await this.db.insert(articleVocabDefinitions).values({
+                            id: crypto.randomUUID(),
+                            vocabId: targetVocabId,
+                            partOfSpeech: def.pos,
+                            definition: def.definition
+                        });
+                    }
+                }
+            }
+        }
 
         // [Semantic Weaving] Index words for memory recall
         try {

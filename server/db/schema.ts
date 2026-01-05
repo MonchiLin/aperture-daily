@@ -108,14 +108,12 @@ export const words = sqliteTable(
     ]
 );
 
-
-
-
-
 // Add read_levels column dynamically via migration or assume new deploy. 
 // Ideally we run a migration. For now, we add it to schema.
 // Since Drizzle Kit push handles schema changes for SQLite (D1ish/Local), 
 // we just add the field.
+// ... (existing code)
+
 export const articles = sqliteTable(
     'articles',
     {
@@ -127,7 +125,10 @@ export const articles = sqliteTable(
         model: text('model').notNull(),
         variant: integer('variant').notNull(),
         title: text('title').notNull(),
-        contentJson: text('content_json').notNull(),
+
+        // [New] Normalized columns
+        sourceUrl: text('source_url'), // Single source URL
+
         status: text('status', { enum: ['draft', 'published'] }).notNull(),
         readLevels: integer('read_levels').notNull().default(0),
         createdAt: text('created_at')
@@ -140,10 +141,74 @@ export const articles = sqliteTable(
         index('idx_articles_generation_task_id').on(table.generationTaskId),
         index('idx_articles_status').on(table.status),
         index('idx_articles_published').on(table.publishedAt),
-        check('chk_articles_status_enum', sql`${table.status} IN ('draft', 'published')`),
-        check('chk_articles_content_json_valid', sql`json_valid(${table.contentJson})`)
+        check('chk_articles_status_enum', sql`${table.status} IN ('draft', 'published')`)
     ]
 );
+
+// [New] Stores the actual content for each difficulty level
+export const articleVariants = sqliteTable(
+    'article_variants',
+    {
+        id: text('id').primaryKey(),
+        articleId: text('article_id')
+            .notNull()
+            .references(() => articles.id, { onDelete: 'cascade' }),
+        level: integer('level').notNull(), // 1, 2, 3
+        levelLabel: text('level_label').notNull(), // e.g. "B1 Intermediate"
+        title: text('title').notNull(),
+        content: text('content').notNull(), // Markdown Content
+        structureJson: text('structure_json'), // Sentence structure analysis
+        createdAt: text('created_at')
+            .notNull()
+            .default(sql`(CURRENT_TIMESTAMP)`),
+    },
+    (table) => [
+        uniqueIndex('uq_article_variant_level').on(table.articleId, table.level),
+        index('idx_article_variant_article_id').on(table.articleId)
+    ]
+);
+
+// [New] Stores the unique words for the article (Parent Table)
+export const articleVocabulary = sqliteTable(
+    'article_vocabulary',
+    {
+        id: text('id').primaryKey(),
+        articleId: text('article_id')
+            .notNull()
+            .references(() => articles.id, { onDelete: 'cascade' }),
+        word: text('word').notNull(),
+        phonetic: text('phonetic'),
+        createdAt: text('created_at')
+            .notNull()
+            .default(sql`(CURRENT_TIMESTAMP)`),
+    },
+    (table) => [
+        uniqueIndex('uq_article_vocab_word').on(table.articleId, table.word),
+        index('idx_article_vocab_article_id').on(table.articleId)
+    ]
+);
+
+// [New] Stores the specific meanings (Child Table)
+export const articleVocabDefinitions = sqliteTable(
+    'article_vocab_definitions',
+    {
+        id: text('id').primaryKey(),
+        vocabId: text('vocab_id')
+            .notNull()
+            .references(() => articleVocabulary.id, { onDelete: 'cascade' }),
+        partOfSpeech: text('part_of_speech').notNull(), // e.g. "n.", "v."
+        definition: text('definition').notNull(),
+        createdAt: text('created_at')
+            .notNull()
+            .default(sql`(CURRENT_TIMESTAMP)`),
+    },
+    (table) => [
+        index('idx_vocab_def_vocab_id').on(table.vocabId),
+        index('idx_vocab_def_pos').on(table.partOfSpeech)
+    ]
+);
+
+// ... (existing highlights, articleWordIndex)
 
 // web-highlighter 选区与笔记；通过 deleted_at 软删。
 export const highlights = sqliteTable(
