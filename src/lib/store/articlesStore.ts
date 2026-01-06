@@ -1,18 +1,9 @@
 import { atom } from 'nanostores';
 import { apiFetch } from '../api';
+import type { Article, ArticlesState } from '../../types';
 
-export interface Article {
-    id: string;
-    model: string;
-    title: string;
-    read_levels?: number;
-}
+export type { Article, ArticlesState };
 
-export interface ArticlesState {
-    date: string;
-    articles: Article[];
-    loading: boolean;
-}
 
 export const articlesStore = atom<ArticlesState>({
     date: '',

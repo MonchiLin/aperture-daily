@@ -7,13 +7,8 @@ import { useState } from 'react';
 import { Drawer, ConfigProvider } from 'antd';
 import { BookOpen } from 'lucide-react';
 import WordListPanel from './WordListPanel';
+import type { WordData } from '../types';
 
-interface WordData {
-    new_words: string[];
-    review_words: string[];
-    new_count: number;
-    review_count: number;
-}
 
 export default function WordsDrawer({ date, wordData }: { date: string; wordData?: WordData }) {
     const [open, setOpen] = useState(false);

@@ -7,14 +7,8 @@
 import { useEffect, useState } from 'react';
 import { Tabs, Tag, Spin, Empty } from 'antd';
 import { apiFetch } from '../lib/api';
+import type { WordData } from '../types';
 
-
-interface WordData {
-    new_words: string[];
-    review_words: string[];
-    new_count: number;
-    review_count: number;
-}
 
 interface WordListPanelProps {
     date: string;

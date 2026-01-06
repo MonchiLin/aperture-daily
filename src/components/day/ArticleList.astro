@@ -6,12 +6,7 @@
  * 使用 ArticleItem 子组件渲染每篇文章
  */
 import ArticleItem from './ArticleItem.astro';
-
-interface Article {
-    id: string;
-    title: string;
-    read_levels?: number;
-}
+import type { Article } from '../../types';
 
 interface Props {
     articles: Article[];

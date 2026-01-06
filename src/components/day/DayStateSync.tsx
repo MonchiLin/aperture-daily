@@ -5,13 +5,9 @@
  * 不渲染任何 UI，作为不可见的孤岛运行
  */
 import { useEffect } from 'react';
-import { setArticles, type Article } from '../../lib/store/articlesStore';
+import { setArticles } from '../../lib/store/articlesStore';
 import { initFromSSR } from '../../lib/store/adminStore';
-
-interface AdminData {
-    isAdmin: boolean;
-    tasks: any[];
-}
+import type { Article, AdminData } from '../../types';
 
 interface Props {
     date: string;
