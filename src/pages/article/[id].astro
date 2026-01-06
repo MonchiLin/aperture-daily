@@ -5,6 +5,11 @@
  * 三个难度级别的内容都在 HTML 中输出，用 CSS 控制显示/隐藏。
  * 难度切换使用极简的原生 JavaScript，无需 React。
  * 高亮功能作为独立 Island 延迟加载。
+ * 
+ * 🔧 逻辑已拆分到:
+ *   - lib/articles/loader.ts - 数据加载
+ *   - lib/features/levelSwitcher.ts - 难度切换
+ *   - lib/features/readTracker.ts - 阅读追踪
  */
 import Layout from "@/layouts/Layout.astro";
 import WordSidebarAstro from "@/components/WordSidebar.astro";
@@ -14,17 +19,15 @@ import AudioPlayer from "@/components/AudioPlayer";
 import AudioInit from "@/components/AudioInit";
 import MemorySpirit from "@/components/MemorySpirit";
 
-import { apiFetch } from "@/lib/api";
-import {
-    extractSources,
-    extractWordDefinitions,
-    formatDateLabel,
-    mapToSidebarWords,
-    parseArticleContent,
-} from "@/lib/articles/utils";
+import { 
+    loadArticle, 
+    buildWordMatchConfigs, 
+    fetchMemories, 
+    getReadingStats,
+    getAllArticleContents 
+} from "@/lib/articles/loader";
 import { StructureParser, splitASTIntoBlocks } from "@/lib/structure/parser";
 import StructuredText from "@/components/structure/StructuredText.astro";
-import type { ArticleParsedContent } from "@/lib/articles/types";
 
 const { id } = Astro.params;
 
@@ -33,91 +36,52 @@ if (!id) {
 }
 
 // 服务端获取文章数据
-let row: any = null;
-let parsed: ArticleParsedContent = {};
-let sources: string[] = [];
-let wordDefinitions: any[] = [];
-let sidebarWords: any[] = [];
-let dateLabel = "";
+const articleData = await loadArticle(id);
 
-try {
-    row = await apiFetch(`/api/articles/${id}`);
-    if (row?.articles?.content_json) {
-        parsed = parseArticleContent(row.articles.content_json);
-        sources = extractSources(parsed);
-        wordDefinitions = extractWordDefinitions(parsed);
-        sidebarWords = mapToSidebarWords(wordDefinitions);
-        dateLabel = formatDateLabel(row.tasks?.task_date);
-        // ISR 策略：CDN 缓存 1 天 (s-maxage)，过期后先返回旧内容 (stale) 并在后台异步刷新 (revalidate)
-        Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
-    }
-} catch (e: any) {
-    console.error("[SSR] Failed to fetch article:", e.message);
-    // 错误情况，禁止缓存
+if (!articleData) {
     Astro.response.headers.set('Cache-Control', 'no-store');
-    if (e.message?.includes("404") || e.message?.includes("Not found")) {
-        Astro.response.status = 404;
-    }
+    Astro.response.status = 404;
 }
 
-// 获取三个难度级别的文章
-const articles = parsed?.result?.articles || [];
-const sortedArticles = [...articles].sort((a: any, b: any) => a.level - b.level);
+// 解构数据
+const {
+    row,
+    sources,
+    wordDefinitions,
+    sidebarWords,
+    dateLabel,
+    sortedArticles,
+    title,
+    readLevels,
+} = articleData || {
+    row: null,
+    sources: [],
+    wordDefinitions: [],
+    sidebarWords: [],
+    dateLabel: '',
+    sortedArticles: [],
+    title: 'Article',
+    readLevels: 0,
+};
 
-const title = row?.articles?.title || "Article";
-
-// 获取所有文章内容用于 AudioPlayer（按难度合并）
-const allArticleContents = sortedArticles.map((a: any) => ({
-    level: a.level,
-    content: a.content || ''
-}));
-
-// 计算阅读统计
-function getReadingStats(content: string) {
-    const words = content?.trim().split(/\s+/).filter(Boolean) || [];
-    const count = words.length;
-    const minutes = count ? Math.max(1, Math.ceil(count / 120)) : 0;
-    return { wordCount: count, minutes };
+// 设置缓存
+if (row) {
+    Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
 }
 
 // 目标单词列表
-const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase()); // Keep for compatibility/other uses if any
+const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
 
-// [Refactor] Build Word Match Configs for Morphological Logic
-const wordMatchConfigs = wordDefinitions.map((w: any) => ({
-    lemma: w.word.toLowerCase(),
-    forms: [
-        w.word.toLowerCase(), 
-        w.used_form ? w.used_form.toLowerCase() : w.word.toLowerCase()
-    ].filter((v, i, a) => a.indexOf(v) === i) // Unique
-}));
+// 构建单词匹配配置
+const wordMatchConfigs = buildWordMatchConfigs(wordDefinitions);
 
-// [Semantic Weaving] Pre-fetch memories (SSR Batch)
-let initialMemories = {};
+// 获取所有文章内容用于 AudioPlayer
+const allArticleContents = getAllArticleContents(sortedArticles);
+
+// 预获取记忆数据
 const adminKey = Astro.cookies.get('admin_key')?.value;
 const isAdmin = !!adminKey;
-
-if (targetWords.length > 0 && isAdmin) {
-    try {
-        const data = await apiFetch<{ memories?: Record<string, unknown> }>('/api/context/batch', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminKey}`
-            },
-            body: JSON.stringify({
-                words: targetWords,
-                exclude_article_id: id
-            })
-        });
-        
-        initialMemories = data?.memories || {};
-    } catch (e) {
-        console.error("Failed to fetch memories:", e);
-    }
-}
-
-const readLevels = row?.articles?.read_levels || 0;
+const initialMemories = await fetchMemories(targetWords, id, adminKey);
 ---
 
 <Layout title={`${title} - Aperture Daily`}>
@@ -159,8 +123,6 @@ const readLevels = row?.articles?.read_levels || 0;
                                         </button>
                                     ))}
                                 </div>
-                                
-
                             </div>
                             
                             <h1 class="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.1] font-display">
@@ -173,7 +135,7 @@ const readLevels = row?.articles?.read_levels || 0;
                             {sortedArticles.map((article: any) => {
                                 const stats = getReadingStats(article.content);
                                 
-                                // [Structure] AST-Based Rendering (New System)
+                                // [Structure] AST-Based Rendering
                                 let astBlocks: any[] = [];
                                 try {
                                     const parser = new StructureParser(article.content || '', article.structure || []);
@@ -181,8 +143,6 @@ const readLevels = row?.articles?.read_levels || 0;
                                     astBlocks = splitASTIntoBlocks(ast);
                                 } catch (e) {
                                     console.error("[Structure] AST Parsing failed:", e);
-                                    // Fallback: render text as single block or split by newlines manually
-                                    // Simulating basic text block
                                     astBlocks = [[{ type: 'text', content: article.content || '' }]]; 
                                 }
 
@@ -240,10 +200,10 @@ const readLevels = row?.articles?.read_levels || 0;
                     <VisualTether client:only="react" />
                 </div>
                 
-                <!-- [New] Memory Spirit (Floating Echo) -->
+                <!-- Memory Spirit -->
                 <MemorySpirit client:load />
 
-                <!-- 高亮管理器 - 作为独立 Island 加载 -->
+                <!-- 高亮管理器 -->
                 <HighlightManager 
                     client:load 
                     articleId={id} 
@@ -251,24 +211,17 @@ const readLevels = row?.articles?.read_levels || 0;
                     wordMatchConfigs={wordMatchConfigs}
                     memoriesMap={initialMemories}
                 />
-                
-
             </main>
             
-            <!-- 侧边栏 - 音频 + 词汇 -->
+            <!-- 侧边栏 -->
             {sidebarWords.length > 0 && (
                 <aside class="lg:w-80 lg:shrink-0">
                     <div class="lg:sticky lg:top-6 space-y-4">
-                        <!-- Audio 初始化器（传递所有难度的内容） -->
                         <AudioInit 
                             client:idle 
                             allContent={allArticleContents} 
                         />
-                        
-                        <!-- Audio Edition (组件自带标题) -->
                         <AudioPlayer client:only="react" />
-
-                        <!-- Margin Notes -->
                         <WordSidebarAstro words={sidebarWords} />
                     </div>
                 </aside>
@@ -286,9 +239,9 @@ const readLevels = row?.articles?.read_levels || 0;
 <style is:global>
     /* 强力覆盖：确保朗读时的高亮优先级最高 */
     span.w-token.bg-orange-200 {
-        background-color: #fed7aa !important; /* orange-200 */
-        color: #7c2d12 !important; /* orange-900 */
-        box-shadow: 0 0 0 2px #fed7aa; /* 稍微扩散背景以确保可见性 */
+        background-color: #fed7aa !important;
+        color: #7c2d12 !important;
+        box-shadow: 0 0 0 2px #fed7aa;
         border-radius: 2px;
         position: relative;
         z-index: 10;
@@ -320,13 +273,12 @@ const readLevels = row?.articles?.read_levels || 0;
     #article-content {
         position: relative;
         transition: height 0.5s ease;
-        /* 防止高度塌陷时的抖动 */
         min-height: 200px; 
     }
     
     /* 难度按钮激活状态 */
     .level-btn[data-active] {
-        background-color: rgb(15 23 42); /* slate-900 */
+        background-color: rgb(15 23 42);
         color: white;
         border-color: rgb(15 23 42);
     }
@@ -341,9 +293,9 @@ const readLevels = row?.articles?.read_levels || 0;
         transition: all 0.3s ease;
     }
 
-    /* Golden Soul Pin - Words with History */
+    /* Golden Soul Pin */
     .target-word[data-has-history="true"] {
-        border-bottom-color: #f59e0b; /* Amber-500 */
+        border-bottom-color: #f59e0b;
     }
     
     .target-word[data-has-history="true"]::after {
@@ -361,177 +313,29 @@ const readLevels = row?.articles?.read_levels || 0;
 </style>
 
 <script>
-    // 极简的难度切换逻辑
-    // 使用 astro:page-load 以支持 View Transitions
-    
-    let readTimer: number | undefined;
-
-    import { apiFetch } from '../../lib/api';
-
-    function trackReading() {
-        if (readTimer) clearTimeout(readTimer);
-        
-        const main = document.querySelector('main[data-article-id]');
-        const isAdmin = main?.getAttribute('data-is-admin') === 'true';
-        if (!isAdmin) return;
-
-        const articleId = main?.getAttribute('data-article-id');
-        const currentMask = parseInt(main?.getAttribute('data-read-levels') || '0');
-        
-        const activeLevel = document.querySelector('.article-level[data-active]');
-        if (!activeLevel || !articleId) return;
-        
-        const level = parseInt(activeLevel.getAttribute('data-level') || '1');
-        const minutes = parseInt(activeLevel.getAttribute('data-minutes') || '1');
-        
-        // Check if fully covered (downward inclusion)
-        const targetMask = (1 << level) - 1;
-        if ((currentMask & targetMask) === targetMask) return;
-        
-        // Threshold: 50% of estimated time, minimum 10 seconds
-        const threshold = Math.max(10000, minutes * 30 * 1000); 
-        
-        readTimer = window.setTimeout(async () => {
-            try {
-                await apiFetch(`/api/articles/${articleId}/read`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ level })
-                });
-                main?.setAttribute('data-read-levels', String(currentMask | targetMask));
-                console.log('[ReadTracker] Marked as read:', level);
-            } catch (e) {
-                console.error('[ReadTracker] Failed:', e);
-            }
-        }, threshold);
-    }
-
-    function initLevelSwitcher() {
-        const levels = document.querySelectorAll('.article-level');
-        const buttons = document.querySelectorAll('[data-level-btn]');
-        const readingTimeEl = document.getElementById('reading-time');
-        
-        // 如果没有找到元素，说明不在文章页
-        if (levels.length === 0 || buttons.length === 0) return;
-        
-        function setLevel(level: number) {
-            // 切换内容显示
-            // 使用 Grid Layer 或 Absolute Position 过渡
-            // 简单方案：计算高度并设置
-            
-            const container = document.getElementById('article-content');
-            
-            levels.forEach(el => {
-                const elLevel = parseInt(el.getAttribute('data-level') || '0');
-                if (elLevel === level) {
-                    el.setAttribute('data-active', '');
-                    
-                    // 更新阅读时间
-                    const minutes = el.getAttribute('data-minutes') || '1';
-                    if (readingTimeEl) {
-                        readingTimeEl.textContent = `${minutes} ${parseInt(minutes) === 1 ? 'minute' : 'minutes'}`;
-                    }
-                } else {
-                    el.removeAttribute('data-active');
-                }
-            });
-            
-            // 手动设置容器高如果是 absolute 定位方案 (我们用的是 relative toggle, 但为了 smooth height，还是需要 trick)
-            // 修改了 CSS 为 absolute overlay? 不，文章太长，absolute 会导致 footer 上浮。
-            // 最佳方案：
-            // A (Old) -> Fade Out (Absolute)
-            // B (New) -> Fade In (Relative)
-            // Container -> Animate Height
-            
-            // 为了简单且效果好：
-            // 1. 获取新层的高度，直接设置给 Container
-             // Trick: 我们先让它 block (but opacity 0) 来测量? 
-            // 现在的 CSS .article-level[data-active] 是 relative + visible
-            // 非 active 是 absolute + hidden
-            
-            // 在 React/Vue 中我们会用 FLIP，这里手动：
-            // 由于 active 变为 relative，它撑开了父容器，会有自动的高度变化吗？
-            // transition: height 需要明确的 height 值。
-            
-            // 重新测量 active element 的高度
-             const activeEl = document.querySelector(`.article-level[data-level="${level}"]`);
-             if (activeEl && container) {
-                 // 此时它已经 relative 了，所以 container 理论上已经被撑开
-                 // 但我们要动画...
-                 // 方案：先锁定 container 高度为当前高度
-                 // const currentH = container.offsetHeight;
-                 // container.style.height = `${currentH}px`;
-                 // ... switch class ...
-                 // const newH = activeEl.offsetHeight;
-                 // container.style.height = `${newH}px`;
-                 // setTimeout(() => container.style.height = 'auto', 500);
-             }
-            
-            // 切换按钮状态
-            buttons.forEach(btn => {
-                const btnLevel = parseInt(btn.getAttribute('data-level-btn') || '0');
-                if (btnLevel === level) {
-                    btn.setAttribute('data-active', '');
-                    btn.classList.add('bg-slate-900', 'text-white', 'border-slate-900');
-                    btn.classList.remove('bg-transparent', 'text-stone-400', 'border-transparent');
-                } else {
-                    btn.removeAttribute('data-active');
-                    btn.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
-                    btn.classList.add('bg-transparent', 'text-stone-400', 'border-transparent');
-                }
-            });
-            
-            // 保存到 localStorage
-            try {
-                localStorage.setItem('aperture-daily_preferred_level', String(level));
-            } catch {}
-
-            // Dispatch event for React components
-            window.dispatchEvent(new CustomEvent('level-change', { detail: { level } }));
-            trackReading();
-        }
-        
-        // 绑定点击事件
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const level = parseInt(btn.getAttribute('data-level-btn') || '1');
-                setLevel(level);
-            });
-        });
-
-        // 绑定 Visibility Change 以暂停/清除计时
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && readTimer) clearTimeout(readTimer);
-            if (!document.hidden) trackReading(); // Resume? Or explicit restart
-        });
-
-        // Initialize tracking
-        trackReading();
-
-        
-        // 恢复上次选择的难度
-        let initialLevel = 1;
-        try {
-            const saved = localStorage.getItem('aperture-daily_preferred_level');
-            if (saved) initialLevel = parseInt(saved) || 1;
-        } catch {}
-        
-        // 确保有效范围
-        if (initialLevel < 1 || initialLevel > 3) initialLevel = 1;
-        
-        // 初始化
-        setLevel(initialLevel);
-    }
-    
-    // 支持普通页面加载和 View Transitions SPA 导航
-    document.addEventListener('DOMContentLoaded', initLevelSwitcher);
-    document.addEventListener('astro:page-load', initLevelSwitcher);
-    
-
-
-    // [Feature] Structure Reveal
+    // 导入拆分后的模块
+    import { initLevelSwitcher } from '../../lib/features/levelSwitcher';
+    import { initReadTracker, trackReading } from '../../lib/features/readTracker';
     import { initStructureInteraction } from '../../lib/features/structure/interaction';
 
-    // Init on page load
+    function initArticlePage() {
+        // 初始化难度切换
+        const switcher = initLevelSwitcher();
+        
+        // 初始化阅读追踪
+        initReadTracker();
+        
+        // 监听难度变化以触发阅读追踪
+        window.addEventListener('level-change', () => {
+            trackReading();
+        });
+    }
+
+    // 支持普通页面加载和 View Transitions
+    document.addEventListener('DOMContentLoaded', initArticlePage);
+    document.addEventListener('astro:page-load', initArticlePage);
+
+    // Structure Interaction
     document.addEventListener('DOMContentLoaded', initStructureInteraction);
     document.addEventListener('astro:page-load', initStructureInteraction);
 </script>
