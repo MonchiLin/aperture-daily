@@ -80,6 +80,12 @@ export function useAudioPlayer() {
         audio.currentTime = offset;
         console.log('[useAudioPlayer] User seeked to sentence', currentIndex, 'at', offset.toFixed(2), 's');
 
+        // Dispatch event immediately for instant UI feedback
+        // This is needed because onTimeUpdate will skip dispatching since lastSentenceIndexRef is already updated
+        window.dispatchEvent(new CustomEvent('audio-sentence-change', {
+            detail: { sentenceIndex: currentIndex, isPlaying: true }
+        }));
+
         userSeekRef.current = false;
     }, [currentIndex, isReady]);
 

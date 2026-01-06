@@ -164,12 +164,12 @@ export function initStructureInteraction() {
 
         // Clear previous highlight
         if (lastPlayingSid !== -1) {
-            toggleSentenceClass(level, lastPlayingSid.toString(), 'audio-playing', false);
+            toggleSentenceClass(level, lastPlayingSid.toString(), 'audio-active-sentence', false);
         }
 
         // Apply new highlight if playing
         if (isPlaying && typeof sentenceIndex === 'number' && sentenceIndex >= 0) {
-            toggleSentenceClass(level, sentenceIndex.toString(), 'audio-playing', true);
+            toggleSentenceClass(level, sentenceIndex.toString(), 'audio-active-sentence', true);
             lastPlayingSid = sentenceIndex;
 
             // Auto-scroll to keep playing sentence in view
