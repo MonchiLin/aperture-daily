@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 
 import { VinylRecord } from './VinylRecord';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import type { AudioSegment } from '../lib/articles/types';
 
 /**
  * FloatingAudioPlayer Component
@@ -203,15 +204,15 @@ const FloatingAudioPlayer: React.FC = () => {
                                 <div className="space-y-6 px-1">
                                     {/* grouping logic for rendering */}
                                     {(() => {
-                                        const blocks = [];
-                                        let currentBlock: any[] = [];
+                                        const blocks: AudioSegment[][] = [];
+                                        let currentBlock: AudioSegment[] = [];
 
                                         playlist.forEach((item, i) => {
                                             if (item.isNewParagraph && currentBlock.length > 0) {
                                                 blocks.push(currentBlock);
                                                 currentBlock = [];
                                             }
-                                            currentBlock.push({ ...item, originalIndex: i });
+                                            currentBlock.push({ ...item, originalIndex: i } as any);
                                         });
                                         if (currentBlock.length > 0) blocks.push(currentBlock);
 

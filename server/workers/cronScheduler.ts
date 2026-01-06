@@ -1,6 +1,6 @@
 import { dayjs } from '../src/lib/time';
 import { TaskQueue } from '../src/services/tasks/TaskQueue';
-import { executeCronLogic, runDailyWordFetch, runTaskEnqueue } from '../lib/cronLogic';
+import { runDailyWordFetch, runTaskEnqueue } from '../lib/cronLogic';
 
 const CRON_INTERVAL_MS = 60000; // Check every minute
 let lastCronRunDate = '';

@@ -40,7 +40,7 @@ async function d1Query(sql: string, params: any[] = []) {
         body: JSON.stringify({ sql, params })
     });
 
-    const data = await response.json();
+    const data = await response.json() as any;
     if (!data.success) {
         throw new Error(`D1 API Error: ${JSON.stringify(data.errors)}`);
     }

@@ -4,7 +4,7 @@
  * 集中处理文章数据的获取和解析逻辑
  */
 import { apiFetch } from '../api';
-import type { ArticleParsedContent } from './types';
+import type { ArticleParsedContent, ArticleRow, ArticleLevelContent, WordDefinition, SidebarWord } from './types';
 import {
     extractSources,
     extractWordDefinitions,
@@ -14,13 +14,13 @@ import {
 } from './utils';
 
 export interface ArticleData {
-    row: any;
+    row: ArticleRow | null;
     parsed: ArticleParsedContent;
     sources: string[];
-    wordDefinitions: any[];
-    sidebarWords: any[];
+    wordDefinitions: WordDefinition[];
+    sidebarWords: SidebarWord[];
     dateLabel: string;
-    sortedArticles: any[];
+    sortedArticles: ArticleLevelContent[];
     title: string;
     readLevels: number;
 }
@@ -34,15 +34,15 @@ export interface WordMatchConfig {
  * 加载文章数据
  */
 export async function loadArticle(id: string): Promise<ArticleData | null> {
-    let row: any = null;
+    let row: ArticleRow | null = null;
     let parsed: ArticleParsedContent = {};
     let sources: string[] = [];
-    let wordDefinitions: any[] = [];
-    let sidebarWords: any[] = [];
+    let wordDefinitions: WordDefinition[] = [];
+    let sidebarWords: SidebarWord[] = [];
     let dateLabel = "";
 
     try {
-        row = await apiFetch(`/api/articles/${id}`);
+        row = await apiFetch<ArticleRow>(`/api/articles/${id}`);
         if (row?.articles?.content_json) {
             parsed = parseArticleContent(row.articles.content_json);
             sources = extractSources(parsed);
@@ -56,7 +56,7 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
     }
 
     const articles = parsed?.result?.articles || [];
-    const sortedArticles = [...articles].sort((a: any, b: any) => a.level - b.level);
+    const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
     const title = row?.articles?.title || "Article";
     const readLevels = row?.articles?.read_levels || 0;
 
@@ -76,8 +76,8 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
 /**
  * 构建单词匹配配置 (用于形态学匹配)
  */
-export function buildWordMatchConfigs(wordDefinitions: any[]): WordMatchConfig[] {
-    return wordDefinitions.map((w: any) => ({
+export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMatchConfig[] {
+    return wordDefinitions.map((w) => ({
         lemma: w.word.toLowerCase(),
         forms: [
             w.word.toLowerCase(),
@@ -131,8 +131,8 @@ export function getReadingStats(content: string): { wordCount: number; minutes: 
 /**
  * 获取所有文章内容用于 AudioPlayer
  */
-export function getAllArticleContents(sortedArticles: any[]): { level: number; content: string }[] {
-    return sortedArticles.map((a: any) => ({
+export function getAllArticleContents(sortedArticles: ArticleLevelContent[]): { level: number; content: string }[] {
+    return sortedArticles.map((a) => ({
         level: a.level,
         content: a.content || ''
     }));

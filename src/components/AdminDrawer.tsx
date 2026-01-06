@@ -6,7 +6,7 @@
  * 
  * ⚠️ 权限由 SSR 层控制，此组件仅在管理员身份确认后渲染
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer, ConfigProvider } from 'antd';
 import { Settings } from 'lucide-react';
 import AdminDayPanel from './AdminDayPanel';
@@ -21,10 +21,16 @@ interface Props {
 
 export default function AdminDrawer({ date, initialTasks }: Props) {
     const [open, setOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const taskStatus = useStore(taskStatusStore);
 
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // 状态指示器：失败 > 运行中/排队中
-    const statusIndicator = taskStatus.hasFailed ? (
+    // 状态指示器：失败 > 运行中/排队中
+    const statusIndicator = !mounted ? null : taskStatus.hasFailed ? (
         <span className="w-1.5 h-1.5 rounded-full bg-red-500" title="有失败任务" />
     ) : (taskStatus.hasRunning || taskStatus.hasQueued) ? (
         <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" title="有进行中任务" />

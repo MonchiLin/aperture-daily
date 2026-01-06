@@ -66,28 +66,18 @@
 		text-decoration: none;
 	}
 
-	.highlight-mengshou-wrap {
-		border-radius: 0.15em;
-	}
+	/* sx-react-calendar-wrapper removed */
+}
 
-	.sx-react-calendar-wrapper {
-		width: 100%;
-		height: 100%;
-	}
+@layer components {
 
 	/* Global Target Word Style (Dynamic Content) */
 	.target-word {
-		color: var(--color-accent);
-		font-weight: 600;
-		border-bottom: 2px dotted var(--color-accent);
-		cursor: pointer;
-		transition: all 0.2s ease;
+		@apply text-[var(--color-accent)] font-semibold border-b-[2px] border-dotted border-[var(--color-accent)] cursor-pointer transition-all duration-200 ease-out;
 	}
 
 	.target-word:hover {
-		background-color: var(--color-accent-soft);
-		color: white;
-		border-bottom-style: solid;
+		@apply bg-[var(--color-accent-soft)] text-white border-solid;
 	}
 
 	/* Audio Playback Highlight */
