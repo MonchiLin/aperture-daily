@@ -6,7 +6,6 @@ import { useAudioPlayer } from '../hooks/useAudioPlayer';
 
 interface FloatingAudioPlayerProps {
     title?: string;
-    source?: string;
 }
 
 /**
@@ -20,8 +19,7 @@ interface FloatingAudioPlayerProps {
  * - "Stream Flow" layout with vertical sentence blocks and visual separators
  */
 const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
-    title = "Audio Article",
-    source = "Daily Read"
+    title = "Audio Article"
 }) => {
     // UI State: Expanded vs Collapsed (Pill)
     const [expanded, setExpanded] = useState(false);

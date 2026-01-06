@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface VinylRecordProps {
     isPlaying: boolean;
@@ -118,10 +118,6 @@ export const VinylRecord: React.FC<VinylRecordProps> = ({
     showTonearm = true,
     tonearmScale = 1.0
 }) => {
-
-    // Extract numeric size estimate from className for icon sizing (rough heuristic)
-    const isSmall = className.includes('w-1') || className.includes('w-20');
-    const iconSize = isSmall ? 6 : 10;
 
     return (
         <div className={`relative shrink-0 select-none ${className} group`}>
