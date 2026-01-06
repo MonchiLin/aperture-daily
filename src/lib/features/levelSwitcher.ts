@@ -1,7 +1,14 @@
 /**
  * Level Switcher - 难度切换器
  * 
- * 使用简洁的声明式风格处理难度切换
+ * 支持 URL 和 localStorage 双重级别存储
+ * 优先级: URL > data-initial-level > localStorage > 默认值 1
+ * 
+ * URL 模式:
+ *   - /article/{id} → 默认 L1
+ *   - /article/{id}/L1 → L1
+ *   - /article/{id}/L2 → L2
+ *   - /article/{id}/L3 → L3
  */
 
 const STORAGE_KEY = 'aperture-daily_preferred_level';
@@ -17,6 +24,23 @@ const setActive = (el: Element, active: boolean, activeClasses?: string[], inact
         el.classList.toggle('text-stone-400', !active);
         el.classList.toggle('border-transparent', !active);
     }
+};
+
+/** 从 URL 读取级别 */
+const getLevelFromUrl = (): number | null => {
+    const match = window.location.pathname.match(/\/article\/[^/]+\/L([1-3])$/i);
+    return match ? parseInt(match[1]) : null;
+};
+
+/** 从 data-initial-level 属性读取 SSR 初始级别 */
+const getInitialLevelFromDom = (): number | null => {
+    const main = document.querySelector('main[data-initial-level]');
+    const level = main?.getAttribute('data-initial-level');
+    if (level) {
+        const parsed = parseInt(level);
+        return parsed >= 1 && parsed <= 3 ? parsed : null;
+    }
+    return null;
 };
 
 /** 从 localStorage 读取保存的难度 */
@@ -37,6 +61,25 @@ const saveLevel = (level: number) => {
     } catch { /* ignore */ }
 };
 
+/** 更新 URL 中的级别 (使用 replaceState 避免历史堆积) */
+const updateUrlLevel = (level: number) => {
+    // 移除现有的 /L1, /L2, /L3 后缀
+    const base = window.location.pathname.replace(/\/L[1-3]$/i, '');
+    // L1 使用简洁路径，L2/L3 显式包含
+    const newPath = level === 1 ? base : `${base}/L${level}`;
+    if (window.location.pathname !== newPath) {
+        history.replaceState(null, '', newPath);
+    }
+};
+
+/**
+ * 获取初始级别
+ * 优先级: URL > DOM attribute > localStorage > 默认值 1
+ */
+const getInitialLevel = (): number => {
+    return getLevelFromUrl() ?? getInitialLevelFromDom() ?? getSavedLevel();
+};
+
 /**
  * 初始化难度切换器
  */
@@ -47,7 +90,7 @@ export function initLevelSwitcher() {
 
     if (!levels.length || !buttons.length) return;
 
-    const setLevel = (level: number) => {
+    const setLevel = (level: number, updateUrl = true) => {
         // 更新内容层
         levels.forEach(el => {
             const isActive = parseInt(el.dataset.level || '0') === level;
@@ -63,7 +106,12 @@ export function initLevelSwitcher() {
             setActive(btn, parseInt(btn.dataset.levelBtn || '0') === level, [], []);
         });
 
+        // 保存到 localStorage 和更新 URL
         saveLevel(level);
+        if (updateUrl) {
+            updateUrlLevel(level);
+        }
+
         window.dispatchEvent(new CustomEvent('level-change', { detail: { level } }));
     };
 
@@ -72,8 +120,8 @@ export function initLevelSwitcher() {
         btn.addEventListener('click', () => setLevel(parseInt(btn.dataset.levelBtn || '1')));
     });
 
-    // 初始化
-    setLevel(getSavedLevel());
+    // 初始化 (不更新 URL，因为 SSR 已设置正确路径)
+    setLevel(getInitialLevel(), false);
 
     return { setLevel };
 }
