@@ -1,12 +1,13 @@
 /**
  * 每日文章列表 - React 版本 (支持 SSR + 响应式更新)
+ * 
+ * ⚠️ AdminDrawer 已移至页面级别，由 SSR 条件渲染
  */
 import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import { articlesStore, setArticles, type Article } from '../lib/store/articlesStore';
 import { initFromSSR } from '../lib/store/adminStore';
 import WordsDrawer from './WordsDrawer';
-import AdminDrawer from './AdminDrawer';
 
 interface WordData {
     new_words: string[];
@@ -26,9 +27,11 @@ interface Props {
     initialArticles: Article[];
     wordData?: WordData;
     adminData?: AdminData | null;
+    /** Slot for admin drawer (rendered conditionally by page) */
+    adminSlot?: React.ReactNode;
 }
 
-export default function DayFeed({ date, initialArticles, wordData, adminData }: Props) {
+export default function DayFeed({ date, initialArticles, wordData, adminData, adminSlot }: Props) {
     const { articles, date: storeDate, loading } = useStore(articlesStore);
 
     // 同步 SSR 数据到全局状态
@@ -59,9 +62,10 @@ export default function DayFeed({ date, initialArticles, wordData, adminData }: 
                 </h2>
                 <div className="flex items-center gap-4">
                     <WordsDrawer date={date} wordData={wordData} />
-                    <AdminDrawer date={date} initialTasks={adminData?.tasks} isAdmin={adminData?.isAdmin} />
+                    {adminSlot}
                 </div>
             </div>
+
 
             {/* Compact List */}
             <div className="flex-1">

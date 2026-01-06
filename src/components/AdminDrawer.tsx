@@ -3,30 +3,25 @@
  * 
  * 独立的管理入口，点击打开右侧抽屉显示管理功能。
  * MANAGE 按钮显示任务状态指示器（失败=红点，运行中/排队中=橙色脉冲）
+ * 
+ * ⚠️ 权限由 SSR 层控制，此组件仅在管理员身份确认后渲染
  */
 import { useState } from 'react';
 import { Drawer, ConfigProvider } from 'antd';
 import { Settings } from 'lucide-react';
 import AdminDayPanel from './AdminDayPanel';
 
-import { isAdminStore, taskStatusStore } from '../lib/store/adminStore';
+import { taskStatusStore } from '../lib/store/adminStore';
 import { useStore } from '@nanostores/react';
 
 interface Props {
     date: string;
     initialTasks?: any[]; // SSR 预取的任务数据
-    isAdmin?: boolean;    // SSR 注入的管理员状态
 }
 
-export default function AdminDrawer({ date, initialTasks, isAdmin: ssrIsAdmin }: Props) {
+export default function AdminDrawer({ date, initialTasks }: Props) {
     const [open, setOpen] = useState(false);
-    const storeIsAdmin = useStore(isAdminStore);
     const taskStatus = useStore(taskStatusStore);
-
-    // 优先使用 SSR 数据或 Store 数据，确保 hydration 一致
-    const isAdmin = ssrIsAdmin || storeIsAdmin;
-
-    if (!isAdmin) return null;
 
     // 状态指示器：失败 > 运行中/排队中
     const statusIndicator = taskStatus.hasFailed ? (

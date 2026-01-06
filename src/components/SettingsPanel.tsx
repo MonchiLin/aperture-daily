@@ -1,12 +1,17 @@
+/**
+ * SettingsPanel - 设置面板主入口
+ * 
+ * 管理 Modal 状态并分发不同 Tab 的渲染
+ * 子组件已拆分到 settings/ 目录
+ */
+import { useState } from 'react';
 import { GearIcon } from '@radix-ui/react-icons';
-import { useEffect, useMemo, useState } from 'react';
-import ProfilesPanel from './ProfilesPanel';
-import Modal from './ui/Modal';
 import { clsx } from 'clsx';
-import { isAdminStore, login } from '../lib/store/adminStore';
-import { useStore } from '@nanostores/react';
-import Toggle from './ui/Toggle';
-import { settingsStore, updateSetting } from '../lib/store/settingsStore';
+import Modal from './ui/Modal';
+import ProfilesPanel from './ProfilesPanel';
+import GeneralTab from './settings/GeneralTab';
+import AudioTab from './settings/AudioTab';
+import { useSettings } from './settings/useSettings';
 
 const VOICES = [
 	{ id: 'en-US-GuyNeural', name: 'Guy (Male, Default)' },
@@ -17,71 +22,6 @@ const VOICES = [
 	{ id: 'en-US-MichelleNeural', name: 'Michelle (Female)' },
 ];
 
-/**
- * SettingsPanel 的业务逻辑 Hook
- */
-function useSettings() {
-	const [adminKey, setAdminKey] = useState('');
-	const [savedAt, setSavedAt] = useState<number | null>(null);
-	const [voice, setVoiceSettings] = useState('en-US-GuyNeural');
-	const [tab, setTab] = useState<'general' | 'audio' | 'profiles'>('general');
-
-	const isAdmin = useStore(isAdminStore);
-
-	const hasKey = useMemo(() => adminKey.trim().length > 0, [adminKey]);
-
-	useEffect(() => {
-		try {
-			const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
-			if (storedVoice) setVoiceSettings(storedVoice);
-		} catch { /* ignore */ }
-	}, []);
-
-	useEffect(() => {
-		if (!isAdmin && tab === 'profiles') setTab('general');
-	}, [isAdmin, tab]);
-
-	// 保存设置并登录
-	async function save() {
-		const nextKey = adminKey.trim();
-
-		// 保存音频设置
-		try {
-			localStorage.setItem('aperture-daily_voice_preference', voice);
-			import('../lib/store/audioStore').then(mod => mod.setVoice(voice));
-		} catch { /* ignore */ }
-
-		// 调用登录 API 设置 HttpOnly Cookie
-		if (nextKey) {
-			await login(nextKey);
-		}
-
-		setSavedAt(Date.now());
-	}
-
-	function clearKey() {
-		setAdminKey('');
-	}
-
-	return {
-		adminKey,
-		setAdminKey,
-		savedAt,
-		isAdmin,
-		voice,
-		setVoiceSettings,
-		tab,
-		setTab,
-		hasKey,
-		save,
-		clearKey
-	};
-}
-
-/**
- * 设置面板主组件
- * 管理 Modal 状态并分发不同 Tab 的渲染
- */
 export default function SettingsPanel() {
 	const [open, setOpen] = useState(false);
 	const {
@@ -126,38 +66,31 @@ export default function SettingsPanel() {
 				onClose={() => setOpen(false)}
 				width={800}
 			>
+				{/* Tab Navigation */}
 				<div className="flex border-b border-stone-200 mb-6">
-					<button
+					<TabButton
+						active={tab === 'general'}
 						onClick={() => setTab('general')}
-						className={clsx(
-							"px-4 py-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors",
-							tab === 'general' ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
-						)}
 					>
 						General
-					</button>
-					<button
+					</TabButton>
+					<TabButton
+						active={tab === 'audio'}
 						onClick={() => setTab('audio')}
-						className={clsx(
-							"px-4 py-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors",
-							tab === 'audio' ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
-						)}
 					>
 						Audio
-					</button>
+					</TabButton>
 					{isAdmin && (
-						<button
+						<TabButton
+							active={tab === 'profiles'}
 							onClick={() => setTab('profiles')}
-							className={clsx(
-								"px-4 py-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors",
-								tab === 'profiles' ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
-							)}
 						>
 							Profiles
-						</button>
+						</TabButton>
 					)}
 				</div>
 
+				{/* Tab Content */}
 				{tab === 'general' ? (
 					<GeneralTab
 						adminKey={adminKey}
@@ -184,176 +117,18 @@ export default function SettingsPanel() {
 }
 
 /**
- * 子组件: General Tab
+ * TabButton - 标签页按钮
  */
-function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, savedAt, save }: any) {
+function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
 	return (
-		<div className="space-y-6">
-			<div className="space-y-2">
-				<label className="block text-sm font-serif font-bold text-stone-800">
-					Admin Key
-				</label>
-				<input
-					type="text"
-					placeholder="Enter Admin Key (Stored locally)"
-					value={adminKey}
-					onChange={(e) => setAdminKey(e.target.value)}
-					className="w-full px-4 py-2 bg-white border border-stone-300 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 text-stone-900 placeholder:text-stone-400 text-sm"
-				/>
-				<div className="flex items-center justify-between mt-1">
-					<span className="text-xs text-stone-500 font-serif italic">
-						Status: {hasKey ? 'Configured' : 'Not Configured'}
-					</span>
-					<button
-						type="button"
-						onClick={clearKey}
-						disabled={!hasKey}
-						className="text-xs text-stone-400 hover:text-red-600 disabled:opacity-30 underline decoration-dotted underline-offset-4"
-					>
-						Clear Key
-					</button>
-				</div>
-			</div>
-
-			<div className="space-y-4 pt-4 border-t border-stone-200">
-				<div className="flex items-center justify-between">
-					<div className="space-y-0.5">
-						<label className="text-sm font-bold text-stone-800 block">
-							Smart Copy
-						</label>
-						<p className="text-xs text-stone-500 font-serif italic">
-							Automatically copy text to clipboard when selecting a sentence.
-						</p>
-					</div>
-					<SmartCopyToggle />
-				</div>
-			</div>
-
-			{savedAt && (
-				<div className="text-xs text-stone-400 font-serif italic">
-					Last saved: {new Date(savedAt).toLocaleTimeString()}
-				</div>
+		<button
+			onClick={onClick}
+			className={clsx(
+				"px-4 py-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors",
+				active ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
 			)}
-
-			<div className="flex justify-end pt-4 border-t border-stone-200">
-				<button
-					onClick={save}
-					className="px-6 py-2 bg-stone-900 !text-white text-sm font-bold rounded-sm hover:bg-stone-700"
-				>
-					Save Changes
-				</button>
-			</div>
-		</div>
-	);
-}
-
-/**
- * 子组件: Audio Tab
- */
-function AudioTab({ voices, voice, setVoiceSettings, savedAt, save }: any) {
-	async function previewVoice(e: any, voiceId: string) {
-		e.stopPropagation();
-		const btn = e.currentTarget;
-		const originalContent = btn.innerHTML;
-
-		try {
-			btn.disabled = true;
-			btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-
-			const { EdgeTTSClient } = await import('../lib/tts/edge-client');
-			const client = new EdgeTTSClient(voiceId);
-			const result = await client.synthesize("Hello, this is a test of my voice.", 1.0);
-
-			const audio = new Audio(URL.createObjectURL(result.audioBlob));
-			audio.play();
-
-			audio.onended = () => {
-				btn.disabled = false;
-				btn.innerHTML = originalContent;
-			};
-		} catch (err) {
-			console.error(err);
-			btn.disabled = false;
-			btn.innerHTML = originalContent;
-		}
-	}
-
-	return (
-		<div className="space-y-6">
-			<div className="space-y-3">
-				<label className="block text-sm font-serif font-bold text-stone-800">
-					TTS Voice (Speaker)
-				</label>
-
-				<div className="border border-stone-200 rounded-lg divide-y divide-stone-100 bg-white">
-					{voices.map((v: any) => (
-						<div
-							key={v.id}
-							className={clsx(
-								"flex items-center justify-between px-4 py-3 transition-colors cursor-pointer hover:bg-stone-50",
-								voice === v.id ? "bg-stone-50/80" : ""
-							)}
-							onClick={() => setVoiceSettings(v.id)}
-						>
-							<div className="flex items-center gap-3">
-								<div className={clsx(
-									"w-4 h-4 rounded-full border flex items-center justify-center",
-									voice === v.id ? "border-slate-900" : "border-stone-300"
-								)}>
-									{voice === v.id && <div className="w-2 h-2 rounded-full bg-slate-900" />}
-								</div>
-								<span className={clsx("text-sm", voice === v.id ? "font-bold text-slate-900" : "text-stone-600")}>
-									{v.name}
-								</span>
-							</div>
-
-							<button
-								type="button"
-								onClick={(e) => previewVoice(e, v.id)}
-								className="p-1.5 rounded-full hover:bg-stone-200 text-stone-400 hover:text-slate-900 transition-all ml-4"
-								title="Preview Voice"
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-									<path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-								</svg>
-							</button>
-						</div>
-					))}
-				</div>
-				<div className="text-xs text-stone-500 font-serif italic mt-1 px-1">
-					Choose a speaker. Click the play button to preview their voice.
-				</div>
-			</div>
-
-			{savedAt && (
-				<div className="text-xs text-stone-400 font-serif italic">
-					Last saved: {new Date(savedAt).toLocaleTimeString()}
-				</div>
-			)}
-
-			<div className="flex justify-end pt-4 border-t border-stone-200">
-				<button
-					onClick={save}
-					className="px-6 py-2 bg-stone-900 !text-white text-sm font-bold rounded-sm hover:bg-stone-700"
-				>
-					Save Changes
-				</button>
-			</div>
-		</div>
-	);
-}
-
-/**
- * Smart Copy Toggle - Uses settingsStore
- */
-function SmartCopyToggle() {
-	const settings = useStore(settingsStore);
-
-	return (
-		<Toggle
-			checked={settings.autoCopy}
-			onChange={(val) => updateSetting('autoCopy', val)}
-			label="Smart Copy"
-		/>
+		>
+			{children}
+		</button>
 	);
 }

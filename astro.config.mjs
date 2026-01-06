@@ -28,9 +28,6 @@ export default defineConfig({
     }
   },
   vite: {
-    build: {
-      minify: false,
-    },
     plugins: [/** @type {any} */(tailwindcss())],
     resolve: {
       alias: {
