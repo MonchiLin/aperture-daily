@@ -150,6 +150,37 @@ export function initStructureInteraction() {
             toggleSentenceClass(level, sid.toString(), CLASS_HOVER, !!active);
         }
     }) as EventListener);
+
+    // --- Sync Audio Playback Highlight ---
+    // Listen for audio sentence changes and highlight the currently playing sentence
+    let lastPlayingSid: number = -1;
+
+    window.addEventListener('audio-sentence-change', ((e: Event) => {
+        const detail = (e as CustomEvent).detail || {};
+        const { sentenceIndex, isPlaying } = detail;
+        const level = document.querySelector(SELECTOR_LEVEL + '[data-active]');
+
+        if (!(level instanceof HTMLElement)) return;
+
+        // Clear previous highlight
+        if (lastPlayingSid !== -1) {
+            toggleSentenceClass(level, lastPlayingSid.toString(), 'audio-playing', false);
+        }
+
+        // Apply new highlight if playing
+        if (isPlaying && typeof sentenceIndex === 'number' && sentenceIndex >= 0) {
+            toggleSentenceClass(level, sentenceIndex.toString(), 'audio-playing', true);
+            lastPlayingSid = sentenceIndex;
+
+            // Auto-scroll to keep playing sentence in view
+            const firstToken = level.querySelector(`.s-token[data-sid="${sentenceIndex}"]`);
+            if (firstToken) {
+                firstToken.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            lastPlayingSid = -1;
+        }
+    }) as EventListener);
 }
 
 /**

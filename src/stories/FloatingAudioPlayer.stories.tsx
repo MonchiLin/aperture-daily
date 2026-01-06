@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import FloatingAudioPlayer from '../components/FloatingAudioPlayer';
-import { audioState } from '../lib/store/audioStore';
+import { audioState, type AudioSegment } from '../lib/store/audioStore';
 
 const meta: Meta<typeof FloatingAudioPlayer> = {
     title: 'Components/FloatingAudioPlayer',
@@ -25,25 +25,28 @@ export default meta;
 type Story = StoryObj<typeof FloatingAudioPlayer>;
 
 // MOCK DATA for the Store
-const MOCK_PLAYLIST = [
-    "This is the first paragraph of the article. It serves as an introduction to the topic at hand.",
-    "Here is the second paragraph. It delves deeper into the subject matter, exploring various nuances and details.",
-    "The third paragraph offers a different perspective, challenging the reader's assumptions with new evidence.",
-    "Finally, the conclusion wraps up the argument, summarizing the key points and offering a look ahead."
+const MOCK_PLAYLIST: AudioSegment[] = [
+    { text: "This is the first paragraph of the article. It serves as an introduction to the topic at hand.", isNewParagraph: true },
+    { text: "Here is the second paragraph. It delves deeper into the subject matter, exploring various nuances and details.", isNewParagraph: true },
+    { text: "The third paragraph offers a different perspective, challenging the reader's assumptions with new evidence.", isNewParagraph: true },
+    { text: "Finally, the conclusion wraps up the argument, summarizing the key points and offering a look ahead.", isNewParagraph: true }
 ];
+
+const MOCK_FULL_TEXT = MOCK_PLAYLIST.map(s => s.text).join(' ');
 
 export const Default: Story = {
     args: {
         title: "Demo Article Title",
-        source: "SOURCE / CATEGORY"
     },
     render: (args) => {
         // Initialize store state for this story
         useEffect(() => {
             audioState.setKey('playlist', MOCK_PLAYLIST);
+            audioState.setKey('fullText', MOCK_FULL_TEXT);
             audioState.setKey('currentIndex', 0);
             audioState.setKey('isPlaying', false);
             audioState.setKey('playbackRate', 1.0);
+            audioState.setKey('isReady', true); // Simulate ready state
             // Reset on unmount
             return () => {
                 audioState.setKey('playlist', []);
@@ -57,14 +60,15 @@ export const Default: Story = {
 export const PlayingState: Story = {
     args: {
         title: "Active Playing Demo",
-        source: "LIVE DEMO"
     },
     render: (args) => {
         useEffect(() => {
             audioState.setKey('playlist', MOCK_PLAYLIST);
+            audioState.setKey('fullText', MOCK_FULL_TEXT);
             audioState.setKey('currentIndex', 1); // Start at 2nd paragraph
             audioState.setKey('isPlaying', true);
             audioState.setKey('playbackRate', 1.25);
+            audioState.setKey('isReady', true);
             return () => {
                 audioState.setKey('playlist', []);
                 audioState.setKey('isPlaying', false);
@@ -74,3 +78,4 @@ export const PlayingState: Story = {
         return <FloatingAudioPlayer {...args} />;
     }
 };
+

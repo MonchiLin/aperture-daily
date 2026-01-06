@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 
 import { VinylRecord } from './VinylRecord';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { playParagraph } from '../lib/store/audioStore';
 
 interface FloatingAudioPlayerProps {
     title?: string;
@@ -34,7 +33,8 @@ const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         nextSpeed,
         audioRef,
         onTimeUpdate,
-        onEnded
+        onEnded,
+        jumpToSentence
     } = useAudioPlayer();
 
     const { isPlaying, playbackRate, playlist, currentIndex } = state;
@@ -47,14 +47,12 @@ const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
      * Wraps the hook's update logic to also calculate local progress bar state.
      */
     const handleTimeUpdate = (e: React.SyntheticEvent<HTMLAudioElement>) => {
-        onTimeUpdate(e); // Sync word highlighting
+        onTimeUpdate(); // Sync word highlighting
 
         const audio = e.currentTarget;
         if (playlist.length > 0 && audio.duration) {
-            // Calculate global progress:
-            // (Completed Sentences + Current Sentence Progress) / Total Sentences
-            const segmentProgress = audio.currentTime / audio.duration;
-            const globalProgress = ((currentIndex + segmentProgress) / playlist.length) * 100;
+            // Calculate global progress based on current time / total duration
+            const globalProgress = (audio.currentTime / audio.duration) * 100;
             setProgress(globalProgress);
         }
     };
@@ -242,7 +240,7 @@ const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                                                             <div
                                                                 key={seg.originalIndex}
                                                                 ref={isActive ? activeLineRef : null}
-                                                                onClick={() => playParagraph(seg.originalIndex)}
+                                                                onClick={() => jumpToSentence(seg.originalIndex)}
                                                                 onMouseEnter={() => {
                                                                     // Sync external hover state (e.g. main article text)
                                                                     window.dispatchEvent(new CustomEvent('sync-sentence-hover', {

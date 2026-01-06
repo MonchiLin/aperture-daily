@@ -1,97 +1,65 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '@nanostores/react';
 import { audioState, setPlaybackRate, setVoice, togglePlay as storeTogglePlay } from '../lib/store/audioStore';
-import { EdgeTTSClient } from '../lib/tts/edge-client';
+import { getCachedAudio, getSentenceAudioOffset, getSentenceIndexAtTime, setPreloaderVoice } from '../lib/tts/audioPreloader';
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
 const VOICE_STORAGE_KEY = 'aperture-daily_voice_preference';
 
 /**
- * 音频播放引擎 Hook
- * 负责处理 TTS 合成、音频生命周期、播放进度同步以及高亮对齐
+ * Audio Player Engine Hook
+ * 
+ * Uses preloaded whole-article audio with time-based sentence tracking.
  */
 export function useAudioPlayer() {
     const state = useStore(audioState);
-    const { isPlaying, currentIndex, playlist, playbackRate, wordAlignments, isLoading, voice, audioUrl } = state;
-    const currentItem = playlist[currentIndex];
-    const currentText = currentItem?.text || '';
+    const { isPlaying, currentIndex, playlist, playbackRate, isReady, voice } = state;
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const clientRef = useRef<EdgeTTSClient | null>(null);
-    const lastCharIndexRef = useRef<number>(-1);
+    const lastSentenceIndexRef = useRef<number>(-1);
 
-    if (!clientRef.current) {
-        clientRef.current = new EdgeTTSClient(voice);
-    }
+    // Flag to track if seek was triggered by user action
+    const userSeekRef = useRef<boolean>(false);
 
-    // 1. Initialize voice from storage (with legacy backup)
+    // 1. Initialize voice from storage
     useEffect(() => {
         try {
             const savedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
             if (savedVoice) {
                 setVoice(savedVoice);
+                setPreloaderVoice(savedVoice);
             }
         } catch { /* ignore */ }
     }, []);
 
-    // 2. Update client voice when it changes
+    // 2. Update preloader voice when it changes
     useEffect(() => {
-        clientRef.current = new EdgeTTSClient(voice);
+        setPreloaderVoice(voice);
     }, [voice]);
 
-    // 3. Side Effect: Fetch Audio with Debouncing
-    useEffect(() => {
-        if (!currentText) return;
-
-        let active = true;
-        const timer = setTimeout(() => {
-            const fetchAudio = async () => {
-                audioState.setKey('isLoading', true);
-                clientRef.current!.cancel();
-
-                try {
-                    const result = await clientRef.current!.synthesize(currentText, playbackRate);
-                    if (active) {
-                        const url = URL.createObjectURL(result.audioBlob);
-                        audioState.setKey('audioUrl', url);
-                        audioState.setKey('wordAlignments', result.wordBoundaries);
-                        audioState.setKey('isLoading', false);
-                        audioState.setKey('charIndex', -1);
-                        lastCharIndexRef.current = -1;
-                    }
-                } catch (e) {
-                    console.error("Audio fetch failed", e);
-                    if (active) audioState.setKey('isLoading', false);
-                }
-            };
-
-            if (audioUrl) {
-                URL.revokeObjectURL(audioUrl);
-                audioState.setKey('audioUrl', null);
-                audioState.setKey('wordAlignments', []);
-            }
-
-            fetchAudio();
-        }, 300);
-
-        return () => {
-            active = false;
-            clearTimeout(timer);
-        };
-    }, [currentIndex, currentText, playbackRate, voice]);
-
-    // 4. Side Effect: Sync Audio Element
+    // 3. Sync audio source from preloaded cache
     useEffect(() => {
         const audio = audioRef.current;
-        if (!audio) return;
+        const cached = getCachedAudio();
 
-        if (audioUrl && audio.src !== audioUrl) {
-            audio.src = audioUrl;
+        if (!audio || !cached || !isReady) return;
+
+        if (audio.src !== cached.url) {
+            audio.src = cached.url;
+            console.log('[useAudioPlayer] Audio source set from cache');
         }
+    }, [isReady]);
 
-        if (isPlaying && audioUrl && !isLoading) {
+    // 4. Control playback state
+    useEffect(() => {
+        const audio = audioRef.current;
+        const cached = getCachedAudio();
+
+        if (!audio || !cached || !isReady) return;
+
+        if (isPlaying) {
             audio.play().catch(e => {
-                console.warn("Autoplay blocked or failed", e);
+                console.warn('Autoplay blocked or failed', e);
                 audioState.setKey('isPlaying', false);
             });
         } else {
@@ -99,49 +67,55 @@ export function useAudioPlayer() {
         }
 
         audio.playbackRate = playbackRate;
-    }, [audioUrl, isPlaying, isLoading, playbackRate]);
+    }, [isPlaying, isReady, playbackRate]);
 
-    // 5. Binary Search Sync (Optimized for timeupdate)
+    // 5. Handle USER-triggered sentence change - seek to correct position
+    useEffect(() => {
+        if (!userSeekRef.current) return;
+
+        const audio = audioRef.current;
+        if (!audio || !isReady) return;
+
+        const offset = getSentenceAudioOffset(currentIndex);
+        audio.currentTime = offset;
+        console.log('[useAudioPlayer] User seeked to sentence', currentIndex, 'at', offset.toFixed(2), 's');
+
+        userSeekRef.current = false;
+    }, [currentIndex, isReady]);
+
+    // 6. Time update handler - update sentence index based on audio time
     const onTimeUpdate = useCallback(() => {
         const audio = audioRef.current;
-        if (!audio || !wordAlignments.length) return;
+        if (!audio) return;
 
-        const timeMs = audio.currentTime * 1000;
+        const currentTime = audio.currentTime;
+        const sentenceIdx = getSentenceIndexAtTime(currentTime);
 
-        // Binary search for active word
-        let l = 0, r = wordAlignments.length - 1;
-        let idx = -1;
+        // Only update if changed and not during user seek
+        if (sentenceIdx !== lastSentenceIndexRef.current && !userSeekRef.current) {
+            lastSentenceIndexRef.current = sentenceIdx;
+            audioState.setKey('currentIndex', sentenceIdx);
 
-        while (l <= r) {
-            const mid = Math.floor((l + r) / 2);
-            if (wordAlignments[mid].audioOffset <= timeMs) {
-                idx = mid;
-                l = mid + 1;
-            } else {
-                r = mid - 1;
-            }
+            // Dispatch event to sync article highlighting
+            window.dispatchEvent(new CustomEvent('audio-sentence-change', {
+                detail: { sentenceIndex: sentenceIdx, isPlaying: true }
+            }));
         }
+    }, []);
 
-        if (idx !== -1) {
-            const word = wordAlignments[idx];
-            if (lastCharIndexRef.current !== word.textOffset) {
-                lastCharIndexRef.current = word.textOffset;
-                audioState.setKey('charIndex', word.textOffset);
-            }
-        }
-    }, [wordAlignments]);
-
+    // 7. Handle audio end
     const onEnded = useCallback(() => {
-        if (currentIndex < playlist.length - 1) {
-            audioState.setKey('currentIndex', currentIndex + 1);
-        } else {
-            audioState.setKey('isPlaying', false);
-            audioState.setKey('currentIndex', 0);
-            audioState.setKey('charIndex', -1);
-        }
-    }, [currentIndex, playlist.length]);
+        audioState.setKey('isPlaying', false);
+        audioState.setKey('currentIndex', 0);
+        lastSentenceIndexRef.current = -1;
 
-    // 6. Action Wrappers
+        // Clear article highlight
+        window.dispatchEvent(new CustomEvent('audio-sentence-change', {
+            detail: { sentenceIndex: -1, isPlaying: false }
+        }));
+    }, []);
+
+    // 8. Action wrappers
     const togglePlay = useCallback(() => storeTogglePlay(), []);
 
     const nextSpeed = useCallback(() => {
@@ -150,10 +124,24 @@ export function useAudioPlayer() {
     }, [playbackRate]);
 
     const restart = useCallback(() => {
+        const audio = audioRef.current;
+        if (audio) {
+            audio.currentTime = 0;
+        }
         audioState.setKey('currentIndex', 0);
         audioState.setKey('isPlaying', false);
-        audioState.setKey('charIndex', -1);
+        lastSentenceIndexRef.current = -1;
     }, []);
+
+    // 9. Jump to specific sentence (USER action - will trigger seek)
+    const jumpToSentence = useCallback((index: number) => {
+        if (index >= 0 && index < playlist.length) {
+            userSeekRef.current = true;
+            lastSentenceIndexRef.current = index;
+            audioState.setKey('currentIndex', index);
+            audioState.setKey('isPlaying', true);
+        }
+    }, [playlist.length]);
 
     return {
         state,
@@ -162,6 +150,7 @@ export function useAudioPlayer() {
         onEnded,
         togglePlay,
         nextSpeed,
-        restart
+        restart,
+        jumpToSentence
     };
 }

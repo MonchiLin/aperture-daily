@@ -1,5 +1,4 @@
 import { map } from 'nanostores';
-import type { WordBoundary } from '../tts/types';
 
 export interface AudioSegment {
     text: string;
@@ -8,26 +7,25 @@ export interface AudioSegment {
 
 export interface AudioState {
     playlist: AudioSegment[];      // Array of text segments (sentences)
-    currentIndex: number;    // Current segment index
-    charIndex: number;       // Current character index within the segment
+    fullText: string;              // Complete article text for TTS
+    currentIndex: number;          // Current segment index
+    charIndex: number;             // Current character index in fullText
     isPlaying: boolean;
-    playbackRate: number;    // 0.75, 1.0, 1.25, 1.5
-    // Edge TTS specific
-    audioUrl: string | null;
-    wordAlignments: WordBoundary[];
-    isLoading: boolean;
+    playbackRate: number;          // 0.75, 1.0, 1.25, 1.5
+    isPreloading: boolean;         // True while preloading audio
+    isReady: boolean;              // True when audio is ready to play
     voice: string;
 }
 
 export const audioState = map<AudioState>({
     playlist: [],
+    fullText: '',
     currentIndex: 0,
     charIndex: -1, // -1 means no word highlighted
     isPlaying: false,
     playbackRate: 1.0,
-    audioUrl: null,
-    wordAlignments: [],
-    isLoading: false,
+    isPreloading: false,
+    isReady: false,
     voice: 'en-US-GuyNeural'
 });
 
@@ -36,21 +34,15 @@ export const setVoice = (voice: string) => {
     audioState.setKey('voice', voice);
 };
 
-export const setPlaylist = (segments: AudioSegment[]) => {
+export const setPlaylist = (segments: AudioSegment[], fullText: string) => {
     // Basic validation to ensure no empty segments
     const clean = segments.filter(s => s.text.trim().length > 0);
     audioState.setKey('playlist', clean);
+    audioState.setKey('fullText', fullText);
     audioState.setKey('currentIndex', 0);
     audioState.setKey('isPlaying', false);
     audioState.setKey('charIndex', -1);
-};
-
-export const playParagraph = (index: number) => {
-    const s = audioState.get();
-    if (index >= 0 && index < s.playlist.length) {
-        audioState.setKey('currentIndex', index);
-        audioState.setKey('isPlaying', true);
-    }
+    audioState.setKey('isReady', false);
 };
 
 export const setPlaybackRate = (rate: number) => {

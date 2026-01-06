@@ -17,7 +17,7 @@ export default function AudioPlayer() {
         restart
     } = useAudioPlayer();
 
-    const { isPlaying, currentIndex, playlist, playbackRate, isLoading } = state;
+    const { isPlaying, currentIndex, playlist, playbackRate, isPreloading } = state;
 
     if (playlist.length === 0) return null;
 
@@ -37,7 +37,7 @@ export default function AudioPlayer() {
             <div className="flex items-center gap-4">
                 <button
                     onClick={togglePlay}
-                    disabled={isLoading}
+                    disabled={isPreloading}
                     className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-900 !text-white hover:bg-slate-700 transition-all shrink-0 disabled:opacity-50"
                 >
                     {isPlaying ? <PauseOutlined className="text-xl" /> : <CaretRightFilled className="text-xl ml-1" />}
@@ -45,7 +45,7 @@ export default function AudioPlayer() {
 
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <div className="text-sm font-bold text-slate-900 leading-none mb-1">
-                        {isLoading ? 'Loading Audio...' : (isPlaying ? 'Now Playing' : 'Listen to Article')}
+                        {isPreloading ? 'Preparing Audio...' : (isPlaying ? 'Now Playing' : 'Listen to Article')}
                     </div>
                     <div className="text-xs text-stone-500 font-serif italic truncate">
                         Section {currentIndex + 1} of {playlist.length}
@@ -72,7 +72,7 @@ export default function AudioPlayer() {
 
             {/* Waveform */}
             <div className="mt-4 opacity-50">
-                <AudioVisualizer isPlaying={isPlaying && !isLoading} />
+                <AudioVisualizer isPlaying={isPlaying && !isPreloading} />
             </div>
 
             {/* Hidden Audio Element */}
@@ -85,3 +85,4 @@ export default function AudioPlayer() {
         </div>
     );
 }
+
