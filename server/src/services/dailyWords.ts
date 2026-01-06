@@ -7,6 +7,8 @@ function uniqueStrings(input: string[]) {
     return Array.from(new Set(input.filter((x) => typeof x === 'string' && x.length > 0)));
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function fetchAndStoreDailyWords(
     db: AppDatabase,
     args: {
@@ -41,6 +43,9 @@ export async function fetchAndStoreDailyWords(
             .insert(words)
             .values(chunk.map((w) => ({ word: w, origin: 'shanbay' as const })))
             .onConflictDoNothing();
+
+        // Rate Limiting: Sleep to avoid D1 "internal error" / rate limits
+        await sleep(200);
     }
 
     // 写入 daily_word_references (Normalized)
@@ -56,6 +61,9 @@ export async function fetchAndStoreDailyWords(
     for (let i = 0; i < references.length; i += REF_CHUNK) {
         console.log(`[DailyWords] Inserting references chunk: ${i} - ${Math.min(i + REF_CHUNK, references.length)} / ${references.length}`);
         await db.insert(dailyWordReferences).values(references.slice(i, i + REF_CHUNK)).onConflictDoNothing();
+
+        // Rate Limiting: Sleep to avoid D1 "internal error" / rate limits
+        await sleep(200);
     }
 
     return {
