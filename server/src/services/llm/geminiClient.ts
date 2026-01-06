@@ -7,7 +7,7 @@
 
 export type GeminiEnv = {
     GEMINI_API_KEY: string;
-    GEMINI_BASE_URL: string;  // e.g. https://antigravity-project.zeabur.app
+    GEMINI_BASE_URL: string;
 };
 
 // 35 分钟超时

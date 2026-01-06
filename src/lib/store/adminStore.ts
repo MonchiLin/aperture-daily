@@ -30,14 +30,31 @@ export function updateTaskStatus(tasks: { status: string }[]) {
 }
 
 // 登录并设置 HttpOnly Cookie
+// 同时调用前端和后端登录接口，确保 Cookie 设置到正确的域名
 export async function login(key: string): Promise<boolean> {
     try {
+        // 1. 调用前端登录接口（设置 Cookie 到 pages.dev 域名）
+        //    这样 SSR 阶段可以读取到 Cookie
+        const frontendRes = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key }),
+            credentials: 'include'
+        });
+
+        if (!frontendRes.ok) {
+            throw new Error('Frontend login failed');
+        }
+
+        // 2. 调用后端登录接口（设置 Cookie 到 hf.space 域名）
+        //    虽然这个 Cookie SSR 读不到，但客户端 API 调用需要
         await apiFetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ key }),
-            credentials: 'include' // 接收 Set-Cookie
+            credentials: 'include'
         });
+
         isAdminStore.set(true);
         return true;
     } catch {
