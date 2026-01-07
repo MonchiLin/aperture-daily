@@ -1,19 +1,20 @@
 /**
  * Level Switcher - 难度切换器
  * 
- * 支持 URL 和 localStorage 双重级别存储
- * 优先级: URL > data-initial-level > localStorage > 默认值 1
+ * 优先级: URL > 单篇文章记录 > 设置默认值 > 兜底 L1
  * 
  * URL 模式:
- *   - /article/{id} → 默认 L1
- *   - /article/{id}/L1 → L1
- *   - /article/{id}/L2 → L2
- *   - /article/{id}/L3 → L3
+ *   - /article/{id} → 使用设置默认值
+ *   - /article/{id}/L1 → L1 (算手动选择)
+ *   - /article/{id}/L2 → L2 (算手动选择)
+ *   - /article/{id}/L3 → L3 (算手动选择)
  */
 
 import { setLevel as storeSetLevel } from '../store/interactionStore';
+import { settingsStore } from '../store/settingsStore';
 
-const STORAGE_KEY = 'aperture-daily_preferred_level';
+/** Storage key prefix for per-article level */
+const ARTICLE_LEVEL_PREFIX = 'aperture-daily_article_';
 
 /** 设置单个元素的 active 状态 */
 const setActive = (el: Element, active: boolean, activeClasses?: string[], inactiveClasses?: string[]) => {
@@ -34,33 +35,45 @@ const getLevelFromUrl = (): number | null => {
     return match ? parseInt(match[1]) : null;
 };
 
-/** 从 data-initial-level 属性读取 SSR 初始级别 */
-const getInitialLevelFromDom = (): number | null => {
-    const main = document.querySelector('main[data-initial-level]');
-    const level = main?.getAttribute('data-initial-level');
-    if (level) {
-        const parsed = parseInt(level);
-        return parsed >= 1 && parsed <= 3 ? parsed : null;
+/** 从 URL 或 DOM 获取文章 ID */
+const getArticleId = (): string | null => {
+    // 优先从 DOM 获取
+    const main = document.querySelector('main[data-article-id]');
+    if (main) {
+        return main.getAttribute('data-article-id');
     }
+    // 从 URL 提取
+    const match = window.location.pathname.match(/\/article\/([^/]+)/);
+    return match ? match[1] : null;
+};
+
+/** 获取单篇文章的保存级别 */
+const getArticleLevel = (articleId: string): number | null => {
+    try {
+        const saved = localStorage.getItem(`${ARTICLE_LEVEL_PREFIX}${articleId}_level`);
+        if (saved) {
+            const level = parseInt(saved);
+            return level >= 1 && level <= 3 ? level : null;
+        }
+    } catch { /* ignore */ }
     return null;
 };
 
-/** 从 localStorage 读取保存的难度 */
-const getSavedLevel = (): number => {
+/** 保存单篇文章的级别 */
+const saveArticleLevel = (articleId: string, level: number) => {
     try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        const level = saved ? parseInt(saved) : 1;
-        return level >= 1 && level <= 3 ? level : 1;
+        localStorage.setItem(`${ARTICLE_LEVEL_PREFIX}${articleId}_level`, String(level));
+    } catch { /* ignore */ }
+};
+
+/** 获取设置面板的默认级别 */
+const getDefaultLevel = (): number => {
+    try {
+        const settings = settingsStore.get();
+        return settings.defaultLevel || 1;
     } catch {
         return 1;
     }
-};
-
-/** 保存难度到 localStorage */
-const saveLevel = (level: number) => {
-    try {
-        localStorage.setItem(STORAGE_KEY, String(level));
-    } catch { /* ignore */ }
 };
 
 /** 更新 URL 中的级别 (使用 replaceState 避免历史堆积) */
@@ -76,10 +89,25 @@ const updateUrlLevel = (level: number) => {
 
 /**
  * 获取初始级别
- * 优先级: URL > DOM attribute > localStorage > 默认值 1
+ * 优先级: URL > 单篇文章记录 > 设置默认值 > 兜底 1
  */
-const getInitialLevel = (): number => {
-    return getLevelFromUrl() ?? getInitialLevelFromDom() ?? getSavedLevel();
+const getInitialLevel = (articleId: string | null): { level: number; fromUrl: boolean } => {
+    // 1. URL 指定的级别 (算手动选择)
+    const urlLevel = getLevelFromUrl();
+    if (urlLevel !== null) {
+        return { level: urlLevel, fromUrl: true };
+    }
+
+    // 2. 单篇文章的保存记录
+    if (articleId) {
+        const articleLevel = getArticleLevel(articleId);
+        if (articleLevel !== null) {
+            return { level: articleLevel, fromUrl: false };
+        }
+    }
+
+    // 3. 设置面板默认值
+    return { level: getDefaultLevel(), fromUrl: false };
 };
 
 /**
@@ -89,10 +117,11 @@ export function initLevelSwitcher() {
     const levels = document.querySelectorAll<HTMLElement>('.article-level');
     const buttons = document.querySelectorAll<HTMLElement>('[data-level-btn]');
     const readingTimeEl = document.getElementById('reading-time');
+    const articleId = getArticleId();
 
     if (!levels.length || !buttons.length) return;
 
-    const setLevel = (level: number, updateUrl = true) => {
+    const setLevel = (level: number, saveToArticle = true, updateUrl = true) => {
         // 更新内容层
         levels.forEach(el => {
             const isActive = parseInt(el.dataset.level || '0') === level;
@@ -108,24 +137,35 @@ export function initLevelSwitcher() {
             setActive(btn, parseInt(btn.dataset.levelBtn || '0') === level, [], []);
         });
 
-        // 保存到 localStorage 和更新 URL
-        saveLevel(level);
+        // 保存到单篇文章记录
+        if (saveToArticle && articleId) {
+            saveArticleLevel(articleId, level);
+        }
+
+        // 更新 URL
         if (updateUrl) {
             updateUrlLevel(level);
         }
 
         window.dispatchEvent(new CustomEvent('level-change', { detail: { level } }));
-        // Update Store (New Communication)
         storeSetLevel(level);
     };
 
-    // 绑定点击
+    // 绑定点击 (用户手动切换，保存到文章)
     buttons.forEach(btn => {
-        btn.addEventListener('click', () => setLevel(parseInt(btn.dataset.levelBtn || '1')));
+        btn.addEventListener('click', () => setLevel(parseInt(btn.dataset.levelBtn || '1'), true, true));
     });
 
-    // 初始化 (不更新 URL，因为 SSR 已设置正确路径)
-    setLevel(getInitialLevel(), false);
+    // 获取初始级别
+    const { level: initialLevel, fromUrl } = getInitialLevel(articleId);
+
+    // 如果来自 URL，保存到文章记录
+    if (fromUrl && articleId) {
+        saveArticleLevel(articleId, initialLevel);
+    }
+
+    // 初始化 (不更新 URL，因为 SSR 已设置正确路径，或者首次访问保持简洁)
+    setLevel(initialLevel, false, false);
 
     return { setLevel };
 }

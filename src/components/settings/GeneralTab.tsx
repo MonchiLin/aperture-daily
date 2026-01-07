@@ -55,6 +55,18 @@ export default function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, sa
                     </div>
                     <SmartCopyToggle />
                 </div>
+
+                <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                        <label className="text-sm font-bold text-stone-800 block">
+                            Default Level
+                        </label>
+                        <p className="text-xs text-stone-500 font-serif italic">
+                            Default difficulty level when opening articles for the first time.
+                        </p>
+                    </div>
+                    <DefaultLevelSelector />
+                </div>
             </div>
 
             {savedAt && (
@@ -87,5 +99,31 @@ function SmartCopyToggle() {
             onChange={(val) => updateSetting('autoCopy', val)}
             label="Smart Copy"
         />
+    );
+}
+
+/**
+ * Default Level Selector - Uses settingsStore
+ */
+function DefaultLevelSelector() {
+    const settings = useStore(settingsStore);
+    const levels = [1, 2, 3] as const;
+
+    return (
+        <div className="flex gap-1">
+            {levels.map((level) => (
+                <button
+                    key={level}
+                    type="button"
+                    onClick={() => updateSetting('defaultLevel', level)}
+                    className={`w-8 h-6 flex items-center justify-center text-xs font-bold transition-all rounded-sm border leading-none ${settings.defaultLevel === level
+                            ? 'bg-slate-900 text-white border-slate-900'
+                            : 'bg-transparent text-stone-400 border-stone-200 hover:border-stone-400 hover:text-stone-600'
+                        }`}
+                >
+                    L{level}
+                </button>
+            ))}
+        </div>
     );
 }
