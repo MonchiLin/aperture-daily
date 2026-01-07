@@ -14,12 +14,12 @@ import AudioTab from './settings/AudioTab';
 import { useSettings } from './settings/useSettings';
 
 const VOICES = [
-	{ id: 'en-US-GuyNeural', name: 'Guy (Male, Default)' },
 	{ id: 'en-US-JennyNeural', name: 'Jenny (Female)' },
+	{ id: 'en-US-GuyNeural', name: 'Guy (Male)' },
 	{ id: 'en-US-AriaNeural', name: 'Aria (Female)' },
-	{ id: 'en-US-ChristopherNeural', name: 'Christopher (Male)' },
-	{ id: 'en-US-EricNeural', name: 'Eric (Male)' },
-	{ id: 'en-US-MichelleNeural', name: 'Michelle (Female)' },
+	{ id: 'en-US-AvaMultilingualNeural', name: 'Ava (Female, Realistic)' },
+	{ id: 'en-US-AndrewMultilingualNeural', name: 'Andrew (Male, Realistic)' },
+	{ id: 'en-US-EmmaMultilingualNeural', name: 'Emma (Female, Friendly)' },
 ];
 
 export default function SettingsPanel() {

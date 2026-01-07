@@ -48,11 +48,13 @@ export function clearCache() {
 
 /**
  * Preload entire article audio
+ * Now supports server-side fetching via articleId
  */
 export async function preloadArticleAudio(
     fullText: string,
     level: number,
     sentenceOffsets: number[],
+    articleId: string,
     onProgress?: (loading: boolean) => void
 ): Promise<PreloadedAudio | null> {
     if (cachedAudio && cachedAudio.level === level && cachedAudio.fullText === fullText) {
@@ -73,7 +75,12 @@ export async function preloadArticleAudio(
     preloadingPromise = (async () => {
         try {
             const client = new EdgeTTSClient(currentVoice);
-            const result = await client.synthesize(fullText, 1.0);
+
+            // Use server-side fetch via articleId + level
+            const result = await client.synthesize(fullText, 1.0, {
+                articleId,
+                level
+            });
 
             const boundaries = result.wordBoundaries;
 

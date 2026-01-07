@@ -7,6 +7,7 @@ import { UniversalTokenizer } from '../lib/utils/tokenizer';
 
 interface AudioInitProps {
     allContent: { level: number, content: string }[];
+    articleId: string;
 }
 
 /**
@@ -15,7 +16,7 @@ interface AudioInitProps {
  * Initializes audio playlist and triggers auto-preload of TTS audio.
  * Listens for level changes and re-preloads when difficulty changes.
  */
-export default function AudioInit({ allContent }: AudioInitProps) {
+export default function AudioInit({ allContent, articleId }: AudioInitProps) {
     // Use centralized store for level
     const { currentLevel } = useStore(interactionStore);
 
@@ -98,7 +99,7 @@ export default function AudioInit({ allContent }: AudioInitProps) {
         setPreloaderVoice(currentVoice);
 
         audioState.setKey('isPreloading', true);
-        preloadArticleAudio(fullText, currentLevel, sentenceOffsets, (loading) => {
+        preloadArticleAudio(fullText, currentLevel, sentenceOffsets, articleId, (loading) => {
             audioState.setKey('isPreloading', loading);
             if (!loading) {
                 audioState.setKey('isReady', true);
@@ -106,7 +107,7 @@ export default function AudioInit({ allContent }: AudioInitProps) {
             }
         });
 
-    }, [allContent, currentLevel]);
+    }, [allContent, currentLevel, articleId]);
 
     return null;
 }

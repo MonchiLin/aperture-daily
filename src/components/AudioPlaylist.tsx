@@ -57,7 +57,7 @@ export const AudioPlaylist: React.FC<AudioPlaylistProps> = ({
 
     return (
         <div className="flex-1 overflow-y-auto pr-1 pt-4 custom-scrollbar mask-gradient" role="list">
-            <div className="space-y-6 px-1">
+            <div className="space-y-2 px-1">
                 {blocks.map((block, bIdx) => (
                     <div key={bIdx} className="relative" role="listitem">
                         {/* Visual Separator */}
