@@ -3,18 +3,26 @@ import { EdgeTTS } from 'edge-tts-universal';
 import { db } from '../src/db/client';
 import { articleVariants } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
+import type { Context } from 'elysia';
 
 // Helper to remove markdown symbols for cleaner TTS
-// (Simple regex to remove common markdown like **, #, [], etc)
 function cleanMarkdown(text: string): string {
     return text
-        .replace(/[*#`_~[\]]/g, '') // Remove symbols
-        .replace(/\(https?:\/\/[^\)]+\)/g, '') // Remove links
-        .replace(/\n\s*\n/g, '\n'); // Collapse multiple newlines
+        .replace(/[*#`_~[\]]/g, '')
+        .replace(/\(https?:\/\/[^\)]+\)/g, '')
+        .replace(/\n\s*\n/g, '\n');
+}
+
+interface TTSQuery {
+    text?: string;
+    voice?: string;
+    articleId?: string;
+    level?: string;
+    rate?: string;
 }
 
 export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
-    .get('/', async ({ query, set }: any) => {
+    .get('/', async ({ query, set }: Context<{ query: TTSQuery }>) => {
         const { text, voice, articleId, level } = query;
         const speed = query.rate || '1.0';
 
@@ -23,8 +31,6 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
         // Mode 1: Fetch from Article DB
         if (articleId && level) {
             try {
-                console.log(`[TTS Proxy] Querying articleId=${articleId}, level=${level}`);
-
                 const results = await db.select()
                     .from(articleVariants)
                     .where(and(
@@ -33,19 +39,12 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
                     ))
                     .limit(1);
 
-                console.log("[TTS Proxy] DB results count:", results.length);
-                if (results.length > 0) {
-                    console.log("[TTS Proxy] First row keys:", Object.keys(results[0]));
-                    console.log("[TTS Proxy] First row content type:", typeof results[0].content);
-                    console.log("[TTS Proxy] First row content length:", results[0].content?.length || 'N/A');
-                }
-
                 if (results.length > 0 && results[0]) {
                     const row = results[0];
                     if (row.content && typeof row.content === 'string') {
                         textToSpeak = cleanMarkdown(row.content);
                     } else {
-                        console.error("[TTS Proxy] DB returned row with missing content:", row);
+                        console.error("[TTS Proxy] DB returned row with missing content");
                     }
                 } else {
                     set.status = 404;
@@ -68,7 +67,6 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
             set.headers['Cache-Control'] = 'public, max-age=31536000, immutable';
 
             const selectedVoice = voice || "en-US-GuyNeural";
-            // Parse rate properly - handle "1", "1.0", "1.5", etc.
             const speedNum = parseFloat(speed) || 1.0;
             const ratePct = speedNum === 1.0 ? "+0%" : `${speedNum > 1 ? '+' : ''}${Math.round((speedNum - 1) * 100)}%`;
 
@@ -78,7 +76,6 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
                 pitch: "+0Hz"
             });
 
-            // Set timeout for synthesis
             const result = await Promise.race([
                 tts.synthesize(),
                 new Promise<never>((_, reject) =>
@@ -98,17 +95,18 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
                 audio: base64Audio,
                 boundaries: result.subtitle || []
             };
-        } catch (e: any) {
-            console.error("[TTS Proxy] Error:", e);
+        } catch (e) {
+            const error = e as Error;
+            console.error("[TTS Proxy] Error:", error);
             set.status = 500;
-            return e.message || "Internal TTS Error";
+            return error.message || "Internal TTS Error";
         }
     }, {
         query: t.Object({
             text: t.Optional(t.String()),
             voice: t.Optional(t.String()),
             articleId: t.Optional(t.String()),
-            level: t.Optional(t.String()), // Query params are strings
+            level: t.Optional(t.String()),
             rate: t.Optional(t.String())
         })
     });

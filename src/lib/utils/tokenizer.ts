@@ -41,7 +41,7 @@ export class UniversalTokenizer {
 
         const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' });
 
-        paragraphs.forEach((paraRaw, paraIdx) => {
+        paragraphs.forEach((paraRaw, _paraIdx) => {
             // "Ghost" paragraphs (empty lines) still consume char count but have no sentences
             if (!paraRaw.trim()) {
                 globalCharOffset += paraRaw.length + 1; // +1 for the newline used in split

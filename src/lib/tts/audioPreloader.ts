@@ -92,7 +92,7 @@ export async function preloadArticleAudio(
 
             // 3. Match sentence offsets to word boundaries for PRECISE timing
             // instead of estimating based on character ratio.
-            const sentenceAudioTimes = sentenceOffsets.map((sentenceStartChar, idx) => {
+            const sentenceAudioTimes = sentenceOffsets.map((sentenceStartChar, _idx) => {
                 // Heuristic: Limit search to a window to prevent matching "phantom" words far away
                 // (e.g. prevents jumping to end of article due to weird duplicate word match)
                 const SEARCH_WINDOW = 500;
@@ -110,17 +110,10 @@ export async function preloadArticleAudio(
                         return { dist, time: current.audioOffset };
                     }
                     return best;
-                }, { dist: Infinity, time: headersTimeCorrection(idx, boundaries) }); // Default fallback
+                }, { dist: Infinity, time: 0 }); // Default fallback to 0
 
-                return matchedStats.time / 1000; // Convert ms back to seconds!
+                return matchedStats.time / 1000; // Convert ms to seconds
             });
-
-            // Helper for fallback time (prevents returning 0 if no match found)
-            function headersTimeCorrection(idx: number, allBoundaries: WordBoundary[]) {
-                // If it's 0th sentence, 0. Otherwise try to guess? 
-                // Actually 0 is safer than random.
-                return 0;
-            }
 
             console.log('[AudioPreloader] Precise Sentence Times (s):', sentenceAudioTimes.slice(0, 5));
 

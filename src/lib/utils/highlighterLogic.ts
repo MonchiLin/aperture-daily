@@ -28,21 +28,7 @@ export function tokenizeSentences(
         ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'LI', 'BLOCKQUOTE', 'DIV'].includes(el.tagName)
     );
 
-    // [Best Practice] Use Single Source of Truth Tokenizer
-    // This ensures DOM tokens match EXACTLY with Audio offsets.
-    const tokenizer = new UniversalTokenizer(levelContainer.textContent || ''); // Or use innerText? 
-    // Wait, levelContainer has HTML blocks. We need to iterate blocks.
-
-    // Actually, Tokenizer takes a raw string.
-    // But here we need to map back to DOM nodes.
-    // The previous logic iterated DOM blocks (H1, P) independently.
-    // UniversalTokenizer splits by '\n'.
-    // If we feed it block.textContent, it works per block.
-
-    // Let's keep the block iteration, but use UniversalTokenizer PER BLOCK.
-    // This ensures that WITHIN a paragraph, the segmentation logic is identical to AudioInit.
-
-    // [Fix] Global Sentence ID counter to ensure uniqueness across paragraphs
+    // Global Sentence ID counter to ensure uniqueness across paragraphs
     let globalSentenceIdCounter = 0;
 
     blocks.forEach((block) => {

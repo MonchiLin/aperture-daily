@@ -5,6 +5,7 @@ import type { SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy';
 import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
 import * as schema from '../../db/schema';
 import * as path from 'path';
+import { mapKeys, camelCase } from 'lodash-es';
 
 // Re-export the database type for use across the app
 export type AppDatabase = SqliteRemoteDatabase<typeof schema> | BunSQLiteDatabase<typeof schema>;
@@ -39,6 +40,7 @@ function createDatabase(): AppDatabase {
     return drizzle(async (sql, params) => {
         const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${DATABASE_ID}/query`;
 
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -66,7 +68,10 @@ function createDatabase(): AppDatabase {
             }
 
             const firstResult = data.result?.[0];
-            const rows = (firstResult?.results || []) as Record<string, unknown>[];
+            const rawRows = (firstResult?.results || []) as Record<string, unknown>[];
+
+            // D1 returns snake_case, Drizzle schema uses camelCase
+            const rows = rawRows.map(row => mapKeys(row, (_, key) => camelCase(key)));
 
             return { rows };
         } catch (e) {

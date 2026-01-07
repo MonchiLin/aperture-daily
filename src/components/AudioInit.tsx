@@ -48,20 +48,9 @@ export default function AudioInit({ allContent, articleId }: AudioInitProps) {
         // 2. Generate optimized text for TTS (preserves \n between blocks)
         const fullText = tokenizer.getFullTextForTTS();
 
-        // 3. Extract offsets for audio mapping
-        // IMPORTANT: We use the re-generated fullText for offsets, 
-        // to match what we send to the TTS engine exactly.
-        // We recalculate offsets based on the fullText we just built.
+        // 3. Extract offsets for audio mapping using fullText
         const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' });
-        const textForOffsets = fullText;
-        // Note: UniversalTokenizer.getFullTextForTTS() might slightly differ from map(text).join?
-        // Let's ensure consistency.
 
-        // Actually, simpler strategy:
-        // Pass the "segments" directly to AudioPreloader?
-        // No, AudioPreloader needs a single string to send to EdgeTTS.
-
-        // Let's compute offsets relative to 'fullText'
         const sentenceOffsets: number[] = [];
         let currentOffset = 0;
 
