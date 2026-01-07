@@ -115,6 +115,10 @@ export function useAudioPlayer() {
         setPlaybackRate(SPEEDS[nextIdx]);
     }, [playbackRate]);
 
+    const changeSpeed = useCallback((speed: number) => {
+        setPlaybackRate(speed);
+    }, []);
+
     const restart = useCallback(() => {
         const audio = audioRef.current;
         if (audio) {
@@ -142,6 +146,7 @@ export function useAudioPlayer() {
         onEnded,
         togglePlay,
         nextSpeed,
+        changeSpeed,
         restart,
         jumpToSentence
     };
