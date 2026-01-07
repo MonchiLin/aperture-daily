@@ -12,7 +12,7 @@ import {
     runGeminiDraftGeneration,
     runGeminiJsonConversion,
 } from './geminiStages3';
-import { runGeminiGrammarAnalysis } from './geminiStages4';
+import { runSentenceAnalysis } from './sentenceAnalyzer';
 import type { GeminiResponse } from './geminiClient';
 
 interface UsageRecord {
@@ -122,23 +122,42 @@ export async function generateDailyNews3StageWithGemini(args: {
         });
     }
 
-    // Stage 4: Grammar Analysis (The Enhancer)
-    // Run Structure Analysis on ALL generated article levels
+    // Stage 4: Sentence Analysis (with Checkpoint Support)
+    // Supports resume from completedLevels and saves progress per-level
     if (generation.output.articles && Array.isArray(generation.output.articles) && generation.output.articles.length > 0) {
-        console.log(`[Pipeline 4-Stage] Starting Stage 4 (Grammar Analysis) for ${generation.output.articles.length} levels...`);
+        const completedFromCheckpoint = args.checkpoint?.completedLevels || [];
 
-        const xrayRes = await runGeminiGrammarAnalysis({
+        console.log(`[Pipeline 4-Stage] Starting Stage 4 (Sentence Analysis) for ${generation.output.articles.length} levels...`);
+        if (completedFromCheckpoint.length > 0) {
+            console.log(`[Pipeline 4-Stage] Resuming with ${completedFromCheckpoint.length} completed levels from checkpoint`);
+        }
+
+        const analysisRes = await runSentenceAnalysis({
             client,
             model: args.model,
-            articles: generation.output.articles as Parameters<typeof runGeminiGrammarAnalysis>[0]['articles']
+            articles: generation.output.articles as Parameters<typeof runSentenceAnalysis>[0]['articles'],
+            completedLevels: completedFromCheckpoint as Parameters<typeof runSentenceAnalysis>[0]['completedLevels'],
+            onLevelComplete: args.onCheckpoint ? async (completedArticles) => {
+                // Save checkpoint after each level completes
+                await args.onCheckpoint!({
+                    stage: 'grammar_analysis',
+                    selectedWords,
+                    newsSummary,
+                    sourceUrls,
+                    draftText,
+                    completedLevels: completedArticles,
+                    usage
+                });
+            } : undefined
         });
 
-        // In-place update of articles with structure
-        generation.output.articles = xrayRes.articles as typeof generation.output.articles;
-        usage.grammar_analysis = xrayRes.usage;
+        // In-place update of articles with sentences and structure
+        generation.output.articles = analysisRes.articles as typeof generation.output.articles;
+        usage.sentence_analysis = analysisRes.usage;
 
         console.log(`[Pipeline 4-Stage] Stage 4 Complete.`);
 
+        // Final checkpoint after all levels done
         if (args.onCheckpoint) {
             await args.onCheckpoint({
                 stage: 'grammar_analysis',
@@ -146,7 +165,7 @@ export async function generateDailyNews3StageWithGemini(args: {
                 newsSummary,
                 sourceUrls,
                 draftText,
-                structure: [], // Legacy/Unused field in checkpoint, or can be null
+                completedLevels: analysisRes.articles,
                 usage
             });
         }

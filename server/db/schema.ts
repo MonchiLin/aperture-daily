@@ -158,6 +158,7 @@ export const articleVariants = sqliteTable(
         title: text('title').notNull(),
         content: text('content').notNull(), // Markdown Content
         structureJson: text('structure_json'), // Sentence structure analysis
+        sentencesJson: text('sentences_json'), // Sentence boundaries [{id, start, end, text}]
         createdAt: text('created_at')
             .notNull()
             .default(sql`(CURRENT_TIMESTAMP)`),

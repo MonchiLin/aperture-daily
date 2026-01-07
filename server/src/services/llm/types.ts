@@ -48,7 +48,17 @@ export type GeminiCheckpoint3 = {
     newsSummary?: string;
     sourceUrls?: string[];
     draftText?: string;
-    structure?: GeminiStructureData; // Renamed from xrayStructure
+    structure?: GeminiStructureData;
+    /** Stage 4 checkpoint: 已完成分析的 article levels */
+    completedLevels?: Array<{
+        level: 1 | 2 | 3;
+        content: string;
+        level_name: string;
+        difficulty_desc: string;
+        title?: string;
+        sentences: Array<{ id: number; start: number; end: number; text: string }>;
+        structure: Array<{ start: number; end: number; role: string; text: string }>;
+    }>;
     usage?: Record<string, any>;
 };
 

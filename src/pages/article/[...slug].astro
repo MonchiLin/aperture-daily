@@ -32,8 +32,8 @@ import {
     getReadingStats,
     getAllArticleContents 
 } from "@/lib/articles/loader";
-import { StructureParser, splitASTIntoBlocks } from "@/lib/structure/parser";
-import StructuredText from "@/components/structure/StructuredText.astro";
+import { buildUnifiedAST, splitASTIntoParagraphs } from "@/lib/structure/UnifiedAnnotationRenderer";
+import UnifiedText from "@/components/structure/UnifiedText.astro";
 
 // 解析 slug 参数
 const { slug } = Astro.params;
@@ -155,15 +155,18 @@ const isAdmin = !!adminKey;
                             {sortedArticles.map((article: any) => {
                                 const stats = getReadingStats(article.content);
                                 
-                                // [Structure] AST-Based Rendering
-                                let astBlocks: any[] = [];
+                                // [Unified] Build AST from sentences + structure
+                                let paragraphs: any[][] = [];
                                 try {
-                                    const parser = new StructureParser(article.content || '', article.structure || []);
-                                    const ast = parser.parse();
-                                    astBlocks = splitASTIntoBlocks(ast);
+                                    const ast = buildUnifiedAST(
+                                        article.content || '',
+                                        article.sentences || [],
+                                        article.structure || []
+                                    );
+                                    paragraphs = splitASTIntoParagraphs(ast);
                                 } catch (e) {
-                                    console.error("[Structure] AST Parsing failed:", e);
-                                    astBlocks = [[{ type: 'text', content: article.content || '' }]]; 
+                                    console.error("[Unified] AST build failed:", e);
+                                    paragraphs = [[{ type: 'text', content: article.content || '' }]]; 
                                 }
 
                                 return (
@@ -174,11 +177,11 @@ const isAdmin = !!adminKey;
                                         data-minutes={stats.minutes}
                                         data-active={article.level === initialLevel ? "" : undefined}
                                     >
-                                        {astBlocks.map((blockNodes: any[], pIndex: number) => (
+                                        {paragraphs.map((blockNodes: any[], pIndex: number) => (
                                             <p 
                                                 class={`mb-6 ${pIndex === 0 ? 'drop-cap-p' : 'indent-8'}`}
                                             >
-                                                <StructuredText nodes={blockNodes} />
+                                                <UnifiedText nodes={blockNodes} />
                                             </p>
                                         ))}
                                     </div>
@@ -227,9 +230,6 @@ const isAdmin = !!adminKey;
                 <!-- 高亮管理器 -->
                 <HighlightManager 
                     client:load 
-                    articleId={id} 
-                    targetWords={targetWords}
-                    wordMatchConfigs={wordMatchConfigs}
                     memoriesMap={memories}
                 />
             </main>

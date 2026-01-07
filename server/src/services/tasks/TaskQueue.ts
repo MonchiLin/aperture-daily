@@ -414,14 +414,16 @@ export class TaskQueue {
         // [Normalization] Dual Write: Insert into normalized tables
         if (output.output.articles) {
             for (const variant of output.output.articles) {
+                const v = variant as typeof variant & { sentences?: any[] };
                 await this.db.insert(articleVariants).values({
                     id: crypto.randomUUID(),
                     articleId: articleId,
-                    level: variant.level,
-                    levelLabel: variant.level_name || `Level ${variant.level}`,
+                    level: v.level,
+                    levelLabel: v.level_name || `Level ${v.level}`,
                     title: output.output.title,
-                    content: variant.content,
-                    structureJson: JSON.stringify(variant.structure || null)
+                    content: v.content,
+                    structureJson: JSON.stringify(v.structure || []),
+                    sentencesJson: JSON.stringify(v.sentences || [])
                 });
             }
         }

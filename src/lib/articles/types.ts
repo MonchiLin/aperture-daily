@@ -32,10 +32,17 @@ export interface ArticleLevelContent {
     content: string;
     title?: string;
     difficulty_desc: string;
-    xray_structure?: Array<{
+    structure?: Array<{
         start: number;
         end: number;
         role: string;
+        text?: string;
+    }>;
+    sentences?: Array<{
+        id: number;
+        start: number;
+        end: number;
+        text: string;
     }>;
 }
 

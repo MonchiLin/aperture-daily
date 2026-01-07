@@ -131,11 +131,12 @@ export function getReadingStats(content: string): { wordCount: number; minutes: 
 }
 
 /**
- * 获取所有文章内容用于 AudioPlayer
+ * 获取所有文章内容用于 AudioPlayer (包含 sentences)
  */
-export function getAllArticleContents(sortedArticles: ArticleLevelContent[]): { level: number; content: string }[] {
+export function getAllArticleContents(sortedArticles: ArticleLevelContent[]) {
     return sortedArticles.map((a) => ({
         level: a.level,
-        content: a.content || ''
+        content: a.content || '',
+        sentences: a.sentences || []
     }));
 }

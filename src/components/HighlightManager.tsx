@@ -1,35 +1,33 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '@nanostores/react';
 import { audioState } from '../lib/store/audioStore';
-import { tokenizeSentences, findActiveSid } from '../lib/utils/highlighterLogic';
 import { setMemoryData, interactionStore } from '../lib/store/interactionStore';
 
 interface HighlightManagerProps {
-    articleId: string;
-    targetWords: string[]; // Keep for backward compatibility or simple highlighting
-    wordMatchConfigs?: { lemma: string; forms: string[] }[]; // [Refactor] New Config
     memoriesMap?: Record<string, any>;
 }
 
-export default function HighlightManager({ articleId, targetWords, wordMatchConfigs, memoriesMap = {} }: HighlightManagerProps) {
+/**
+ * HighlightManager - Simplified
+ * 
+ * 职责简化为：
+ * 1. 监听音频播放状态，应用句子高亮
+ * 2. 处理单词 hover 的 memory 查询
+ */
+export default function HighlightManager({
+    memoriesMap = {}
+}: HighlightManagerProps) {
 
-    const wordsWithHistory = Object.keys(memoriesMap);
     const { activeWord, currentLevel } = useStore(interactionStore);
     const playbackActiveSidRef = useRef<number | null>(null);
-    const { charIndex, currentIndex, isPlaying } = useStore(audioState);
+    const { currentIndex, isPlaying } = useStore(audioState);
 
-    // Level change listener removed (reactive via store)
-
-    // Word hover listener removed (logic moved to highlighterLogic calling store directly)
-
-    // [New] Store Sync: Lookup memory for active word
+    // [Store Sync] 查找 active word 的 memory
     useEffect(() => {
         if (!activeWord) return;
 
         const normalized = activeWord.toLowerCase();
         const mems = memoriesMap[normalized];
-
-        console.log(`[HighlightManager] Hover: ${normalized}, History found:`, !!mems);
 
         if (mems && Array.isArray(mems)) {
             setMemoryData(mems.map(m => ({
@@ -42,49 +40,35 @@ export default function HighlightManager({ articleId, targetWords, wordMatchConf
         }
     }, [activeWord, memoriesMap]);
 
-    // 句子分词核心逻辑 (调用抽离后的工具函数)
+    // [Audio Sync] 朗读高亮同步
     useEffect(() => {
-        const levelContainer = document.querySelector(`.article-level[data-level="${currentLevel}"]`) as HTMLElement;
-        if (!levelContainer || levelContainer.dataset.processed === 'true') return;
-
-        console.log(`[HighlightManager] Initializing tokenization for Level ${currentLevel}`);
-        tokenizeSentences(levelContainer, targetWords, wordsWithHistory, wordMatchConfigs);
-    }, [targetWords, articleId, currentLevel, wordsWithHistory, wordMatchConfigs]);
-
-    // 朗读高亮同步 (调用抽离后的工具函数)
-    useEffect(() => {
-        // 清除旧高亮
-        if (playbackActiveSidRef.current !== null) {
-            const oldSid = playbackActiveSidRef.current;
-            const levelContainer = document.querySelector(`.article-level[data-level="${currentLevel}"]`);
-            if (levelContainer) {
-                const oldTokens = levelContainer.querySelectorAll(`.s-token[data-sid="${oldSid}"]`);
-                oldTokens.forEach(t => t.classList.remove('audio-active-sentence'));
-            }
-            playbackActiveSidRef.current = null;
-        }
-
-        if (!isPlaying || charIndex === -1) return;
-
         const levelContainer = document.querySelector(`.article-level[data-level="${currentLevel}"]`);
         if (!levelContainer) return;
 
-        const blocks = Array.from(levelContainer.children).filter(el =>
-            ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'LI', 'BLOCKQUOTE', 'DIV'].includes(el.tagName)
-        );
-        const block = blocks[currentIndex] as HTMLElement;
-        if (!block) return;
-
-        // 查找当前应激活的句子 ID
-        const targetSid = findActiveSid(block, charIndex);
-
-        if (targetSid !== -1) {
-            const targetTokens = block.querySelectorAll(`.s-token[data-sid="${targetSid}"]`);
-            targetTokens.forEach(t => t.classList.add('audio-active-sentence'));
-            playbackActiveSidRef.current = targetSid;
+        // 清除旧高亮
+        if (playbackActiveSidRef.current !== null) {
+            const oldSid = playbackActiveSidRef.current;
+            const oldTokens = levelContainer.querySelectorAll(`.s-token[data-sid="${oldSid}"]`);
+            oldTokens.forEach(t => t.classList.remove('audio-active-sentence'));
+            playbackActiveSidRef.current = null;
         }
 
-    }, [charIndex, currentIndex, isPlaying, currentLevel]);
+        if (!isPlaying || currentIndex < 0) return;
+
+        // 应用新高亮 (currentIndex 现在就是 sid)
+        const targetTokens = levelContainer.querySelectorAll(`.s-token[data-sid="${currentIndex}"]`);
+        if (targetTokens.length > 0) {
+            targetTokens.forEach(t => t.classList.add('audio-active-sentence'));
+            playbackActiveSidRef.current = currentIndex;
+
+            // 自动滚动
+            const firstToken = targetTokens[0] as HTMLElement;
+            if (firstToken) {
+                firstToken.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+    }, [currentIndex, isPlaying, currentLevel]);
 
     return null;
 }
