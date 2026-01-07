@@ -61,7 +61,9 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
             set.headers['Cache-Control'] = 'public, max-age=31536000, immutable';
 
             const selectedVoice = voice || "en-US-GuyNeural";
-            const ratePct = speed === '1.0' ? "+0%" : `${parseFloat(speed) > 1 ? '+' : ''}${Math.round((parseFloat(speed) - 1) * 100)}%`;
+            // Parse rate properly - handle "1", "1.0", "1.5", etc.
+            const speedNum = parseFloat(speed) || 1.0;
+            const ratePct = speedNum === 1.0 ? "+0%" : `${speedNum > 1 ? '+' : ''}${Math.round((speedNum - 1) * 100)}%`;
 
             const tts = new EdgeTTS(textToSpeak, selectedVoice, {
                 rate: ratePct,
