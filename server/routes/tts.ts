@@ -30,6 +30,7 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
 
         // Mode 1: Fetch from Article DB
         if (articleId && level) {
+            console.log(`[TTS Proxy] Querying articleId=${articleId}, level=${level}`);
             try {
                 const results = await db.select()
                     .from(articleVariants)
@@ -39,14 +40,22 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
                     ))
                     .limit(1);
 
+                console.log(`[TTS Proxy] DB returned ${results.length} row(s)`);
                 if (results.length > 0 && results[0]) {
                     const row = results[0];
+                    console.log(`[TTS Proxy] Row keys: ${Object.keys(row).join(', ')}`);
+                    console.log(`[TTS Proxy] content type: ${typeof row.content}, length: ${row.content?.length || 'N/A'}`);
+
                     if (row.content && typeof row.content === 'string') {
                         textToSpeak = cleanMarkdown(row.content);
+                        console.log(`[TTS Proxy] Text prepared, length: ${textToSpeak.length}`);
                     } else {
-                        console.error("[TTS Proxy] DB returned row with missing content");
+                        console.error("[TTS Proxy] DB returned row with missing/invalid content:", JSON.stringify(row).slice(0, 200));
+                        set.status = 400;
+                        return `Content missing in DB row. Keys: ${Object.keys(row).join(', ')}`;
                     }
                 } else {
+                    console.log(`[TTS Proxy] No variant found for articleId=${articleId}, level=${level}`);
                     set.status = 404;
                     return "Article variant not found";
                 }
@@ -58,6 +67,7 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
         }
 
         if (!textToSpeak) {
+            console.log(`[TTS Proxy] No text provided. articleId=${articleId}, level=${level}, text=${text?.slice(0, 50)}`);
             set.status = 400;
             return "Content is required (provide 'text' OR 'articleId'+'level')";
         }
