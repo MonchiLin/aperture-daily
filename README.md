@@ -113,3 +113,4 @@ Hugging Face 免费 Space 在 48 小时无访问后会休眠。使用 [UptimeRob
 
 [x] 播放器优化
 
+[x] 播放器背景音乐

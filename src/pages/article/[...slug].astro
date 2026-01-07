@@ -113,11 +113,11 @@ const isAdmin = !!adminKey;
                 transition:animate="slide"
             >
                 <div class="space-y-8">
-                    <!-- 文章容器 -->
-                    <div class="bg-white rounded-3xl border border-gray-100 p-6 md:p-8">
+                    <!-- 文章容器 (去卡片化) -->
+                    <div class="md:px-2">
                         <!-- 文章头部 -->
-                        <header class="mb-6 md:mb-8">
-                            <div class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-4 border-b border-slate-900 pb-2">
+                        <header class="mb-10 md:mb-12 border-b-4 border-double border-slate-900/80 pb-6">
+                            <div class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-6">
                                 <div class="flex items-center gap-3">
                                     <BackButton client:load href={`/day/${row.tasks?.task_date || ''}`} label="Day" />
                                     <div class="h-4 w-px bg-stone-300"></div>
@@ -145,7 +145,7 @@ const isAdmin = !!adminKey;
                                 </div>
                             </div>
                             
-                            <h1 class="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.1] font-display">
+                            <h1 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] font-display mb-2">
                                 {title}
                             </h1>
                         </header>

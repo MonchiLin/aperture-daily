@@ -123,7 +123,7 @@ const FloatingAudioPlayer: React.FC = () => {
                             className="flex items-center h-full w-full px-4"
                         >
                             <div className="flex flex-col justify-center">
-                                <div className="font-bold text-sm text-stone-900 leading-tight">Now Playing</div>
+                                <div className="font-bold text-sm text-stone-900 leading-tight">Article Player</div>
                                 <div className="text-[10px] text-stone-500">Tap to expand</div>
                             </div>
                         </motion.div>
@@ -136,7 +136,7 @@ const FloatingAudioPlayer: React.FC = () => {
                             <div className="h-14 border-b border-stone-100 flex items-center px-6 justify-between bg-white/50 shrink-0">
                                 <div className="flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span className="text-xs font-medium text-stone-500 tracking-widest uppercase">Articel Player</span>
+                                    <span className="text-xs font-medium text-stone-500 tracking-widest uppercase">Article Player</span>
                                 </div>
                                 {/* Top Right Controls */}
                                 <div className="flex items-center gap-1">
