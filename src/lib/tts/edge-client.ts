@@ -200,4 +200,30 @@ export class EdgeTTSClient {
             this.ws = null;
         }
     }
+
+    /**
+     * Helper to play text directly
+     */
+    static async play(text: string): Promise<void> {
+        const client = new EdgeTTSClient();
+        const result = await client.synthesize(text);
+        const audioUrl = URL.createObjectURL(result.audioBlob);
+        const audio = new Audio(audioUrl);
+
+        return new Promise((resolve, reject) => {
+            audio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+            };
+            audio.onerror = (e) => {
+                URL.revokeObjectURL(audioUrl);
+                reject(e);
+            };
+
+            audio.play().catch((e) => {
+                URL.revokeObjectURL(audioUrl);
+                reject(e);
+            });
+        });
+    }
 }
