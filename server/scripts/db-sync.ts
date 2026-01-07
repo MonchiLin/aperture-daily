@@ -35,7 +35,14 @@ async function pull() {
 
     // Read backup SQL and execute using Bun's SQLite
     console.log(`   Importing SQL to local SQLite...`);
-    const sqlContent = fs.readFileSync(BACKUP_FILE, "utf-8");
+    let sqlContent = fs.readFileSync(BACKUP_FILE, "utf-8");
+
+    // Filter out sqlite_sequence statements (internal SQLite table that may not exist in fresh DB)
+    sqlContent = sqlContent
+        .split('\n')
+        .filter(line => !line.toLowerCase().includes('sqlite_sequence'))
+        .join('\n');
+
     const db = new Database(LOCAL_DB_PATH);
 
     // Execute the SQL statements

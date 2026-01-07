@@ -23,6 +23,7 @@ export interface ArticleData {
     sortedArticles: ArticleLevelContent[];
     title: string;
     readLevels: number;
+    memories: Record<string, unknown>;
 }
 
 export interface WordMatchConfig {
@@ -31,18 +32,27 @@ export interface WordMatchConfig {
 }
 
 /**
- * 加载文章数据
+ * 加载文章数据（包含并行获取 memories）
  */
 export async function loadArticle(id: string): Promise<ArticleData | null> {
-    let row: ArticleRow | null = null;
-    let parsed: ArticleParsedContent = {};
-    let sources: string[] = [];
-    let wordDefinitions: WordDefinition[] = [];
-    let sidebarWords: SidebarWord[] = [];
-    let dateLabel = "";
-
     try {
-        row = await apiFetch<ArticleRow>(`/api/articles/${id}`);
+        // 并行请求文章数据和 memories
+        const [articleRes, memoriesRes] = await Promise.all([
+            apiFetch<ArticleRow>(`/api/articles/${id}`),
+            apiFetch<{ memories?: Record<string, unknown> }>('/api/context/batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ article_id: id })
+            }).catch(() => ({ memories: {} }))
+        ]);
+
+        const row = articleRes;
+        let parsed: ArticleParsedContent = {};
+        let sources: string[] = [];
+        let wordDefinitions: WordDefinition[] = [];
+        let sidebarWords: SidebarWord[] = [];
+        let dateLabel = "";
+
         if (row?.articles?.content_json) {
             parsed = parseArticleContent(row.articles.content_json);
             sources = extractSources(parsed);
@@ -50,27 +60,29 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
             sidebarWords = mapToSidebarWords(wordDefinitions);
             dateLabel = formatDateLabel(row.tasks?.task_date);
         }
+
+        const articles = parsed?.result?.articles || [];
+        const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
+        const title = row?.articles?.title || "Article";
+        const readLevels = row?.articles?.read_levels || 0;
+        const memories = memoriesRes?.memories || {};
+
+        return {
+            row,
+            parsed,
+            sources,
+            wordDefinitions,
+            sidebarWords,
+            dateLabel,
+            sortedArticles,
+            title,
+            readLevels,
+            memories,
+        };
     } catch (e: any) {
         console.error("[SSR] Failed to fetch article:", e.message);
         return null;
     }
-
-    const articles = parsed?.result?.articles || [];
-    const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
-    const title = row?.articles?.title || "Article";
-    const readLevels = row?.articles?.read_levels || 0;
-
-    return {
-        row,
-        parsed,
-        sources,
-        wordDefinitions,
-        sidebarWords,
-        dateLabel,
-        sortedArticles,
-        title,
-        readLevels,
-    };
 }
 
 /**
@@ -87,30 +99,20 @@ export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMa
 }
 
 /**
- * 预获取记忆数据 (SSR Batch)
+ * @deprecated Use loadArticle() which includes memories via parallel fetch
  */
 export async function fetchMemories(
-    targetWords: string[],
+    _targetWords: string[],
     articleId: string,
-    adminKey: string | undefined
+    _adminKey: string | undefined
 ): Promise<Record<string, unknown>> {
-    if (targetWords.length === 0 || !adminKey) {
-        return {};
-    }
-
+    console.warn('[DEPRECATED] fetchMemories: Use loadArticle() instead');
     try {
         const data = await apiFetch<{ memories?: Record<string, unknown> }>('/api/context/batch', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminKey}`
-            },
-            body: JSON.stringify({
-                words: targetWords,
-                exclude_article_id: articleId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ article_id: articleId })
         });
-
         return data?.memories || {};
     } catch (e) {
         console.error("Failed to fetch memories:", e);

@@ -12,16 +12,28 @@ interface MemoryEntry {
 }
 
 export const contextRoutes = new Elysia({ prefix: '/api/context' })
-    .post('/batch', async ({ body }: { body: { words: string[], exclude_article_id?: string } }) => {
-        const { words, exclude_article_id } = body;
+    .post('/batch', async ({ body }: { body: { words?: string[], article_id?: string, exclude_article_id?: string } }) => {
+        const { words, article_id, exclude_article_id } = body;
 
-        if (!words || words.length === 0) return { memories: {} };
+        let targets: string[] = [];
 
-        // Clean words
-        const targets = words.map(w => w.trim().toLowerCase()).filter(w => w.length > 1);
+        // If article_id is provided, look up words from article_vocabulary
+        if (article_id) {
+            const vocabRows = await db.all(sql`
+                SELECT word FROM article_vocabulary WHERE article_id = ${article_id}
+            `) as { word: string }[];
+            targets = vocabRows.map(r => r.word.toLowerCase());
+        } else if (words && words.length > 0) {
+            // Use provided words list
+            targets = words.map(w => w.trim().toLowerCase()).filter(w => w.length > 1);
+        }
+
         if (targets.length === 0) return { memories: {} };
 
-        console.log(`[Context Batch] Checking ${targets.length} words. Exclude: ${exclude_article_id}`);
+        // Use article_id as exclude if not explicitly provided
+        const excludeId = exclude_article_id || article_id;
+
+        console.log(`[Context Batch] Checking ${targets.length} words. Exclude: ${excludeId}`);
 
 
         // Batch query: Find latest memory for each word
@@ -105,7 +117,7 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
             JOIN articles a ON awi.article_id = a.id
             LEFT JOIN tasks ON a.generation_task_id = tasks.id
             WHERE awi.word IN (${placeholders})
-            ${exclude_article_id ? `AND awi.article_id != '${exclude_article_id}'` : ''}
+            ${excludeId ? `AND awi.article_id != '${excludeId}'` : ''}
             ORDER BY awi.created_at DESC
             LIMIT 150
         `);
@@ -140,7 +152,8 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
         return { memories };
     }, {
         body: t.Object({
-            words: t.Array(t.String()),
+            words: t.Optional(t.Array(t.String())),
+            article_id: t.Optional(t.String()),
             exclude_article_id: t.Optional(t.String())
         })
     });

@@ -22,7 +22,6 @@ import MemorySpirit from "@/components/MemorySpirit";
 import { 
     loadArticle, 
     buildWordMatchConfigs, 
-    fetchMemories, 
     getReadingStats,
     getAllArticleContents 
 } from "@/lib/articles/loader";
@@ -53,6 +52,7 @@ const {
     sortedArticles,
     title,
     readLevels,
+    memories,
 } = articleData || {
     row: null,
     sources: [],
@@ -62,6 +62,7 @@ const {
     sortedArticles: [],
     title: 'Article',
     readLevels: 0,
+    memories: {},
 };
 
 // 设置缓存
@@ -78,10 +79,9 @@ const wordMatchConfigs = buildWordMatchConfigs(wordDefinitions);
 // 获取所有文章内容用于 AudioPlayer
 const allArticleContents = getAllArticleContents(sortedArticles);
 
-// 预获取记忆数据
+// 管理员状态
 const adminKey = Astro.cookies.get('admin_key')?.value;
 const isAdmin = !!adminKey;
-const initialMemories = await fetchMemories(targetWords, id, adminKey);
 ---
 
 <Layout title={`${title} - Aperture Daily`}>
@@ -209,7 +209,7 @@ const initialMemories = await fetchMemories(targetWords, id, adminKey);
                     articleId={id} 
                     targetWords={targetWords}
                     wordMatchConfigs={wordMatchConfigs}
-                    memoriesMap={initialMemories}
+                    memoriesMap={memories}
                 />
 
                 {/* 悬浮播放器 */}
