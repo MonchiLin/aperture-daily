@@ -10,8 +10,11 @@ export const articlesRoutes = new Elysia({ prefix: '/api/articles' })
         if (articleRows.length === 0) throw AppError.notFound();
         const article = articleRows[0]!;
 
-        const taskRows = await db.all(sql`SELECT * FROM tasks WHERE id = ${article.generation_task_id} LIMIT 1`);
-        const task = taskRows.length > 0 ? taskRows[0] : null;
+        let task = null;
+        if (article.generation_task_id) {
+            const taskRows = await db.all(sql`SELECT * FROM tasks WHERE id = ${article.generation_task_id} LIMIT 1`);
+            task = taskRows.length > 0 ? taskRows[0] : null;
+        }
 
         // [Normalization] Fetch variants and vocab from new tables
         // 1. Variants
