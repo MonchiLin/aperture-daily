@@ -175,15 +175,3 @@ function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): A
         echoes,
     };
 }
-
-/**
- * Convert title to slug (matching backend logic)
- */
-export function toArticleSlug(title: string): string {
-    return title
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s\u4e00-\u9fa5-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-}

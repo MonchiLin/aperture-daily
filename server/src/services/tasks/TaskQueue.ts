@@ -5,7 +5,7 @@ import type { CandidateWord, GeminiCheckpoint3 } from '../llm/types';
 import { indexArticleWords } from '../wordIndexer';
 import type { AppDatabase } from '../../db/client';
 import type { TaskRow, ProfileRow, IdRow } from '../../types/models';
-import { toArticleSlug } from '../../utils/slug';
+import { toArticleSlug } from '../../../../src/lib/shared/slug';
 
 export type TaskEnv = {
     GEMINI_API_KEY: string;

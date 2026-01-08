@@ -1,19 +1,17 @@
 /**
- * Sentence Analyzer - Stage 4 Refactored (with Checkpoint Support)
+ * Sentence Analyzer - Stage 4 (Paragraph Batch Processing)
  * 
- * 逐句分析语法结构，简化 LLM 输入输出。
+ * 按段落批量分析语法结构，优化 LLM 调用次数。
  * 
  * 核心特性：
  * 1. 预处理：使用 Intl.Segmenter 分句
- * 2. 逐句 LLM 调用：每句独立分析
+ * 2. 按段落批量调用 LLM：同一段落的句子一起分析，保持上下文
  * 3. Checkpoint：每完成一个 Article Level 保存进度
  * 4. 恢复：支持从中断的 Level 继续
  */
 
-import { type GeminiClient, type GeminiRequest, extractGeminiText, safeGeminiCall } from './geminiClient';
+import { type GeminiClient, type GeminiRequest, extractGeminiText, safeGeminiCall, stripMarkdownCodeBlock } from './geminiClient';
 import type { GeminiResponse } from './geminiClient';
-
-// ============ Types ============
 
 // ============ Types ============
 
@@ -43,6 +41,12 @@ export interface AnalysisAnnotation {
 interface LLMAnnotation {
     text: string;
     role: string;
+}
+
+/** 段落分组 */
+interface ParagraphGroup {
+    index: number;
+    sentences: SentenceData[];
 }
 
 /** 单个 Article 输入格式 */
@@ -105,74 +109,120 @@ function splitIntoSentences(content: string): SentenceData[] {
 }
 
 /**
- * 构建逐句分析的 Prompt
+ * 按段落分组句子
+ * 
+ * 检测逻辑：如果两个句子之间存在换行符，则认为是段落边界
  */
-function buildSentencePrompt(sentence: string): string {
-    return `<task>
-分析以下英语句子的语法成分，返回 JSON 数组。
+function groupSentencesByParagraph(content: string, sentences: SentenceData[]): ParagraphGroup[] {
+    const groups: ParagraphGroup[] = [];
+    let currentSentences: SentenceData[] = [];
+    let groupIndex = 0;
 
-<sentence>
-${sentence}
-</sentence>
+    for (let i = 0; i < sentences.length; i++) {
+        const sentence = sentences[i]!;
+        const prevEnd = i > 0 ? sentences[i - 1]!.end : 0;
+        const gap = content.substring(prevEnd, sentence.start);
+
+        // 检测段落边界：句子间是否有换行符
+        const hasParagraphBreak = i > 0 && gap.includes('\n');
+
+        if (hasParagraphBreak && currentSentences.length > 0) {
+            groups.push({ index: groupIndex++, sentences: [...currentSentences] });
+            currentSentences = [];
+        }
+
+        currentSentences.push(sentence);
+    }
+
+    // 处理最后一组
+    if (currentSentences.length > 0) {
+        groups.push({ index: groupIndex, sentences: currentSentences });
+    }
+
+    return groups;
+}
+
+/**
+ * 构建段落批量分析的 Prompt
+ */
+function buildParagraphPrompt(sentences: SentenceData[]): string {
+    const numberedSentences = sentences
+        .map((s, idx) => `[S${idx}] ${s.text}`)
+        .join('\n\n');
+
+    return `<task>
+分析以下段落中每个句子的语法成分。
+
+<paragraph>
+${numberedSentences}
+</paragraph>
 
 <roles>
-s = 主语 (Subject)
-v = 谓语 (Verb，包含助动词)
-o = 直接宾语 (Direct Object)
-io = 间接宾语 (Indirect Object)
-cmp = 补语 (Complement)
-rc = 定语从句 (Relative Clause)
-pp = 介词短语 (Prepositional Phrase)
-adv = 状语 (Adverbial)
-app = 同位语 (Appositive)
-pas = 被动语态 (Passive Voice)
-con = 连接词 (Connective)
-inf = 不定式 (Infinitive)
-ger = 动名词 (Gerund)
-ptc = 分词 (Participle)
+s=主语, v=谓语(含助动词), o=直接宾语, io=间接宾语, cmp=补语,
+rc=定语从句, pp=介词短语, adv=状语, app=同位语,
+pas=被动语态, con=连接词, inf=不定式, ger=动名词, ptc=分词
 </roles>
 
 <rules>
-1. 每个标注的 text 必须是句子中的原文片段
-2. 谓语 v 包含完整动词短语（助动词 + 主动词）
+1. text 必须是句子中的原文片段
+2. 谓语 v 包含完整动词短语
 3. 被动语态同时标注 v 和 pas
-4. 只返回 JSON 数组，不要其他内容
 </rules>
 
-<output_format>
-[{"text": "原文片段", "role": "角色代码"}, ...]
-</output_format>
-
-示例输出:
+<output>
 \`\`\`json
-[{"text":"The scientists","role":"s"},{"text":"have discovered","role":"v"},{"text":"new evidence","role":"o"}]
+{
+  "S0": [{"text": "片段", "role": "角色"}, ...],
+  "S1": [...],
+  ...
+}
 \`\`\`
+</output>
 </task>`;
 }
 
 /**
- * 解析 LLM 返回的 JSON
+ * 解析段落分析响应
  */
-function parseLLMResponse(text: string): LLMAnnotation[] {
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const jsonStr = jsonMatch ? jsonMatch[1]!.trim() : text.trim();
+function parseParagraphResponse(text: string, sentenceCount: number): Map<number, LLMAnnotation[]> {
+    const result = new Map<number, LLMAnnotation[]>();
+
+    // 初始化所有句子为空数组
+    for (let i = 0; i < sentenceCount; i++) {
+        result.set(i, []);
+    }
 
     try {
+        const jsonStr = stripMarkdownCodeBlock(text);
         const parsed = JSON.parse(jsonStr);
-        if (!Array.isArray(parsed)) {
-            console.warn('[SentenceAnalyzer] LLM response is not an array');
-            return [];
+
+        if (typeof parsed !== 'object' || parsed === null) {
+            console.warn('[ParagraphAnalyzer] Response is not an object');
+            return result;
         }
 
-        return parsed.filter(item =>
-            typeof item.text === 'string' &&
-            typeof item.role === 'string' &&
-            item.text.length > 0
-        );
+        for (const [key, value] of Object.entries(parsed)) {
+            // 支持 "S0" 或 "0" 格式
+            const idxMatch = key.match(/^S?(\d+)$/);
+            if (!idxMatch) continue;
+
+            const idx = parseInt(idxMatch[1]!);
+            if (idx >= sentenceCount) continue;
+
+            if (Array.isArray(value)) {
+                const validAnnotations = (value as any[]).filter(item =>
+                    typeof item.text === 'string' &&
+                    typeof item.role === 'string' &&
+                    item.text.length > 0
+                );
+                result.set(idx, validAnnotations);
+            }
+        }
     } catch (e) {
-        console.error('[SentenceAnalyzer] Failed to parse LLM response:', e);
-        return [];
+        console.error('[ParagraphAnalyzer] Failed to parse response:', e);
     }
+
+    return result;
 }
 
 /**
@@ -213,7 +263,7 @@ function convertToGlobalOffsets(
 }
 
 /**
- * 分析单个 Article Level
+ * 分析单个 Article Level (按段落批处理)
  */
 async function analyzeArticle(
     client: GeminiClient,
@@ -234,26 +284,34 @@ async function analyzeArticle(
     const sentences = splitIntoSentences(article.content);
     console.log(`[SentenceAnalyzer] Level ${article.level}: ${sentences.length} sentences`);
 
-    // 2. 逐句分析
+    // 2. 按段落分组
+    const paragraphs = groupSentencesByParagraph(article.content, sentences);
+    console.log(`[SentenceAnalyzer] Level ${article.level}: ${paragraphs.length} paragraphs`);
+
+    // 3. 逐段落分析
     const allAnalyses: AnalysisAnnotation[] = [];
     let totalUsage: GeminiResponse['usageMetadata'] = undefined;
 
-    for (let i = 0; i < sentences.length; i++) {
-        const sentence = sentences[i]!;
+    for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
+        const para = paragraphs[pIdx]!;
 
-        // 跳过太短的句子
-        if (sentence.text.split(/\s+/).length < 3) {
+        // 跳过所有句子都太短的段落
+        const totalWords = para.sentences.reduce(
+            (sum, s) => sum + s.text.split(/\s+/).length, 0
+        );
+        if (totalWords < 5) {
+            console.log(`[SentenceAnalyzer] Skipping paragraph ${pIdx} (too short: ${totalWords} words)`);
             continue;
         }
 
-        const prompt = buildSentencePrompt(sentence.text);
+        const prompt = buildParagraphPrompt(para.sentences);
         const request: GeminiRequest = {
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
         };
 
         try {
             const response = await safeGeminiCall(
-                `Stage4_L${article.level}_S${i}`,
+                `Stage4_L${article.level}_P${pIdx}`,
                 () => client.generateContent(model, request)
             );
 
@@ -269,14 +327,22 @@ async function analyzeArticle(
                 }
             }
 
+            // 解析响应
             const responseText = extractGeminiText(response);
-            const annotations = parseLLMResponse(responseText);
-            const analyses = convertToGlobalOffsets(annotations, sentence, article.content);
-            allAnalyses.push(...analyses);
+            const paragraphAnalyses = parseParagraphResponse(responseText, para.sentences.length);
+
+            // 转换每个句子的偏移量
+            for (let sIdx = 0; sIdx < para.sentences.length; sIdx++) {
+                const sentence = para.sentences[sIdx]!;
+                const annotations = paragraphAnalyses.get(sIdx) || [];
+                const converted = convertToGlobalOffsets(annotations, sentence, article.content);
+                allAnalyses.push(...converted);
+            }
 
         } catch (e) {
-            console.error(`[SentenceAnalyzer] Failed on sentence ${i}:`, e);
-            // 继续处理下一句
+            console.error(`[SentenceAnalyzer] Failed on paragraph ${pIdx}:`, e);
+            // 失败时抛出错误，让上层处理（checkpoint 恢复）
+            throw e;
         }
     }
 
@@ -295,7 +361,7 @@ async function analyzeArticle(
 // ============ Main Export ============
 
 /**
- * 运行逐句语法分析（支持 Checkpoint 恢复）
+ * 运行语法分析（支持 Checkpoint 恢复）
  */
 export async function runSentenceAnalysis(args: AnalyzerInput): Promise<AnalyzerOutput> {
     const usageAccumulator: Record<string, GeminiResponse['usageMetadata']> = {};

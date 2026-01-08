@@ -9,7 +9,7 @@
 import { useStore } from '@nanostores/react';
 import { articlesStore } from '../../lib/store/articlesStore';
 
-import { toArticleSlug } from "@/lib/articles/loader";
+import { toArticleSlug } from "@/lib/shared/slug";
 
 interface ArticleItemProps {
     title: string;
