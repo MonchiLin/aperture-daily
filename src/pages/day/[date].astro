@@ -137,7 +137,7 @@ if (dayData.articles?.length > 0) {
                 <!-- 文章列表：SSR 首屏 + 客户端接管 -->
                 <!-- SSR 版本：首屏渲染，客户端 hydration 后隐藏 -->
                 <div class="article-list-ssr">
-                    <ArticleList articles={dayData.articles} />
+                    <ArticleList articles={dayData.articles} date={date} />
                 </div>
                 <!-- 客户端版本：hydration 后显示，支持动态更新 -->
                 <div class="article-list-client">

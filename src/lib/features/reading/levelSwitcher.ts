@@ -29,22 +29,22 @@ const setActive = (el: Element, active: boolean, activeClasses?: string[], inact
     }
 };
 
-/** 从 URL 读取级别 */
+/** 从 URL 读取级别 (/[date]/[slug]/L[1-3]) */
 const getLevelFromUrl = (): number | null => {
-    const match = window.location.pathname.match(/\/article\/[^/]+\/L([1-3])$/i);
+    // Match /L1, /L2, /L3 at the end
+    const match = window.location.pathname.match(/\/L([1-3])$/i);
     return match ? parseInt(match[1]) : null;
 };
 
-/** 从 URL 或 DOM 获取文章 ID */
+/** 从 URL 或 DOM 获取文章 ID (ID 仍在 DOM 中, URL 不再含 ID) */
 const getArticleId = (): string | null => {
-    // 优先从 DOM 获取
+    // 优先从 DOM 获取 (最可靠)
     const main = document.querySelector('main[data-article-id]');
     if (main) {
         return main.getAttribute('data-article-id');
     }
-    // 从 URL 提取
-    const match = window.location.pathname.match(/\/article\/([^/]+)/);
-    return match ? match[1] : null;
+    // URL 不再包含 ID，所以必须依赖 DOM
+    return null;
 };
 
 /** 获取单篇文章的保存级别 */

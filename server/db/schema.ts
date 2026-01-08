@@ -128,6 +128,7 @@ export const articles = sqliteTable(
 
         // [New] Normalized columns
         sourceUrl: text('source_url'), // Single source URL
+        slug: text('slug'), // [New] for clean URLs (e.g. "my-article-title")
 
         status: text('status', { enum: ['draft', 'published'] }).notNull(),
         readLevels: integer('read_levels').notNull().default(0),

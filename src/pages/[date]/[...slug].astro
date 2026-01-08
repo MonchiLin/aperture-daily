@@ -1,0 +1,370 @@
+---
+/**
+ * 文章页 - SSR 渲染 (支持 Level 路由)
+ * 
+ * 路由模式:
+ *   - /[date]/[slug] → 默认 L1
+ *   - /[date]/[slug]/L1 → L1
+ *   - /[date]/[slug]/L2 → L2
+ *   - /[date]/[slug]/L3 → L3
+ * 
+ * 使用 slug 查找文章，无 ID 依赖
+ */
+import Layout from "@/layouts/Layout.astro";
+import WordSidebarAstro from "@/components/WordSidebar.astro";
+import VisualTether from "@/components/VisualTether";
+import FloatingAudioPlayer from "@/components/FloatingAudioPlayer";
+import AudioInit from "@/components/AudioInit";
+import HistoricalEchoes from "@/components/HistoricalEchoes";
+import { BackButton } from "@/components/ui/BackButton";
+
+import { 
+    loadArticleBySlug, 
+    buildWordMatchConfigs, 
+    getReadingStats,
+    getAllArticleContents 
+} from "@/lib/articles/loader";
+import { buildAnalysisTree } from "@/lib/features/syntax/AnnotationEngine";
+import AnnotatedText from "@/components/analysis/AnnotatedText.astro";
+
+// 解析 date 和 slug 参数
+const { date, slug } = Astro.params;
+
+// slug 可能是数组 (catch-all) e.g. ["my-article", "L2"]
+// 或者 just "my-article"
+const slugParts = (slug || '').split('/');
+const levelPart = slugParts[slugParts.length - 1]?.toUpperCase();
+const isLevelParam = ['L1', 'L2', 'L3'].includes(levelPart);
+
+const articleSlug = isLevelParam 
+    ? slugParts.slice(0, -1).join('/') // Remove level part
+    : slugParts.join('/'); 
+
+const initialLevel = isLevelParam
+    ? parseInt(levelPart.replace('L', ''))
+    : 1;
+
+if (!date || !articleSlug) {
+    return Astro.redirect('/');
+}
+
+// 服务端获取文章数据
+const articleData = await loadArticleBySlug(date, articleSlug);
+
+if (!articleData) {
+    Astro.response.headers.set('Cache-Control', 'no-store');
+    // Consider redirecting to 404 page properly
+    return Astro.redirect('/404');
+}
+
+// 解构数据
+const {
+    row,
+    sources,
+    wordDefinitions,
+    sidebarWords,
+    dateLabel,
+    sortedArticles,
+    title,
+    readLevels,
+    echoes,
+} = articleData;
+
+const id = row?.articles?.id; // Needed for client side logic
+
+// 设置缓存
+if (row) {
+    Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
+}
+
+// 构建单词匹配配置 (用于 SSR 单词高亮)
+const wordMatchConfigs = buildWordMatchConfigs(wordDefinitions);
+
+// 获取所有文章内容用于 AudioPlayer
+const allArticleContents = getAllArticleContents(sortedArticles);
+
+// 管理员状态
+const adminKey = Astro.cookies.get('admin_key')?.value;
+const isAdmin = !!adminKey;
+---
+
+<Layout title={`${title} - Aperture Daily`}>
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 mx-auto w-full max-w-7xl px-4 py-10">
+        <!-- 主内容区 -->
+        <main 
+            class={`relative min-w-0 ${sidebarWords.length === 0 ? "max-w-3xl mx-auto" : ""}`}
+            data-article-id={id}
+            data-read-levels={readLevels}
+            data-is-admin={isAdmin ? "true" : "false"}
+            transition:animate="slide"
+        >
+            <div class="space-y-8">
+                <!-- Memories Data Injection (Robust) -->
+                <script is:inline id="memories-data" type="application/json" set:html={JSON.stringify(echoes)} />
+
+                <!-- 文章容器 (去卡片化) -->
+                <div class="md:px-2">
+                    <!-- 文章头部 -->
+                    <header class="mb-10 md:mb-12 border-b-4 border-double border-slate-900/80 pb-6">
+                        <div class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-6">
+                            <div class="flex items-center gap-3">
+                                <BackButton client:load href={`/day/${row?.tasks?.task_date || ''}`} label="Day" />
+                                <div class="h-4 w-px bg-stone-300"></div>
+                                <span class="text-slate-900">{dateLabel}</span>
+                                <span class="text-stone-300">|</span>
+                                <span id="reading-time">Loading...</span>
+                            </div>
+                            
+                            <!-- 难度切换器 -->
+                            <div class="flex gap-1" id="level-switcher">
+                                {[1, 2, 3].map((level) => (
+                                    <button
+                                        type="button"
+                                        data-level-btn={level}
+                                        class:list={[
+                                            "level-btn w-8 h-6 flex items-center justify-center text-xs font-bold transition-all rounded-sm border leading-none",
+                                            level === initialLevel 
+                                                ? "bg-slate-900 text-white border-slate-900" 
+                                                : "bg-transparent text-stone-400 border-transparent hover:border-stone-200 hover:text-stone-600"
+                                        ]}
+                                    >
+                                        L{level}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <h1 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] font-display mb-2">
+                            {title}
+                        </h1>
+                    </header>
+                    
+                    <!-- 三个难度的文章内容 -->
+                    <article id="article-content" class="font-serif leading-loose text-lg text-slate-800/90 md:text-xl">
+                        {sortedArticles.map((article: any) => {
+                            const stats = getReadingStats(article.content);
+                            
+                            // [Analysis] Build AST with paragraphs and word highlighting
+                            const paragraphs = buildAnalysisTree(
+                                article.content || '',
+                                article.sentences || [],
+                                article.syntax || [],
+                                wordMatchConfigs
+                            );
+
+                            return (
+                                <div
+                                    class="article-level"
+                                    data-level={article.level}
+                                    data-word-count={stats.wordCount}
+                                    data-minutes={stats.minutes}
+                                    data-active={article.level === initialLevel ? "" : undefined}
+                                >
+                                    {paragraphs.map((blockNodes: any[], pIndex: number) => (
+                                        <p 
+                                            class={`mb-6 ${pIndex === 0 ? 'drop-cap-p' : 'indent-8'}`}
+                                        >
+                                            <AnnotatedText nodes={blockNodes} />
+                                        </p>
+                                    ))}
+                                </div>
+                            );
+                        })}
+                    </article>
+                </div>
+                
+                <!-- 来源 -->
+                {sources.length > 0 && (
+                    <div id="article-sources" class="pt-8 mt-8 border-t border-slate-900/10">
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-4">
+                            Sources
+                        </div>
+                        <ul class="space-y-1">
+                            {sources.map((url) => {
+                                let domain = url;
+                                try {
+                                    domain = new URL(url).hostname.replace(/^www\./, "");
+                                } catch {}
+                                return (
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-1 h-1 rounded-full bg-stone-300" />
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            class="text-xs font-serif text-stone-500 hover:text-slate-900 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-900 transition-all"
+                                            title={url}
+                                        >
+                                            {domain}
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                )}
+                
+                <VisualTether client:only="react" />
+            </div>
+            
+            <!-- Historical Echoes (Replaces MemorySpirit & HighlightManager) -->
+            <HistoricalEchoes client:idle />
+        </main>
+        
+        <!-- 侧边栏 -->
+        {sidebarWords.length > 0 && (
+            <aside class="lg:w-80 lg:shrink-0">
+                <div class="lg:sticky lg:top-6 space-y-4">
+                    <AudioInit 
+                        client:idle 
+                        allContent={allArticleContents} 
+                        articleId={id || ""} 
+                    />
+                    <FloatingAudioPlayer client:only="react" />
+                    <WordSidebarAstro words={sidebarWords} />
+                </div>
+            </aside>
+        )}
+    </div>
+</Layout>
+
+<style is:global>
+    /* 强力覆盖：确保朗读时的高亮优先级最高 */
+    span.w-token.bg-orange-200 {
+        background-color: #fed7aa !important;
+        color: #7c2d12 !important;
+        box-shadow: 0 0 0 2px #fed7aa;
+        border-radius: 2px;
+        position: relative;
+        z-index: 10;
+    }
+</style>
+
+<style>
+    /* 默认只显示 Level 1 */
+    .article-level {
+        opacity: 0;
+        visibility: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        transition: opacity 0.5s ease;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .article-level[data-active] {
+        opacity: 1;
+        visibility: visible;
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+    }
+    
+    /* 容器动画 */
+    #article-content {
+        position: relative;
+        transition: height 0.5s ease;
+        min-height: 200px; 
+    }
+    
+    /* 难度按钮激活状态 */
+    .level-btn[data-active] {
+        background-color: rgb(15 23 42);
+        color: white;
+        border-color: rgb(15 23 42);
+    }
+    
+    /* 目标单词高亮 */
+    .target-word {
+        color: #ea580c;
+        font-weight: 600;
+        border-bottom: 2px dotted #ea580c;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    /* Golden Soul Pin */
+    .target-word[data-has-history="true"] {
+        border-bottom-color: #f59e0b;
+    }
+    
+    .target-word[data-has-history="true"]::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -4px;
+        width: 4px;
+        height: 4px;
+        background: #fbbf24;
+        border-radius: 99px;
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+        opacity: 0.8;
+    }
+</style>
+
+<script>
+import { initLevelSwitcher } from '../../lib/features/reading/levelSwitcher';
+import { initReadTracker, trackReading } from '../../lib/features/reading/readTracker';
+import { initSyntaxController } from '../../lib/features/syntax/SyntaxController';
+import { initEchoes } from '../../lib/store/interactionStore';
+import { initHoverController } from '../../lib/features/echoes/hoverController';
+
+function initArticlePage() {
+    // [New] 注入 Echoes 数据到 Store (Single Source of Truth)
+    try {
+        const dataEl = document.getElementById('memories-data');
+        if (dataEl && dataEl.textContent) {
+            const echoes = JSON.parse(dataEl.textContent);
+            initEchoes(echoes);
+        }
+    } catch (e) {
+        console.error("Failed to init echoes", e);
+    }
+
+    // 初始化难度切换
+    initLevelSwitcher();
+    
+    // 初始化阅读追踪
+    initReadTracker();
+    
+    // 监听难度变化以触发阅读追踪
+    window.addEventListener('level-change', () => {
+        trackReading();
+    });
+    
+    // [New] 初始化历史回响交互控制器 (Event Delegation)
+    initHoverController();
+}
+
+/**
+ * 初始化目标单词交互 - 仅保留朗读功能
+ * Hover 功能已移至 initHoverController (Event Delegation)
+ */
+function initTargetWordInteraction() {
+    document.querySelectorAll('.target-word').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            const word = el.getAttribute('data-word');
+            if (!word) return;
+            
+            e.stopPropagation();
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US';
+            speechSynthesis.speak(u);
+        });
+    });
+}
+
+// 支持普通页面加载和 View Transitions
+document.addEventListener('DOMContentLoaded', initArticlePage);
+document.addEventListener('astro:page-load', initArticlePage);
+
+// Analysis Interaction
+document.addEventListener('DOMContentLoaded', initSyntaxController);
+document.addEventListener('astro:page-load', initSyntaxController);
+
+// Target Word Interaction (Click to Speak only)
+document.addEventListener('DOMContentLoaded', initTargetWordInteraction);
+document.addEventListener('astro:page-load', initTargetWordInteraction);
+</script>

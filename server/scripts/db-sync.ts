@@ -14,7 +14,13 @@ import { $ } from "bun";
 import { Database } from "bun:sqlite";
 import * as fs from "fs";
 
-const DB_NAME = process.env.D1_DATABASE_NAME || "ApertureDailyData";
+const DB_NAME = process.env.CLOUDFLARE_DATABASE_NAME;
+
+if (!DB_NAME) {
+    console.error("Error: CLOUDFLARE_DATABASE_NAME environment variable is not set.");
+    process.exit(1);
+}
+
 const LOCAL_DB_PATH = "./local.db";
 const BACKUP_FILE = "./backup.sql";
 

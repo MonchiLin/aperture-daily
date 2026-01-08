@@ -9,17 +9,22 @@
 import { useStore } from '@nanostores/react';
 import { articlesStore } from '../../lib/store/articlesStore';
 
+import { toArticleSlug } from "@/lib/articles/loader";
+
 interface ArticleItemProps {
-    id: string;
     title: string;
     index: number;
     isRead?: boolean;
+    date: string;
 }
 
-function ArticleItem({ id, title, index, isRead = false }: ArticleItemProps) {
+function ArticleItem({ title, index, isRead = false, date }: ArticleItemProps) {
+    const slug = toArticleSlug(title);
+    const href = `/${date}/${slug}`;
+
     return (
         <article className="group relative border-b border-stone-200/60 last:border-0 hover:bg-stone-50/50 -mx-4 px-4 transition-all duration-300 cursor-pointer">
-            <a href={`/article/${id}`} className="flex items-baseline py-5 w-full gap-6">
+            <a href={href} className="flex items-baseline py-5 w-full gap-6">
                 {/* Number / Checkmark */}
                 <span className={`inline-flex shrink-0 transition-colors duration-300 select-none w-8 justify-end ${isRead
                     ? 'text-amber-600/60 translate-y-[2px]'
@@ -77,10 +82,10 @@ export default function ArticleListClient({ date, initialArticles = [] }: Articl
                     {articles.map((article, idx) => (
                         <ArticleItem
                             key={article.id}
-                            id={article.id}
                             title={article.title}
                             index={idx}
                             isRead={(article.read_levels || 0) > 0}
+                            date={date}
                         />
                     ))}
                 </div>

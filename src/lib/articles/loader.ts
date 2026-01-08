@@ -46,39 +46,8 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
             }).catch(() => ({ echoes: {} }))
         ]);
 
-        const row = articleRes;
-        let parsed: ArticleParsedContent = {};
-        let sources: string[] = [];
-        let wordDefinitions: WordDefinition[] = [];
-        let sidebarWords: SidebarWord[] = [];
-        let dateLabel = "";
-
-        if (row?.articles?.content_json) {
-            parsed = parseArticleContent(row.articles.content_json);
-            sources = extractSources(parsed);
-            wordDefinitions = extractWordDefinitions(parsed);
-            sidebarWords = mapToSidebarWords(wordDefinitions);
-            dateLabel = formatDateLabel(row.tasks?.task_date);
-        }
-
-        const articles = parsed?.result?.articles || [];
-        const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
-        const title = row?.articles?.title || "Article";
-        const readLevels = row?.articles?.read_levels || 0;
         const echoes = echoesRes?.echoes || {};
-
-        return {
-            row,
-            parsed,
-            sources,
-            wordDefinitions,
-            sidebarWords,
-            dateLabel,
-            sortedArticles,
-            title,
-            readLevels,
-            echoes,
-        };
+        return processArticleData(articleRes, echoes);
     } catch (e: any) {
         console.error("[SSR] Failed to fetch article:", e.message);
         return null;
@@ -139,4 +108,82 @@ export function getAllArticleContents(sortedArticles: ArticleLevelContent[]) {
         content: a.content || '',
         sentences: a.sentences || []
     }));
+}
+
+export async function loadArticleBySlug(date: string, slug: string): Promise<ArticleData | null> {
+    try {
+        const [articleRes] = await Promise.all([
+            apiFetch<ArticleRow>(`/api/articles/lookup?date=${date}&slug=${slug}`),
+            // Placeholder for parallel fetch if needed in future
+            Promise.resolve(null)
+        ]);
+
+        if (!articleRes) return null;
+
+        // Now fetch echoes using the ID from articleRes
+        const articleId = articleRes.articles?.id;
+        let echoes = {};
+        if (articleId) {
+            try {
+                const echoesData = await apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ article_id: articleId })
+                });
+                echoes = echoesData?.echoes || {};
+            } catch { }
+        }
+
+        return processArticleData(articleRes, echoes);
+    } catch (e: any) {
+        console.error("[SSR] Failed to fetch article by slug:", e.message);
+        return null;
+    }
+}
+
+// Factor out processing logic to reuse
+function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): ArticleData {
+    let parsed: ArticleParsedContent = {};
+    let sources: string[] = [];
+    let wordDefinitions: WordDefinition[] = [];
+    let sidebarWords: SidebarWord[] = [];
+    let dateLabel = "";
+
+    if (row?.articles?.content_json) {
+        parsed = parseArticleContent(row.articles.content_json);
+        sources = extractSources(parsed);
+        wordDefinitions = extractWordDefinitions(parsed);
+        sidebarWords = mapToSidebarWords(wordDefinitions);
+        dateLabel = formatDateLabel(row.tasks?.task_date);
+    }
+
+    const articles = parsed?.result?.articles || [];
+    const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
+    const title = row?.articles?.title || "Article";
+    const readLevels = row?.articles?.read_levels || 0;
+
+    return {
+        row,
+        parsed,
+        sources,
+        wordDefinitions,
+        sidebarWords,
+        dateLabel,
+        sortedArticles,
+        title,
+        readLevels,
+        echoes,
+    };
+}
+
+/**
+ * Convert title to slug (matching backend logic)
+ */
+export function toArticleSlug(title: string): string {
+    return title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s\u4e00-\u9fa5-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }

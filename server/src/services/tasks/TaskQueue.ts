@@ -5,6 +5,7 @@ import type { CandidateWord, GeminiCheckpoint3 } from '../llm/types';
 import { indexArticleWords } from '../wordIndexer';
 import type { AppDatabase } from '../../db/client';
 import type { TaskRow, ProfileRow, IdRow } from '../../types/models';
+import { toArticleSlug } from '../../utils/slug';
 
 export type TaskEnv = {
     GEMINI_API_KEY: string;
@@ -405,10 +406,11 @@ export class TaskQueue {
 
 
         const sourceUrl = output.output.sources?.[0] || null;
+        const slug = toArticleSlug(output.output.title);
 
         await this.db.run(sql`
-            INSERT INTO articles (id, generation_task_id, model, variant, title, source_url, status, published_at)
-            VALUES (${articleId}, ${task.id}, ${model}, 1, ${output.output.title}, ${sourceUrl}, 'published', ${finishedAt})
+            INSERT INTO articles (id, generation_task_id, model, variant, title, slug, source_url, status, published_at)
+            VALUES (${articleId}, ${task.id}, ${model}, 1, ${output.output.title}, ${slug}, ${sourceUrl}, 'published', ${finishedAt})
         `);
 
         // [Normalization] Dual Write: Insert into normalized tables

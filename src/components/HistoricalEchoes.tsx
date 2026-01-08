@@ -114,7 +114,7 @@ export default function HistoricalEchoes() {
                                                         </div>
 
                                                         <a
-                                                            href={`/article/${m.articleId}`}
+                                                            href={`/${m.date}/${m.articleSlug || m.articleTitle.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
                                                             className="group flex items-center gap-1.5 shrink-0 px-3 py-1.5 bg-stone-50 hover:bg-amber-50 rounded-full border border-stone-200/60 hover:border-amber-200 transition-all duration-300"
                                                         >
                                                             <span className="text-[10px] font-black text-stone-600 group-hover:text-amber-700 uppercase tracking-tight">

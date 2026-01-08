@@ -7,6 +7,7 @@ interface MemoryEntry {
     snippet: string;
     articleTitle: string;
     articleId: string;
+    articleSlug?: string;
     date: string;
     timeAgo: string;
 }
@@ -111,7 +112,8 @@ export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
                 awi.context_snippet, 
                 awi.created_at, 
                 a.id as article_id,
-                a.title, 
+                a.title,
+                a.slug, 
                 tasks.task_date
             FROM article_word_index awi
             JOIN articles a ON awi.article_id = a.id
@@ -128,6 +130,7 @@ export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
             created_at: string;
             article_id: string;
             title: string;
+            slug: string | null;
             task_date: string;
         }[];
 
@@ -143,6 +146,7 @@ export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
                 snippet: row.context_snippet,
                 articleTitle: row.title,
                 articleId: row.article_id,
+                articleSlug: row.slug || undefined, // Pass slug
                 date: row.task_date,
                 timeAgo: row.created_at
             });

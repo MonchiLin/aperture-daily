@@ -42,7 +42,6 @@ export default function AudioInit({ allContent, articleId }: AudioInitProps) {
         if (!targetData) return;
 
         const sentences = targetData.sentences || [];
-        const rawText = targetData.content;
 
         console.log(`[AudioInit] Level ${currentLevel} - ${sentences.length} sentences from backend`);
 
