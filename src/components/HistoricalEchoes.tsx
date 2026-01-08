@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Popover, ConfigProvider } from 'antd';
 import { interactionStore, activeInteraction } from '../lib/store/interactionStore';
@@ -63,10 +63,9 @@ export default function HistoricalEchoes() {
                         <Popover
                             open={true}
                             placement="bottom"
-                            destroyTooltipOnHide
                             arrow={false}
                             rootClassName="historical-popover-root"
-                            getPopupContainer={(triggerNode) => document.body} // Ensure it mounts to body
+                            getPopupContainer={() => document.body} // Ensure it mounts to body
                             content={
                                 <div
                                     onMouseEnter={() => window.dispatchEvent(new Event('historical-popup-enter'))}

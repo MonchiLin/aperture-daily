@@ -15,7 +15,9 @@ import type { GeminiResponse } from './geminiClient';
 
 // ============ Types ============
 
-export type StructureRole =
+// ============ Types ============
+
+export type AnalysisRole =
     | 's' | 'v' | 'o' | 'io' | 'cmp'  // Core
     | 'rc' | 'pp' | 'adv' | 'app'     // Clauses & Phrases
     | 'pas' | 'con'                   // Voice & Connectives
@@ -30,10 +32,10 @@ export interface SentenceData {
 }
 
 /** 语法结构标注 */
-export interface StructureAnnotation {
+export interface AnalysisAnnotation {
     start: number;
     end: number;
-    role: StructureRole;
+    role: AnalysisRole;
     text: string;
 }
 
@@ -55,7 +57,7 @@ export interface ArticleInput {
 /** 单个 Article 输出格式 (包含分析结果) */
 export interface ArticleWithAnalysis extends ArticleInput {
     sentences: SentenceData[];
-    structure: StructureAnnotation[];
+    structure: AnalysisAnnotation[]; // Staying with 'structure' for DB compatibility
 }
 
 /** Stage 4 输入 */
@@ -77,7 +79,7 @@ interface AnalyzerOutput {
 
 // ============ Constants ============
 
-const VALID_ROLES: readonly StructureRole[] = [
+const VALID_ROLES: readonly AnalysisRole[] = [
     's', 'v', 'o', 'io', 'cmp',
     'rc', 'pp', 'adv', 'app',
     'pas', 'con', 'inf', 'ger', 'ptc'
@@ -180,11 +182,11 @@ function convertToGlobalOffsets(
     annotations: LLMAnnotation[],
     sentence: SentenceData,
     originalContent: string
-): StructureAnnotation[] {
-    const results: StructureAnnotation[] = [];
+): AnalysisAnnotation[] {
+    const results: AnalysisAnnotation[] = [];
 
     for (const ann of annotations) {
-        const role = ann.role.toLowerCase() as StructureRole;
+        const role = ann.role.toLowerCase() as AnalysisRole;
         if (!VALID_ROLES.includes(role)) {
             console.warn(`[SentenceAnalyzer] Invalid role: ${ann.role}`);
             continue;
@@ -233,7 +235,7 @@ async function analyzeArticle(
     console.log(`[SentenceAnalyzer] Level ${article.level}: ${sentences.length} sentences`);
 
     // 2. 逐句分析
-    const allStructures: StructureAnnotation[] = [];
+    const allAnalyses: AnalysisAnnotation[] = [];
     let totalUsage: GeminiResponse['usageMetadata'] = undefined;
 
     for (let i = 0; i < sentences.length; i++) {
@@ -269,8 +271,8 @@ async function analyzeArticle(
 
             const responseText = extractGeminiText(response);
             const annotations = parseLLMResponse(responseText);
-            const structures = convertToGlobalOffsets(annotations, sentence, article.content);
-            allStructures.push(...structures);
+            const analyses = convertToGlobalOffsets(annotations, sentence, article.content);
+            allAnalyses.push(...analyses);
 
         } catch (e) {
             console.error(`[SentenceAnalyzer] Failed on sentence ${i}:`, e);
@@ -278,13 +280,13 @@ async function analyzeArticle(
         }
     }
 
-    console.log(`[SentenceAnalyzer] Level ${article.level}: ${allStructures.length} annotations`);
+    console.log(`[SentenceAnalyzer] Level ${article.level}: ${allAnalyses.length} annotations`);
 
     return {
         result: {
             ...article,
             sentences,
-            structure: allStructures.sort((a, b) => a.start - b.start)
+            structure: allAnalyses.sort((a, b) => a.start - b.start)
         },
         usage: totalUsage
     };

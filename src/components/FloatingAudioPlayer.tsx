@@ -6,7 +6,7 @@ import { AudioPlaylist } from './AudioPlaylist';
 import { PlaybackSpeedControl } from './PlaybackSpeedControl';
 
 // --- Icons ---
-const PlayIcon = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-stone-900"><path d="M8 5v14l11-7z" /></svg>);
+// --- Icons ---
 const PauseIcon = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-stone-900"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>);
 const MinimizeIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" /></svg>);
 
@@ -22,7 +22,7 @@ const FloatingAudioPlayer: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     // Audio Hook
-    const { state, togglePlay, nextSpeed, changeSpeed, audioRef, onTimeUpdate, onEnded, jumpToSentence } = useAudioPlayer();
+    const { state, togglePlay, changeSpeed, audioRef, onTimeUpdate, onEnded, jumpToSentence } = useAudioPlayer();
     const { isPlaying, playbackRate, playlist, currentIndex } = state;
     const [progress, setProgress] = useState(0);
 
@@ -34,7 +34,7 @@ const FloatingAudioPlayer: React.FC = () => {
 
     // --- PHYSICS ---
     // Softer spring to prevent "Snap" artifacts at the end of JS animation
-    const SPRING_CONFIG = { type: "spring", stiffness: 180, damping: 26, mass: 1 };
+    const SPRING_CONFIG = { type: "spring" as const, stiffness: 180, damping: 26, mass: 1 };
 
     if (!playlist || playlist.length === 0) return null;
 

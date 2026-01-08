@@ -1,37 +1,37 @@
 /**
- * Feature: Structure Reveal Interaction
+ * Feature: Analysis Focus Manager (分析聚焦管理器)
  * 
- * Manages user interactions for the "Structure" feature.
+ * 管理 "Structure Analysis" (结构分析) 功能的用户交互。
  * 
- * **Behaviors**:
- * 1. **Click-to-Focus**:
- *    - Clicking a sentence token (`.s-token`) activates the `structure-active` state for ALL tokens in that sentence.
- *    - Strict single-sentence focus (clears previous).
- *    - Clicking outside the article clears focus.
- * 2. **Unified Hover**:
- *    - Hovering any token in a sentence highlights the entire sentence (`.sentence-hover`).
- * 3. **Keyboard**:
- *    - Escape key clears focus.
- * 4. **Smart Copy** (optional):
- *    - If enabled in settings, auto-copies sentence text to clipboard on activation.
+ * **Behaviors (行为)**:
+ * 1. **Click-to-Focus (点击聚焦)**:
+ *    - 点击句子 Token (`.s-token`) 会激活该句子的 `analysis-focus` 状态。
+ *    - 严格的单句聚焦模式 (Strict single-sentence focus)，点击新句子会清除以前的聚焦。
+ *    - 点击文章外部区域会清除聚焦。
+ * 2. **Unified Hover (统一悬停)**:
+ *    - 悬停在句子内的任意 Token 上，都会高亮整句 (`.sentence-hover`)。
+ * 3. **Keyboard (键盘交互)**:
+ *    - 按下 `Escape` 键清除聚焦。
+ * 4. **Smart Copy (智能复制)**:
+ *    - 如果在设置中开启，激活句子时会自动将其文本复制到剪贴板。
  * 
- * **Architecture**:
- * - Uses **Event Delegation** on `document` to avoid attaching thousands of listeners to individual tokens.
- * - Scoped to `.article-level` container to prevent cross-level SID collisions.
- * - Initialization is idempotent via `data-structure-init` attribute on body.
+ * **Architecture (架构)**:
+ * - **Event Delegation (事件代理)**: 在 `document` 层级监听事件，避免为数千个 Token 单独绑定监听器。
+ * - **Scoped DOM Query**: 将查询限制在 `.article-level` 容器内，防止跨 Level 的 SID 冲突。
+ * - **Idempotency**: 通过 `data-analysis-init` 属性防止重复初始化。
  */
 
-import { positionStructureLabels, clearLabels } from './labelPositioner';
+import { layoutTags, clearLabels } from './TagLayout';
 import { settingsStore } from '../../store/settingsStore';
 import { audioState } from '../../store/audioStore';
 import { interactionStore } from '../../store/interactionStore';
 
-export function initStructureInteraction() {
+export function initFocusManager() {
     if (typeof document === 'undefined') return;
 
-    const ATTR_INIT = 'data-structure-init';
-    // 结构激活状态 (Structure Active State): 点击句子触发，显示 S/V/O 标签并高亮成分
-    const CLASS_ACTIVE = 'structure-active';
+    const ATTR_INIT = 'data-analysis-init';
+    // 分析聚焦状态 (Analysis Focus State): 点击句子触发，显示分析标签并高亮成分
+    const CLASS_FOCUS = 'analysis-focus';
     const CLASS_HOVER = 'sentence-hover';
     const SELECTOR_TOKEN = '.s-token';
     const SELECTOR_CONTAINER = '#article-content';
@@ -41,7 +41,7 @@ export function initStructureInteraction() {
     if (document.body.hasAttribute(ATTR_INIT)) return;
     document.body.setAttribute(ATTR_INIT, 'true');
 
-    console.log('[Structure] Initializing Interaction Protocol (Scoped)...');
+    console.log('[Analysis] Initializing Focus Manager (Scoped)...');
 
     // --- Click Delegation ---
     document.addEventListener('click', (e) => {
@@ -53,7 +53,7 @@ export function initStructureInteraction() {
 
         // Case A: Click OUTSIDE (Dismiss)
         if (!articleContent) {
-            clearAllActive(CLASS_ACTIVE);
+            clearAllActive(CLASS_FOCUS);
             clearLabels();
             return;
         }
@@ -67,15 +67,15 @@ export function initStructureInteraction() {
 
             if (sid && levelContainer instanceof HTMLElement) {
                 // Strategy: Clear Everything -> Activate Target (Scoped)
-                clearAllActive(CLASS_ACTIVE);
+                clearAllActive(CLASS_FOCUS);
                 clearLabels();
 
-                activateSentence(levelContainer, sid, CLASS_ACTIVE);
+                activateSentence(levelContainer, sid, CLASS_FOCUS);
 
                 // Position labels relative to the article content container
                 requestAnimationFrame(() => {
                     if (articleContent instanceof HTMLElement) {
-                        positionStructureLabels(articleContent);
+                        layoutTags(articleContent);
                     }
                 });
                 return;
@@ -83,14 +83,14 @@ export function initStructureInteraction() {
         }
 
         // Case C: Clicked whitespace or non-token inside article (Dismiss)
-        clearAllActive(CLASS_ACTIVE);
+        clearAllActive(CLASS_FOCUS);
         clearLabels();
     });
 
     // --- Keyboard Shortcuts ---
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            clearAllActive(CLASS_ACTIVE);
+            clearAllActive(CLASS_FOCUS);
             clearLabels();
         }
     });
@@ -132,11 +132,11 @@ export function initStructureInteraction() {
         clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(() => {
             // Re-calculate positions if there are active structure elements
-            const activeElements = document.querySelectorAll(`.${CLASS_ACTIVE}`);
+            const activeElements = document.querySelectorAll(`.${CLASS_FOCUS}`);
             if (activeElements.length > 0) {
                 const articleContent = document.querySelector(SELECTOR_CONTAINER) as HTMLElement;
                 if (articleContent) {
-                    positionStructureLabels(articleContent);
+                    layoutTags(articleContent);
                 }
             }
         }, 100); // Debounce 100ms

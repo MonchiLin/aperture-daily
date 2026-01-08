@@ -1,22 +1,19 @@
 /**
- * Unified Annotation Renderer
+ * Annotation Engine
  * 
- * 合并 sentences 和 structure 数据，生成统一的 AST。
+ * 合并 sentences 和 analysis 数据，生成统一的 Analysis Tree。
  * 用于 SSR 阶段一次性输出所有标注属性。
  * 
  * 输出格式：
  * <span class="s-token" data-sid="0">
- *   <span data-structure="s">Turkey</span>
+ *   <span data-analysis="s">Turkey</span>
  *   <span class="target-word" data-word="considering">is <span class="target-word" data-word="considering">considering</span></span>
  * </span>
  */
 
-// ============ Types ============
+import type { AnalysisRole } from './GrammarRules';
 
-export type StructureRole =
-    | 's' | 'v' | 'o' | 'io' | 'cmp'
-    | 'rc' | 'pp' | 'adv' | 'app'
-    | 'pas' | 'con' | 'inf' | 'ger' | 'ptc';
+// ============ Types ============
 
 export interface SentenceData {
     id: number;
@@ -25,10 +22,10 @@ export interface SentenceData {
     text: string;
 }
 
-export interface StructureData {
+export interface AnalysisData {
     start: number;
     end: number;
-    role: StructureRole;
+    role: AnalysisRole;
     text?: string;
 }
 
@@ -42,22 +39,29 @@ export interface WordMatchConfig {
 export type RenderNode =
     | { type: 'text'; content: string }
     | { type: 'sentence'; sid: number; children: RenderNode[] }
-    | { type: 'structure'; role: StructureRole; children: RenderNode[] }
+    | { type: 'analysis'; role: AnalysisRole; children: RenderNode[] }
     | { type: 'word'; lemma: string; children: RenderNode[] };
 
 
 // ============ Core Logic ============
 
 /**
- * 构建统一 AST（按段落分组）
+ * 构建分析树 (Sentence Analysis Tree)
  * 
- * 直接识别段落边界，返回段落数组
- * 段落分隔符：连续两个换行符 (\n\n) 或句子间有换行
+ * 核心职责:
+ * 1. 结构化: 将平铺的文本转换为段落 -> 句子 -> 分析节点/单词/文本 的树状结构。
+ * 2. 混合: 将 "Sentence Split" (分句) 和 "Grammar Analysis" (语法分析) 数据合并。
+ * 3. 容错: 处理换行符作为段落分隔。
+ * 
+ * @param content - 文章全文
+ * @param sentences - 分句数据 (由 Intl.Segmenter 或 LLM 生成)
+ * @param analyses - 语法分析标注 (LLM 生成, 可能包含重叠结构)
+ * @param wordConfigs - 单词高亮配置 (Side Quest 词汇)
  */
-export function buildUnifiedAST(
+export function buildAnalysisTree(
     content: string,
     sentences: SentenceData[],
-    structures: StructureData[],
+    analyses: AnalysisData[],
     wordConfigs: WordMatchConfig[] = []
 ): RenderNode[][] {
     const paragraphs: RenderNode[][] = [];
@@ -84,16 +88,16 @@ export function buildUnifiedAST(
             }
         }
 
-        // 获取该句子内的结构标注
-        const sentenceStructures = structures.filter(
+        // 获取该句子内的分析标注
+        const sentenceAnalyses = analyses.filter(
             s => s.start >= sentence.start && s.end <= sentence.end
         );
 
         // 构建句子内部的 AST
         const sentenceContent = content.substring(sentence.start, sentence.end);
-        const innerNodes = buildStructureNodes(
+        const innerNodes = buildAnalysisNodes(
             sentenceContent,
-            sentenceStructures,
+            sentenceAnalyses,
             sentence.start,
             wordConfigs
         );
@@ -123,43 +127,50 @@ export function buildUnifiedAST(
 }
 
 /**
- * 构建句子内部的结构标注节点
+ * 构建句子内部的分析标注节点
  * 
- * 策略：过滤掉重叠的结构，只保留不重叠的最外层标注。
- * 这样避免了文本重复问题。
+ * 策略 (FLATTENING STRATEGY):
+ * LLM 可能会返回嵌套的结构 (例如: 定语从句可以包含主语)。
+ * 但为了简化渲染和避免 DOM 嵌套混乱，我们采用 "Flat Visualization" (扁平化可视化) 策略:
+ * 
+ * 1. 过滤掉所有重叠的结构 (Overlapping Structures)。
+ * 2. 优先保留 *最长* 的结构 (通常是外层结构)。
+ *    例如: 如果 [A [B] C], 我们只渲染 A，忽略嵌套在内的 B。
+ *    注意: GrammarRules 中的 'priority' 属性在这里尚未生效，
+ *    目前的逻辑是纯粹基于长度和位置的几何过滤。
  */
-function buildStructureNodes(
+function buildAnalysisNodes(
     sentenceText: string,
-    structures: StructureData[],
+    analyses: AnalysisData[],
     globalOffset: number,
     wordConfigs: WordMatchConfig[] = []
 ): RenderNode[] {
     const nodes: RenderNode[] = [];
 
-    // 按 start 排序，相同 start 时长的优先
-    const sorted = [...structures].sort((a, b) => {
+    // 按 start 排序，相同 start 时长的优先 (Greedy: Longest First)
+    const sorted = [...analyses].sort((a, b) => {
         if (a.start !== b.start) return a.start - b.start;
         return (b.end - b.start) - (a.end - a.start); // 长的优先
     });
 
     // 过滤掉被包含的结构，只保留不重叠的
-    const nonOverlapping: StructureData[] = [];
+    const nonOverlapping: AnalysisData[] = [];
     let lastEnd = -1;
 
-    for (const struct of sorted) {
-        // 跳过被前一个范围覆盖的
-        if (struct.start < lastEnd) {
+    for (const item of sorted) {
+        // 跳过被前一个范围覆盖的 (即跳过嵌套的子结构)
+        if (item.start < lastEnd) {
             continue;
         }
-        nonOverlapping.push(struct);
-        lastEnd = struct.end;
+        nonOverlapping.push(item);
+        lastEnd = item.end;
     }
 
     let cursor = 0;
 
-    for (const struct of nonOverlapping) {
-        const localStart = struct.start - globalOffset;
-        const localEnd = struct.end - globalOffset;
+    for (const item of nonOverlapping) {
+        const localStart = item.start - globalOffset;
+        const localEnd = item.end - globalOffset;
 
         // 跳过超出范围的
         if (localStart < 0 || localEnd > sentenceText.length) {
@@ -173,11 +184,11 @@ function buildStructureNodes(
         }
 
         // 添加结构节点 (结构内部也带单词高亮)
-        const structText = sentenceText.substring(localStart, localEnd);
+        const itemText = sentenceText.substring(localStart, localEnd);
         nodes.push({
-            type: 'structure',
-            role: struct.role,
-            children: markTargetWords(structText, wordConfigs)
+            type: 'analysis',
+            role: item.role,
+            children: markTargetWords(itemText, wordConfigs)
         });
 
         cursor = localEnd;

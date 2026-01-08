@@ -1,0 +1,339 @@
+/*
+    Feature: Analysis (Visual Layer)
+    Version: 9.4 (Refactored & Variables)
+    Hierarchy: [data-analysis] > .s-token
+*/
+
+:root {
+    /* --- Palette: Analysis Colors --- */
+    --an-color-subject-bg: #1e3a8a;
+    --an-color-subject-shadow: #3b82f6;
+
+    --an-color-verb-bg: #fee2e2;
+    --an-color-verb-text: #991b1b;
+    --an-color-verb-label: #7f1d1d;
+
+    --an-color-object-bg: #064e3b;
+    --an-color-object-shadow: #10b981;
+
+    --an-color-conn-text: #d97706;
+    --an-color-conn-label: #78350f;
+
+    --an-color-rc-bg: rgba(241, 245, 249, 0.8);
+    --an-color-rc-border: #94a3b8;
+    --an-color-rc-label-bg: #334155;
+    --an-color-rc-label-text: #f1f5f9;
+
+    --an-color-passive-deco: #f97316;
+    --an-color-passive-label: #c2410c;
+
+    --an-color-pp-text: #64748b;
+    --an-color-pp-border: #cbd5e1;
+    --an-color-pp-label: #475569;
+
+    /* New: Complement */
+    --an-color-cmp-bg: #ede9fe;
+    --an-color-cmp-text: #6d28d9;
+
+    /* New: Adverbial */
+    --an-color-adv-text: #0369a1;
+    --an-color-adv-border: #0ea5e9;
+
+    /* New: Appositive */
+    --an-color-app-bg: #ecfeff;
+    --an-color-app-border: #06b6d4;
+
+    /* New: Infinitive */
+    --an-color-inf-text: #be185d;
+    --an-color-inf-deco: #ec4899;
+
+    /* New: Gerund */
+    --an-color-ger-bg: #fdf2f8;
+    --an-color-ger-text: #9d174d;
+
+    /* New: Participle */
+    --an-color-ptc-text: #831843;
+    --an-color-ptc-deco: #f472b6;
+
+    /* New: Indirect Object */
+    --an-color-io-shadow: #10b981;
+
+    /* --- UI States --- */
+    --an-ui-active-bg: rgba(254, 243, 199, 0.5);
+    /* Amber-100/50 */
+    --an-ui-hover-bg: rgba(0, 0, 0, 0.04);
+}
+
+/* Base Analysis Element */
+[data-analysis] {
+    position: relative;
+    display: inline;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+.s-token {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-radius: 2px;
+}
+
+.s-token.sentence-hover {
+    background-color: var(--an-ui-hover-bg);
+}
+
+/* Audio Playing Highlight - More prominent than hover */
+.s-token.audio-playing {
+    background-color: rgba(192, 132, 252, 0.25);
+    /* purple-400/25 */
+    box-shadow: inset 0 -2px 0 0 rgba(168, 85, 247, 0.5);
+    /* purple-500/50 underline */
+}
+
+.s-token.analysis-focus {
+    background-color: var(--an-ui-active-bg);
+}
+
+/* --- 2. Analysis Tags (JS-positioned) --- */
+/* 
+ * Tags are now created by JavaScript (TagLayout.ts)
+ * for dynamic collision detection and avoidance.
+ */
+.analysis-tag {
+    position: absolute;
+    z-index: 100;
+
+    /* Metrics */
+    padding: 2px 6px;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+    /* Typography */
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    white-space: nowrap;
+
+    /* Color from JS via CSS variable */
+    background-color: var(--tag-color, #1e293b);
+    color: #ffffff;
+    pointer-events: none;
+
+    /* Animation */
+    opacity: 0;
+    transform: translateY(4px);
+    animation: tagFadeIn 0.15s ease-out forwards;
+}
+
+@keyframes tagFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- 3. Tag colors are now handled by TagLayout.ts via CSS variables --- */
+
+/* --- 4. Role-Specific Highlighting (Layout Safe) --- */
+
+/* Subject -> Underline Shadow */
+.analysis-focus [data-analysis="s"],
+.analysis-focus [data-analysis="subject"] {
+    box-shadow: 0 -2px 0 0 var(--an-color-subject-shadow);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+
+/* --- Interactive Opacity Swap (Variant B: Semantic Focus) --- */
+/* Ensure transitions apply to clip-path */
+.analysis-tag {
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1), clip-path 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: center center;
+    backface-visibility: hidden;
+}
+
+/* Hidden Children (Depth 1) - Dot Mode */
+.analysis-connector.st-depth-1 {
+    opacity: 0 !important;
+}
+
+.analysis-tag.st-depth-1 {
+    opacity: 0.8 !important;
+    /* Layout: Keep original dimensions */
+    color: transparent !important;
+    /* Dot at Center */
+    clip-path: circle(3px at center);
+
+    transform: translateY(10px) scale(1);
+    filter: none;
+    pointer-events: auto !important;
+    z-index: 50 !important;
+    cursor: help;
+}
+
+/* Parent Fading Out */
+.analysis-tag.st-fade-out {
+    opacity: 0 !important;
+    transform: translateY(-8px) scale(0.95);
+    filter: blur(2px);
+}
+
+/* Children Fading In - Expand from Center */
+.analysis-tag.st-fade-in,
+.analysis-connector.st-fade-in {
+    opacity: 1 !important;
+    transform: translateY(0) scale(1);
+    filter: none;
+
+    /* Animate clip-path to reveal full label from center */
+    clip-path: circle(150% at center) !important;
+    /* Expansion animation */
+
+    color: white !important;
+    pointer-events: auto !important;
+    z-index: 100 !important;
+    cursor: default;
+}
+
+/* Verb -> Red Background & Text */
+.analysis-focus [data-analysis="v"],
+.analysis-focus [data-analysis="verb"] {
+    background-color: var(--an-color-verb-bg);
+    color: var(--an-color-verb-text) !important;
+    font-weight: 500;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Object -> Underline Shadow */
+.analysis-focus [data-analysis="o"],
+.analysis-focus [data-analysis="object"] {
+    box-shadow: 0 2px 0 0 var(--an-color-object-shadow);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Indirect Object -> Green Underline Shadow */
+.analysis-focus [data-analysis="io"],
+.analysis-focus [data-analysis="indirect-object"] {
+    box-shadow: 0 2px 0 0 var(--an-color-io-shadow);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Connective -> Dotted Underline */
+.analysis-focus [data-analysis="con"],
+.analysis-focus [data-analysis="connective"] {
+    color: var(--an-color-conn-text) !important;
+    font-weight: 500;
+    font-size: 0.9em;
+    /* text-decoration: underline dotted var(--an-color-conn-text); removed per request */
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Relative Clause -> Dashed Box */
+.analysis-focus [data-analysis="rc"],
+.analysis-focus [data-analysis="rel-clause"] {
+    background-color: var(--an-color-rc-bg);
+    outline: 1px dashed var(--an-color-rc-border);
+    border-radius: 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Passive -> Wavy Underline */
+.analysis-focus [data-analysis="pas"],
+.analysis-focus [data-analysis="passive"] {
+    font-style: italic;
+    text-decoration: underline wavy var(--an-color-passive-deco);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Prepositional Phrase -> Light Text */
+.analysis-focus [data-analysis="pp"],
+.analysis-focus [data-analysis="prep-phrase"] {
+    color: var(--an-color-pp-text);
+    border-bottom: 1px dotted var(--an-color-pp-border);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Complement -> Purple Background */
+.analysis-focus [data-analysis="cmp"],
+.analysis-focus [data-analysis="complement"] {
+    background-color: var(--an-color-cmp-bg);
+    color: var(--an-color-cmp-text) !important;
+    font-weight: 500;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Adverbial -> Blue Underline */
+.analysis-focus [data-analysis="adv"],
+.analysis-focus [data-analysis="adverbial"] {
+    color: var(--an-color-adv-text);
+    border-bottom: 2px solid var(--an-color-adv-border);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Appositive -> Cyan Box */
+.analysis-focus [data-analysis="app"],
+.analysis-focus [data-analysis="appositive"] {
+    background-color: var(--an-color-app-bg);
+    border: 1px dashed var(--an-color-app-border);
+    border-radius: 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Infinitive -> Pink Dotted Underline */
+.analysis-focus [data-analysis="inf"],
+.analysis-focus [data-analysis="infinitive"] {
+    color: var(--an-color-inf-text) !important;
+    text-decoration: underline dotted var(--an-color-inf-deco);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Gerund -> Pink Background */
+.analysis-focus [data-analysis="ger"],
+.analysis-focus [data-analysis="gerund"] {
+    background-color: var(--an-color-ger-bg);
+    color: var(--an-color-ger-text) !important;
+    font-weight: 500;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Participle -> Rose Underline */
+.analysis-focus [data-analysis="ptc"],
+.analysis-focus [data-analysis="participle"] {
+    color: var(--an-color-ptc-text) !important;
+    text-decoration: underline wavy var(--an-color-ptc-deco);
+    font-style: italic;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* --- 5. Compatibility --- */
+/* Override target-word styles when sentence analysis is active */
+.analysis-focus .target-word,
+.s-token.analysis-focus .target-word {
+    color: inherit !important;
+    border-bottom: none !important;
+    font-weight: inherit !important;
+    cursor: inherit;
+}
+
+/* Also reset the golden soul pin (history indicator) */
+.analysis-focus .target-word[data-has-history="true"]::after {
+    display: none;
+}

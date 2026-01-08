@@ -1,0 +1,52 @@
+/**
+ * AnnotatedText 组件 (递归渲染器)
+ * 
+ * 职责: 将 AnnotationEngine 生成的分析树 (Analysis Tree) 渲染为 HTML 结构。
+ * 
+ * 渲染策略:
+ * - **Recursion (递归)**: 使用 <Astro.self /> 自引用来处理无限嵌套的节点结构 (Paragraph -> Sentence -> Analysis -> Word -> Text)。
+ * - **Semantic Attributes (语义化属性)**:
+ *   - `data-sid`: 标记句子 ID，用于 FocusManager 的点击/悬停交互。
+ *   - `data-analysis`: 标记语法角色 (如 's', 'v')，用于 TagLayout 计算位置和 CSS 样式挂钩。
+ *   - `data-word`: 标记目标词汇 (Lemma)，用于 HistoricEchoes 和 Highlighting。
+ */
+import type { RenderNode } from '../../lib/analysis/AnnotationEngine';
+
+interface Props {
+    nodes: RenderNode[];
+}
+
+const { nodes } = Astro.props;
+---
+
+{nodes && nodes.map((node) => {
+    if (node.type === 'text') {
+        return node.content;
+    }
+    
+    if (node.type === 'sentence') {
+        return (
+            <span class="s-token" data-sid={node.sid}>
+                <Astro.self nodes={node.children} />
+            </span>
+        );
+    }
+    
+    if (node.type === 'analysis') {
+        return (
+            <span data-analysis={node.role}>
+                <Astro.self nodes={node.children} />
+            </span>
+        );
+    }
+    
+    if (node.type === 'word') {
+        return (
+            <span class="target-word" data-word={node.lemma}>
+                <Astro.self nodes={node.children} />
+            </span>
+        );
+    }
+    
+    return null;
+})}

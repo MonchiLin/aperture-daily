@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import Modal from './ui/Modal';
 import { HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
-import { ROLE_LIST } from '../lib/structure/definitions';
+import { RULE_LIST } from '../lib/analysis/GrammarRules';
 
 export default function HelpPanel() {
     const [open, setOpen] = useState(false);
     const [tab, setTab] = useState<'legend' | 'guide'>('legend');
-
-    // import { ROLE_LIST } from '../lib/structure/definitions';
 
     // Group roles for display (Optional: or just use ROLE_LIST flat)
     // The previous hardcoded list had categories. 
@@ -17,7 +15,7 @@ export default function HelpPanel() {
     // The UI loop (lines 95+) iterates `symbols`.
     // Let's map definitions to the shape expected by UI if different, or just use definitions.
 
-    const symbols = ROLE_LIST.map(def => ({
+    const symbols = RULE_LIST.map(def => ({
         key: def.label,
         name: def.name,
         desc: def.desc,

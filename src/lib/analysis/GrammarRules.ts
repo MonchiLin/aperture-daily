@@ -1,46 +1,46 @@
 /**
- * Centralized Definitions for Sentence Structure Grammar Roles.
- * Shared between Backend (Injection), Frontend (Positioning), and UI (HelpPanel).
+ * 句子结构语法规则集中定义 (Centralized Definitions)
  * 
- * NOTE TO AI AGENTS:
- * This file is the single source of truth for the linguistic analysis system ("Sentence Component Analysis").
- * It controls:
- * 1. Visual Rendering (Color, Label Text)
- * 2. DOM Nesting Logic (via 'priority')
- * 3. Interactive Behavior (via 'noLabel')
+ * note: 此文件是 "Sentence Component Analysis" (句子成分分析) 系统的单一数据源 (SSOT)。
+ * 它是连接 Backend (注入), Frontend (布局计算), 和 UI (帮助面板) 的桥梁。
+ * 
+ * 系统控制范围:
+ * 1. 视觉渲染 (颜色, 标签文本)
+ * 2. DOM 嵌套逻辑 (通过 'priority' 属性)
+ * 3. 交互行为 (通过 'noLabel' 属性)
  */
 
-export type StructureRole =
-    | 's' | 'v' | 'o' | 'io' | 'cmp' // Core
-    | 'rc' | 'pp' | 'adv' | 'app'    // Clauses & Phrases
-    | 'pas' | 'con'                  // Voice & Connectives
-    | 'inf' | 'ger' | 'ptc';         // Non-finite
+export type AnalysisRole =
+    | 's' | 'v' | 'o' | 'io' | 'cmp' // 核心成分 Core
+    | 'rc' | 'pp' | 'adv' | 'app'    // 从句与短语 Clauses & Phrases
+    | 'pas' | 'con'                  // 语态与连接 Voice & Connectives
+    | 'inf' | 'ger' | 'ptc';         // 非谓语动词 Non-finite
 
 /**
- * Definition of a Grammar Role.
+ * 语法规则定义接口
  * 
- * @property id       - Unique identifier (e.g., 's', 'v').
- * @property label    - Short abbreviation used in floating labels (e.g., 'S').
- * @property name     - Full human-readable name, bilingual (e.g., '主语 (Subject)').
- * @property desc     - Educational description shown in the Help/Legend panel.
- * @property example  - Example sentence for the legend.
- * @property target   - The specific part of the example sentence that highlights this role.
- * @property color    - Hex code for the label background and text highlight.
+ * @property id       - 唯一标识符 (例如 's', 'v')
+ * @property label    - 悬浮标签上显示的简写 (例如 'S')
+ * @property name     - 人类可读的全名 (双语, 用于帮助面板)
+ * @property desc     -在此处显示的教育性描述
+ * @property example  - 图例中的示例句子
+ * @property target   - 示例句子中高亮显示的目标部分
+ * @property color    - 标签背景色和文本高亮色的 Hex 代码
  * 
- * @property priority - NESTING CONTROL (Critical):
- *                      - Lower number = *Higher* Priority = *Outer* Wrapper.
- *                      - Elements with priority 1 will wrap elements with priority 10.
- *                      - Example: 'rc' (0) wraps 's' (1). 'pas' (1) wraps 'v' (2).
- *                      - Conflict Resolution: If ranges are identical, the Lower Priority Number wraps the Higher Priority Number.
+ * @property priority - 嵌套优先级控制 (NESTING CONTROL):
+ *                      - 数值越小 = 优先级越高 = 作为 *外层* 包裹容器 (Outer Wrapper)。
+ *                      - 优先级 1 的元素会包裹优先级 10 的元素。
+ *                      - 例如: 'rc' (0) 包裹 's' (1)。 'pas' (1) 包裹 'v' (2)。
+ *                      - 冲突解决: 如果范围完全相同，优先级数值更小 (更高优先级) 的元素会在外层。
  * 
- * @property noLabel  - RENDERING CONTROL:
- *                      - If true, the `labelPositioner` system will NOT generate a floating tag for this role.
- *                      - The text will still be accessible in the DOM and may be colored/underlined,
- *                        but visual clutter constitutes by floating labels will be suppressed.
- *                      - Useful for Connectives or particles where only color is needed.
+ * @property noLabel  - 渲染控制 (RENDERING CONTROL):
+ *                      - 如果为 true，TagLayout 系统将 *不会* 为此角色生成悬浮标签。
+ *                      - 文本仍然会在 DOM 中被标记，并且可能有颜色/下划线，
+ *                        但为了防止视觉混乱，会隐藏悬浮标签。
+ *                      - 适用于连接词 (Connectives) 或仅需颜色提示的虚词。
  */
-export interface GrammarRoleDef {
-    id: StructureRole;
+export interface GrammarRuleDef {
+    id: AnalysisRole;
     label: string;
     name: string;
     desc: string;
@@ -51,7 +51,7 @@ export interface GrammarRoleDef {
     noLabel?: boolean;
 }
 
-export const GRAMMAR_ROLES: Record<StructureRole, GrammarRoleDef> = {
+export const GRAMMAR_RULES: Record<AnalysisRole, GrammarRuleDef> = {
     // --- 核心成分 (Core) ---
     's': {
         id: 's', label: 'S', name: '主语 (Subject)',
@@ -164,4 +164,4 @@ export const GRAMMAR_ROLES: Record<StructureRole, GrammarRoleDef> = {
 };
 
 // Helper List for iteration (preserves defining order)
-export const ROLE_LIST = Object.values(GRAMMAR_ROLES);
+export const RULE_LIST = Object.values(GRAMMAR_RULES);

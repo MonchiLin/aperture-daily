@@ -28,10 +28,12 @@ const PlaybackSpeedControlWrapper = () => {
 };
 
 export const Default: Story = {
+    args: { currentSpeed: 1, onSpeedChange: () => { } },
     render: () => <PlaybackSpeedControlWrapper />,
 };
 
 export const StaticStates: Story = {
+    args: { currentSpeed: 1, onSpeedChange: () => { } },
     render: () => (
         <div className="flex gap-8">
             <PlaybackSpeedControl currentSpeed={1} onSpeedChange={() => { }} />
