@@ -3,7 +3,7 @@
  * UnifiedText - 统一标注渲染组件
  * 
  * 渲染 UnifiedAnnotationRenderer 生成的 AST
- * 输出带有 data-sid 和 data-structure 属性的 span 元素
+ * 输出带有 data-sid, data-structure, data-word 属性的 span 元素
  */
 import type { RenderNode } from '../../lib/structure/UnifiedAnnotationRenderer';
 
@@ -30,6 +30,14 @@ const { nodes } = Astro.props;
     if (node.type === 'structure') {
         return (
             <span data-structure={node.role}>
+                <Astro.self nodes={node.children} />
+            </span>
+        );
+    }
+    
+    if (node.type === 'word') {
+        return (
+            <span class="target-word" data-word={node.lemma}>
                 <Astro.self nodes={node.children} />
             </span>
         );

@@ -87,10 +87,7 @@ if (row) {
     Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
 }
 
-// 目标单词列表
-const targetWords = sidebarWords.map((w: any) => w.word.toLowerCase());
-
-// 构建单词匹配配置
+// 构建单词匹配配置 (用于 SSR 单词高亮)
 const wordMatchConfigs = buildWordMatchConfigs(wordDefinitions);
 
 // 获取所有文章内容用于 AudioPlayer
@@ -155,11 +152,12 @@ const isAdmin = !!adminKey;
                             {sortedArticles.map((article: any) => {
                                 const stats = getReadingStats(article.content);
                                 
-                                // [Unified] Build AST with paragraphs directly
+                                // [Unified] Build AST with paragraphs and word highlighting
                                 const paragraphs = buildUnifiedAST(
                                     article.content || '',
                                     article.sentences || [],
-                                    article.structure || []
+                                    article.structure || [],
+                                    wordMatchConfigs
                                 );
 
                                 return (
@@ -332,6 +330,7 @@ const isAdmin = !!adminKey;
     import { initLevelSwitcher } from '../../lib/features/levelSwitcher';
     import { initReadTracker, trackReading } from '../../lib/features/readTracker';
     import { initStructureInteraction } from '../../lib/features/structure/interaction';
+    import { setActiveWord } from '../../lib/store/interactionStore';
 
     function initArticlePage() {
         // 初始化难度切换
@@ -346,6 +345,43 @@ const isAdmin = !!adminKey;
         });
     }
 
+    /**
+     * 初始化目标单词交互
+     * 为 SSR 渲染的 .target-word 元素添加鼠标事件
+     */
+    function initTargetWordInteraction() {
+        const words = document.querySelectorAll('.target-word');
+        
+        words.forEach((el) => {
+            const word = el.getAttribute('data-word');
+            if (!word) return;
+            
+            el.addEventListener('mouseenter', () => {
+                setActiveWord(word);
+                // Dispatch event for MemorySpirit popover positioning
+                window.dispatchEvent(new CustomEvent('word-hover', { 
+                    detail: { word, target: el } 
+                }));
+            });
+            
+            el.addEventListener('mouseleave', () => {
+                setActiveWord(null);
+                // Clear popover
+                window.dispatchEvent(new CustomEvent('word-hover', { 
+                    detail: { word: null, target: null } 
+                }));
+            });
+            
+            // 点击朗读
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const u = new SpeechSynthesisUtterance(word);
+                u.lang = 'en-US';
+                speechSynthesis.speak(u);
+            });
+        });
+    }
+
     // 支持普通页面加载和 View Transitions
     document.addEventListener('DOMContentLoaded', initArticlePage);
     document.addEventListener('astro:page-load', initArticlePage);
@@ -353,4 +389,8 @@ const isAdmin = !!adminKey;
     // Structure Interaction
     document.addEventListener('DOMContentLoaded', initStructureInteraction);
     document.addEventListener('astro:page-load', initStructureInteraction);
+
+    // Target Word Interaction
+    document.addEventListener('DOMContentLoaded', initTargetWordInteraction);
+    document.addEventListener('astro:page-load', initTargetWordInteraction);
 </script>
