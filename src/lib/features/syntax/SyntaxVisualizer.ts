@@ -11,7 +11,7 @@
  * 3. Plan (逻辑计算): 在内存中计算所有标签的最终坐标 (Skyline 算法/堆叠逻辑)。
  * 4. Paint (写入): 批量应用最终坐标并渲染连接线。
  */
-import { type AnalysisRole, GRAMMAR_RULES } from '../../analysis/GrammarRules';
+import { type AnalysisRole, SYNTAX_DEFINITIONS } from './SyntaxDefinitions';
 
 // --- Configuration ---
 const CONFIG = {
@@ -38,12 +38,12 @@ interface LabelItem {
     hasConnector: boolean;
 }
 
-export function clearLabels(): void {
+export function clearSyntaxVisuals(): void {
     document.querySelectorAll('.analysis-tag, .analysis-connector').forEach(el => el.remove());
 }
 
-export function layoutTags(container: HTMLElement): void {
-    clearLabels();
+export function visualizeSyntax(container: HTMLElement): void {
+    clearSyntaxVisuals();
 
     // 1. Selection & Filtering - Find analysis elements inside focused sentences
     const rawSpans = Array.from(container.querySelectorAll('.analysis-focus [data-analysis]')) as HTMLElement[];
@@ -69,7 +69,7 @@ export function layoutTags(container: HTMLElement): void {
 function measureSpans(spans: HTMLElement[], containerRect: DOMRect): LabelItem[] {
     return spans.map(span => {
         const role = span.dataset.analysis as AnalysisRole;
-        const def = GRAMMAR_RULES[role];
+        const def = SYNTAX_DEFINITIONS[role];
         if (def?.noLabel) return null;
 
         // Anchor to first line

@@ -1,3 +1,4 @@
+---
 /**
  * AnnotatedText 组件 (递归渲染器)
  * 
@@ -10,7 +11,7 @@
  *   - `data-analysis`: 标记语法角色 (如 's', 'v')，用于 TagLayout 计算位置和 CSS 样式挂钩。
  *   - `data-word`: 标记目标词汇 (Lemma)，用于 HistoricEchoes 和 Highlighting。
  */
-import type { RenderNode } from '../../lib/analysis/AnnotationEngine';
+import type { RenderNode } from '../../lib/features/syntax/AnnotationEngine';
 
 interface Props {
     nodes: RenderNode[];

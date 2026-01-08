@@ -14,7 +14,7 @@ interface TetherPath {
 }
 
 export default function VisualTether() {
-    const { activeWord, currentLevel, memoryData } = useStore(interactionStore);
+    const { activeWord, currentLevel, echoData } = useStore(interactionStore);
     const [paths, setPaths] = useState<TetherPath[]>([]);
     const svgRef = useRef<SVGSVGElement>(null);
 
@@ -94,7 +94,7 @@ export default function VisualTether() {
             window.removeEventListener('resize', handleScroll);
             clearTimeout(timer);
         };
-    }, [activeWord, currentLevel, memoryData]);
+    }, [activeWord, currentLevel, echoData]);
 
     if (paths.length === 0) return null;
 

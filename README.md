@@ -2,6 +2,22 @@
 
 简要索引：AGENT.md 只保留大纲，细节在代码与注释中。
 
+## 架构概览 (Four Pillars)
+
+文章详情页围绕 **四大功能支柱** 组织代码：
+
+| 支柱 | 目录 | 功能 |
+|------|------|------|
+| **Reading** | `src/lib/features/reading/` | 难度切换 (`levelSwitcher.ts`)、阅读追踪 (`readTracker.ts`) |
+| **Syntax** | `src/lib/features/syntax/` | 语法分析控制器 (`SyntaxController.ts`)、可视化 (`SyntaxVisualizer.ts`)、语法定义 (`SyntaxDefinitions.ts`)、注解引擎 (`AnnotationEngine.ts`) |
+| **Echoes** | `src/lib/features/echoes/` | 历史回响交互 (`hoverController.ts`) - 悬停目标词汇时显示跨文章语境 |
+| **Audio** | `src/lib/features/audio/` | TTS 预加载 (`audioPreloader.ts`)、播放器 Hook (`useAudioPlayer.ts`)、Edge TTS 客户端 (`edge-client.ts`) |
+
+### 命名约定
+- **API**: `/api/echoes/batch` (原 `/api/context/batch`)
+- **数据库**: `syntax_json` (原 `structure_json`)
+- **前端类型**: `syntax` (原 `structure`)、`echoes` (原 `memories`)
+
 ## 快速开始 (Split Stack)
 
 ### 1. 后端 Backend (Elysia + SQLite)

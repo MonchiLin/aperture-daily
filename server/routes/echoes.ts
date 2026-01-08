@@ -11,7 +11,7 @@ interface MemoryEntry {
     timeAgo: string;
 }
 
-export const contextRoutes = new Elysia({ prefix: '/api/context' })
+export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
     .post('/batch', async ({ body }: { body: { words?: string[], article_id?: string, exclude_article_id?: string } }) => {
         const { words, article_id, exclude_article_id } = body;
 
@@ -28,12 +28,12 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
             targets = words.map(w => w.trim().toLowerCase()).filter(w => w.length > 1);
         }
 
-        if (targets.length === 0) return { memories: {} };
+        if (targets.length === 0) return { echoes: {} };
 
         // Use article_id as exclude if not explicitly provided
         const excludeId = exclude_article_id || article_id;
 
-        console.log(`[Context Batch] Checking ${targets.length} words. Exclude: ${excludeId}`);
+        console.log(`[Echoes Batch] Checking ${targets.length} words. Exclude: ${excludeId}`);
 
 
         // Batch query: Find latest memory for each word
@@ -131,15 +131,15 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
             task_date: string;
         }[];
 
-        const memories: Record<string, MemoryEntry[]> = {};
+        const echoes: Record<string, MemoryEntry[]> = {};
 
         for (const row of results) {
-            if (!memories[row.word]) memories[row.word] = [];
+            if (!echoes[row.word]) echoes[row.word] = [];
 
             // Allow up to 10 echoes per word for the UI to decide display
-            if ((memories[row.word]?.length || 0) >= 10) continue;
+            if ((echoes[row.word]?.length || 0) >= 10) continue;
 
-            memories[row.word]?.push({
+            echoes[row.word]?.push({
                 snippet: row.context_snippet,
                 articleTitle: row.title,
                 articleId: row.article_id,
@@ -148,8 +148,8 @@ export const contextRoutes = new Elysia({ prefix: '/api/context' })
             });
         }
 
-        console.log(`[Context Batch] Found memories for ${Object.keys(memories).length} words.`);
-        return { memories };
+        console.log(`[Echoes Batch] Found echoes for ${Object.keys(echoes).length} words.`);
+        return { echoes };
     }, {
         body: t.Object({
             words: t.Optional(t.Array(t.String())),

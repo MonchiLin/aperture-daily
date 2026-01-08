@@ -16,7 +16,7 @@ import { profilesRoutes } from './routes/profiles';
 import { highlightsRoutes } from './routes/highlights';
 import { adminRoutes } from './routes/admin';
 import { cronRoutes } from './routes/cron';
-import { contextRoutes } from './routes/context';
+import { echoesRoutes } from './routes/echoes';
 import { ttsRoutes } from './routes/tts';
 import { env } from './config/env';
 
@@ -108,7 +108,7 @@ const app = new Elysia()
     .use(highlightsRoutes)
     .use(adminRoutes(queue))
     .use(cronRoutes(queue))
-    .use(contextRoutes)
+    .use(echoesRoutes)
     .use(ttsRoutes)
     .listen(Number(process.env.PORT) || 3000);
 

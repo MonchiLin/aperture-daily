@@ -10,8 +10,8 @@
  *   - /article/{id}/L3 → L3 (算手动选择)
  */
 
-import { setLevel as storeSetLevel } from '../store/interactionStore';
-import { settingsStore } from '../store/settingsStore';
+import { setLevel as storeSetLevel } from '../../store/interactionStore';
+import { settingsStore } from '../../store/settingsStore';
 
 /** Storage key prefix for per-article level */
 const ARTICLE_LEVEL_PREFIX = 'aperture-daily_article_';

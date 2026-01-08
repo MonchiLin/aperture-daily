@@ -17,7 +17,7 @@ import { interactionStore, activeInteraction } from '../lib/store/interactionSto
 export default function HistoricalEchoes() {
     // 1. Subscribe to Store (Source of Truth)
     const interaction = useStore(activeInteraction);
-    const { memoryData } = useStore(interactionStore);
+    const { echoData } = useStore(interactionStore);
 
     // 2. Client-side only
     const [isClient, setIsClient] = useState(false);
@@ -26,7 +26,7 @@ export default function HistoricalEchoes() {
     if (!isClient) return null;
 
     // Check if we have valid data in the store
-    const isActive = !!interaction?.current && !!memoryData && memoryData.length > 0;
+    const isActive = !!interaction?.current && !!echoData && echoData.length > 0;
     const rect = interaction?.current?.rect;
 
     // Portal Target
@@ -88,13 +88,13 @@ export default function HistoricalEchoes() {
                                                 </span>
                                             </div>
                                             <span className="text-[10px] font-mono font-medium text-stone-400/80 tracking-tighter">
-                                                {memoryData[0]?.date}
+                                                {echoData[0]?.date}
                                             </span>
                                         </div>
 
                                         {/* Content List */}
                                         <div className="space-y-6">
-                                            {memoryData.slice(0, 3).map((m: any, idx: number) => (
+                                            {echoData.slice(0, 3).map((m: any, idx: number) => (
                                                 <div key={idx} className={idx > 0 ? "pt-5 border-t border-stone-200/60" : ""}>
                                                     {/* Quote */}
                                                     <div className="relative mb-3.5">
@@ -128,10 +128,10 @@ export default function HistoricalEchoes() {
                                         </div>
 
                                         {/* Overflow Indicator */}
-                                        {memoryData.length > 3 && (
+                                        {echoData.length > 3 && (
                                             <div className="mt-6 pt-3.5 border-t-2 border-dotted border-stone-200 flex items-center justify-center gap-2">
                                                 <span className="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded">
-                                                    + {memoryData.length - 3}
+                                                    + {echoData.length - 3}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-stone-300 uppercase tracking-[0.2em]">
                                                     Deep Memories Remaining

@@ -11,7 +11,7 @@
  * </span>
  */
 
-import type { AnalysisRole } from './GrammarRules';
+import type { AnalysisRole } from './SyntaxDefinitions';
 
 // ============ Types ============
 

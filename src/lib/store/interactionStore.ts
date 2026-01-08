@@ -1,7 +1,7 @@
 import { map } from 'nanostores';
 
 
-export type MemoryData = {
+export type EchoData = {
     snippet: string;
     articleTitle: string;
     articleId: string;
@@ -12,7 +12,7 @@ export type MemoryData = {
 export type InteractionState = {
     activeWord: string | null;  // currently hovered word (lowercase)
     currentLevel: number;       // current Difficulty Level (1, 2, 3)
-    memoryData: MemoryData;     // semantic memory context
+    echoData: EchoData;         // semantic memory context
     hoveredSentenceIndex: number | null; // synced hover state from audio playlist
 }
 
@@ -29,10 +29,10 @@ export const activeInteraction = map<{ current: InteractionEvent }>({ current: n
 // Holds the memory data for the current article.
 // Not exported as an atom to avoid react re-renders on init, 
 // but used internally to derive state.
-let memoriesRegistry: Record<string, any> = {};
+let echoesRegistry: Record<string, any> = {};
 
-export const initMemories = (memories: Record<string, any>) => {
-    memoriesRegistry = memories || {};
+export const initEchoes = (echoes: Record<string, any>) => {
+    echoesRegistry = echoes || {};
 };
 
 export const setInteraction = (word: string, rect: { top: number; left: number; width: number; height: number }) => {
@@ -54,9 +54,9 @@ export const setInteraction = (word: string, rect: { top: number; left: number; 
         interactionStore.setKey('activeWord', normalized);
 
         // Look up valid memory data
-        const mems = memoriesRegistry[normalized];
+        const mems = echoesRegistry[normalized];
         if (mems && Array.isArray(mems) && mems.length > 0) {
-            interactionStore.setKey('memoryData', mems.map(m => ({
+            interactionStore.setKey('echoData', mems.map(m => ({
                 snippet: m.snippet,
                 articleTitle: m.articleTitle,
                 articleId: m.articleId,
@@ -64,7 +64,7 @@ export const setInteraction = (word: string, rect: { top: number; left: number; 
                 timeAgo: m.timeAgo || m.date
             })));
         } else {
-            interactionStore.setKey('memoryData', null);
+            interactionStore.setKey('echoData', null);
         }
     }
 };
@@ -74,16 +74,16 @@ export const clearInteraction = () => {
     // Optional: Clear activeWord too? 
     // Usually yes for hover.
     interactionStore.setKey('activeWord', null);
-    // interactionStore.setKey('memoryData', null); // Optional, maybe keep for fade out?
+    // interactionStore.setKey('echoData', null); // Optional, maybe keep for fade out?
 };
 
-// ... keep existing memoryData for compat during migration
-// eventually we might merge memoryData lookup into the component or a derived atom
+// ... keep existing echoData for compat during migration
+// eventually we might merge echoData lookup into the component or a derived atom
 
 export const interactionStore = map<InteractionState>({
     activeWord: null,
     currentLevel: 1,
-    memoryData: null,
+    echoData: null,
     hoveredSentenceIndex: null
 });
 
@@ -98,9 +98,9 @@ export const setActiveWord = (word: string | null) => {
 
     if (normalized) {
         // [Data-Driven] Also look up memory data for sidebar interactions
-        const mems = memoriesRegistry[normalized];
+        const mems = echoesRegistry[normalized];
         if (mems && Array.isArray(mems) && mems.length > 0) {
-            interactionStore.setKey('memoryData', mems.map(m => ({
+            interactionStore.setKey('echoData', mems.map(m => ({
                 snippet: m.snippet,
                 articleTitle: m.articleTitle,
                 articleId: m.articleId,
@@ -108,10 +108,10 @@ export const setActiveWord = (word: string | null) => {
                 timeAgo: m.timeAgo || m.date
             })));
         } else {
-            interactionStore.setKey('memoryData', null);
+            interactionStore.setKey('echoData', null);
         }
     } else {
-        interactionStore.setKey('memoryData', null);
+        interactionStore.setKey('echoData', null);
     }
 };
 

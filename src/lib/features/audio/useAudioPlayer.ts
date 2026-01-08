@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '@nanostores/react';
-import { audioState, setPlaybackRate, setVoice, togglePlay as storeTogglePlay } from '../lib/store/audioStore';
-import { getCachedAudio, getSentenceAudioOffset, getSentenceIndexAtTime, setPreloaderVoice } from '../lib/tts/audioPreloader';
+import { audioState, setPlaybackRate, setVoice, togglePlay as storeTogglePlay } from '../../store/audioStore';
+import { getCachedAudio, getSentenceAudioOffset, getSentenceIndexAtTime, setPreloaderVoice } from './audioPreloader';
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
 const VOICE_STORAGE_KEY = 'aperture-daily_voice_preference';

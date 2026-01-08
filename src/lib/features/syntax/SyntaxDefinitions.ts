@@ -39,7 +39,7 @@ export type AnalysisRole =
  *                        但为了防止视觉混乱，会隐藏悬浮标签。
  *                      - 适用于连接词 (Connectives) 或仅需颜色提示的虚词。
  */
-export interface GrammarRuleDef {
+export interface SyntaxRuleDef {
     id: AnalysisRole;
     label: string;
     name: string;
@@ -51,7 +51,7 @@ export interface GrammarRuleDef {
     noLabel?: boolean;
 }
 
-export const GRAMMAR_RULES: Record<AnalysisRole, GrammarRuleDef> = {
+export const SYNTAX_DEFINITIONS: Record<AnalysisRole, SyntaxRuleDef> = {
     // --- 核心成分 (Core) ---
     's': {
         id: 's', label: 'S', name: '主语 (Subject)',
@@ -164,4 +164,4 @@ export const GRAMMAR_RULES: Record<AnalysisRole, GrammarRuleDef> = {
 };
 
 // Helper List for iteration (preserves defining order)
-export const RULE_LIST = Object.values(GRAMMAR_RULES);
+export const RULE_LIST = Object.values(SYNTAX_DEFINITIONS);

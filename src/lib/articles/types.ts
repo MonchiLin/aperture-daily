@@ -32,7 +32,7 @@ export interface ArticleLevelContent {
     content: string;
     title?: string;
     difficulty_desc: string;
-    structure?: Array<{
+    syntax?: Array<{
         start: number;
         end: number;
         role: string;

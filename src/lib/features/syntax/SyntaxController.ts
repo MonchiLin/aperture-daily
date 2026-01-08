@@ -21,12 +21,12 @@
  * - **Idempotency**: 通过 `data-analysis-init` 属性防止重复初始化。
  */
 
-import { layoutTags, clearLabels } from './TagLayout';
+import { visualizeSyntax, clearSyntaxVisuals } from './SyntaxVisualizer';
 import { settingsStore } from '../../store/settingsStore';
 import { audioState } from '../../store/audioStore';
 import { interactionStore } from '../../store/interactionStore';
 
-export function initFocusManager() {
+export function initSyntaxController() {
     if (typeof document === 'undefined') return;
 
     const ATTR_INIT = 'data-analysis-init';
@@ -54,7 +54,7 @@ export function initFocusManager() {
         // Case A: Click OUTSIDE (Dismiss)
         if (!articleContent) {
             clearAllActive(CLASS_FOCUS);
-            clearLabels();
+            clearSyntaxVisuals();
             return;
         }
 
@@ -68,14 +68,14 @@ export function initFocusManager() {
             if (sid && levelContainer instanceof HTMLElement) {
                 // Strategy: Clear Everything -> Activate Target (Scoped)
                 clearAllActive(CLASS_FOCUS);
-                clearLabels();
+                clearSyntaxVisuals();
 
                 activateSentence(levelContainer, sid, CLASS_FOCUS);
 
                 // Position labels relative to the article content container
                 requestAnimationFrame(() => {
                     if (articleContent instanceof HTMLElement) {
-                        layoutTags(articleContent);
+                        visualizeSyntax(articleContent);
                     }
                 });
                 return;
@@ -84,47 +84,19 @@ export function initFocusManager() {
 
         // Case C: Clicked whitespace or non-token inside article (Dismiss)
         clearAllActive(CLASS_FOCUS);
-        clearLabels();
+        clearSyntaxVisuals();
     });
 
     // --- Keyboard Shortcuts ---
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             clearAllActive(CLASS_FOCUS);
-            clearLabels();
+            clearSyntaxVisuals();
         }
     });
 
     // --- Hover Delegation (Unified Highlight) ---
-    document.addEventListener('mouseover', (e) => {
-        const target = e.target;
-        if (target instanceof HTMLElement) {
-            const token = target.closest(SELECTOR_TOKEN);
-            if (token instanceof HTMLElement) {
-                const sid = token.dataset.sid;
-                const levelContainer = token.closest(SELECTOR_LEVEL);
-
-                if (sid && levelContainer instanceof HTMLElement) {
-                    toggleSentenceClass(levelContainer, sid, CLASS_HOVER, true);
-                }
-            }
-        }
-    });
-
-    document.addEventListener('mouseout', (e) => {
-        const target = e.target;
-        if (target instanceof HTMLElement) {
-            const token = target.closest(SELECTOR_TOKEN);
-            if (token instanceof HTMLElement) {
-                const sid = token.dataset.sid;
-                const levelContainer = token.closest(SELECTOR_LEVEL);
-
-                if (sid && levelContainer instanceof HTMLElement) {
-                    toggleSentenceClass(levelContainer, sid, CLASS_HOVER, false);
-                }
-            }
-        }
-    });
+    // ...
 
     // --- Resize Handling (Robustness) ---
     let resizeTimer: number;
@@ -136,7 +108,7 @@ export function initFocusManager() {
             if (activeElements.length > 0) {
                 const articleContent = document.querySelector(SELECTOR_CONTAINER) as HTMLElement;
                 if (articleContent) {
-                    layoutTags(articleContent);
+                    visualizeSyntax(articleContent);
                 }
             }
         }, 100); // Debounce 100ms

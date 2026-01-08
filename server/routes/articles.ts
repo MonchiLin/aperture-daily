@@ -16,10 +16,9 @@ export const articlesRoutes = new Elysia({ prefix: '/api/articles' })
             task = taskRows.length > 0 ? taskRows[0] : null;
         }
 
-        // [Normalization] Fetch variants and vocab from new tables
         // 1. Variants
         const variants = await db.all(sql`
-            SELECT level, level_label, title, content, structure_json, sentences_json 
+            SELECT level, level_label, title, content, syntax_json, sentences_json 
             FROM article_variants 
             WHERE article_id = ${id} 
             ORDER BY level ASC
@@ -65,7 +64,7 @@ export const articlesRoutes = new Elysia({ prefix: '/api/articles' })
                         level_label: v.level_label,
                         title: v.title,
                         content: v.content,
-                        structure: v.structure_json ? JSON.parse(v.structure_json) : [],
+                        syntax: v.syntax_json ? JSON.parse(v.syntax_json) : [],
                         sentences: v.sentences_json ? JSON.parse(v.sentences_json) : []
                     })),
                     word_definitions: wordDefinitions

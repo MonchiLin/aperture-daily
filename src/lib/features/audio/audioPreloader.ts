@@ -98,13 +98,13 @@ export async function preloadArticleAudio(
                 const SEARCH_WINDOW = 500;
 
                 // Filter boundaries to those reasonably close to the target text offset
-                const candidates = boundaries.filter(b => Math.abs(b.textOffset - sentenceStartChar) < SEARCH_WINDOW);
+                const candidates = boundaries.filter((b: WordBoundary) => Math.abs(b.textOffset - sentenceStartChar) < SEARCH_WINDOW);
 
                 // If no local candidates (unlikely), fallback to all boundaries or previous time
                 const searchSet = candidates.length > 0 ? candidates : boundaries;
 
                 // Find the word boundary that is closest to the sentence start
-                const matchedStats = searchSet.reduce((best, current) => {
+                const matchedStats = searchSet.reduce((best: { dist: number; time: number }, current: WordBoundary) => {
                     const dist = Math.abs(current.textOffset - sentenceStartChar);
                     if (dist < best.dist) {
                         return { dist, time: current.audioOffset };

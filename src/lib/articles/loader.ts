@@ -23,7 +23,7 @@ export interface ArticleData {
     sortedArticles: ArticleLevelContent[];
     title: string;
     readLevels: number;
-    memories: Record<string, unknown>;
+    echoes: Record<string, unknown>;
 }
 
 export interface WordMatchConfig {
@@ -36,14 +36,14 @@ export interface WordMatchConfig {
  */
 export async function loadArticle(id: string): Promise<ArticleData | null> {
     try {
-        // 并行请求文章数据和 memories
-        const [articleRes, memoriesRes] = await Promise.all([
+        // 并行请求文章数据和 echoes
+        const [articleRes, echoesRes] = await Promise.all([
             apiFetch<ArticleRow>(`/api/articles/${id}`),
-            apiFetch<{ memories?: Record<string, unknown> }>('/api/context/batch', {
+            apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ article_id: id })
-            }).catch(() => ({ memories: {} }))
+            }).catch(() => ({ echoes: {} }))
         ]);
 
         const row = articleRes;
@@ -65,7 +65,7 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
         const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
         const title = row?.articles?.title || "Article";
         const readLevels = row?.articles?.read_levels || 0;
-        const memories = memoriesRes?.memories || {};
+        const echoes = echoesRes?.echoes || {};
 
         return {
             row,
@@ -77,7 +77,7 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
             sortedArticles,
             title,
             readLevels,
-            memories,
+            echoes,
         };
     } catch (e: any) {
         console.error("[SSR] Failed to fetch article:", e.message);
@@ -101,21 +101,21 @@ export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMa
 /**
  * @deprecated Use loadArticle() which includes memories via parallel fetch
  */
-export async function fetchMemories(
+export async function fetchEchoes(
     _targetWords: string[],
     articleId: string,
     _adminKey: string | undefined
 ): Promise<Record<string, unknown>> {
-    console.warn('[DEPRECATED] fetchMemories: Use loadArticle() instead');
+    console.warn('[DEPRECATED] fetchEchoes: Use loadArticle() instead');
     try {
-        const data = await apiFetch<{ memories?: Record<string, unknown> }>('/api/context/batch', {
+        const data = await apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ article_id: articleId })
         });
-        return data?.memories || {};
+        return data?.echoes || {};
     } catch (e) {
-        console.error("Failed to fetch memories:", e);
+        console.error("Failed to fetch echoes:", e);
         return {};
     }
 }

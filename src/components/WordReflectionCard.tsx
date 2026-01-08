@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import { interactionStore, setActiveWord } from '../lib/store/interactionStore';
 import { audioState } from '../lib/store/audioStore';
 import { useEffect, useState } from 'react';
-import { EdgeTTSClient } from '../lib/tts/edge-client';
+import { EdgeTTSClient } from '../lib/features/audio/edge-client';
 
 interface Definition {
     pos: string;

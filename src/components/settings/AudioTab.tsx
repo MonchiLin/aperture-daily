@@ -2,7 +2,7 @@
  * AudioTab - 音频设置标签页
  */
 import { clsx } from 'clsx';
-import { EdgeTTSClient } from '../../lib/tts/edge-client';
+import { EdgeTTSClient } from '../../lib/features/audio/edge-client';
 
 export interface VoiceOption {
     id: string;

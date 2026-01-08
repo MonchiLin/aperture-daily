@@ -3,7 +3,7 @@
  * 
  * 追踪用户阅读进度并标记为已读
  */
-import { apiFetch } from '../../lib/api';
+import { apiFetch } from '../../api';
 
 let readTimer: number | undefined;
 

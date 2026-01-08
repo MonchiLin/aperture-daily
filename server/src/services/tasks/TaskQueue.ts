@@ -422,7 +422,7 @@ export class TaskQueue {
                     levelLabel: v.level_name || `Level ${v.level}`,
                     title: output.output.title,
                     content: v.content,
-                    structureJson: JSON.stringify(v.structure || []),
+                    syntaxJson: JSON.stringify(v.structure || []),
                     sentencesJson: JSON.stringify(v.sentences || [])
                 });
             }

@@ -1,4 +1,4 @@
-import { apiFetch } from '../api';
+import { apiFetch } from '../../api';
 import type { TTSResult, WordBoundary } from './types';
 
 export class EdgeTTSClient {

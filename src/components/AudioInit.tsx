@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import { audioState, setPlaylist } from '../lib/store/audioStore';
 import { interactionStore } from '../lib/store/interactionStore';
-import { preloadArticleAudio, clearCache, setPreloaderVoice } from '../lib/tts/audioPreloader';
+import { preloadArticleAudio, clearCache, setPreloaderVoice } from '../lib/features/audio/audioPreloader';
 
 interface SentenceData {
     id: number;

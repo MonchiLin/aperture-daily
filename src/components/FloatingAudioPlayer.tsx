@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VinylRecord } from './VinylRecord';
-import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useAudioPlayer } from '../lib/features/audio/useAudioPlayer';
 import { AudioPlaylist } from './AudioPlaylist';
 import { PlaybackSpeedControl } from './PlaybackSpeedControl';
 

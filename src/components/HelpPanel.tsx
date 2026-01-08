@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Modal from './ui/Modal';
 import { HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
-import { RULE_LIST } from '../lib/analysis/GrammarRules';
+import { RULE_LIST } from '../lib/features/syntax/SyntaxDefinitions';
 
 export default function HelpPanel() {
     const [open, setOpen] = useState(false);
