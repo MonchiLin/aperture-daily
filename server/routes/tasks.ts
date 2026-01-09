@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
-import { TaskQueue } from '../src/services/tasks/TaskQueue';
+import { TaskQueue } from '../src/services/tasks/queue';
 import { getBusinessDate } from '../src/lib/time';
 
 import { AppError } from '../src/errors/AppError';

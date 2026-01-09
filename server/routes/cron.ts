@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
 import { dayjs } from '../src/lib/time';
-import { TaskQueue } from '../src/services/tasks/TaskQueue';
+import { TaskQueue } from '../src/services/tasks/queue';
 import { executeCronLogic } from '../lib/cronLogic';
 
 export const cronRoutes = (queue: TaskQueue) => new Elysia()

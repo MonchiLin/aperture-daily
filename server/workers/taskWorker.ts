@@ -1,4 +1,4 @@
-import { TaskQueue } from '../src/services/tasks/TaskQueue';
+import { TaskQueue } from '../src/services/tasks/queue';
 import { env } from '../config/env';
 
 const WORKER_INTERVAL_MS = 10000; // Check every 10 seconds
@@ -17,7 +17,7 @@ async function runWorker(queue: TaskQueue) {
     if (isWorking) return;
     isWorking = true;
     try {
-        await queue.processQueue(env);
+        await queue.processQueue();
     } catch (e) {
         console.error("Worker error:", e);
     } finally {

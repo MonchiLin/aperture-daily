@@ -14,6 +14,7 @@ export interface TaskRow {
     id: string;
     type: 'article_generation';
     profile_id: string;
+    profileName?: string;
     task_date: string;
     trigger_source: TriggerSource;
     status: TaskStatus;

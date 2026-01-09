@@ -66,6 +66,7 @@ export interface Task {
     task_date: string; // ISO date string
     created_at?: string;
     updated_at?: string;
+    profileName?: string;
 }
 
 // ============ Component/Feature Models ============

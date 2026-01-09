@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
-import { TaskQueue } from '../src/services/tasks/TaskQueue';
+import { TaskQueue } from '../src/services/tasks/queue';
 import { fetchAndStoreDailyWords } from '../src/services/dailyWords';
 import { env } from '../config/env';
 

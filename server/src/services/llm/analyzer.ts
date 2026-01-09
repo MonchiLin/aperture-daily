@@ -1,17 +1,14 @@
 /**
  * Sentence Analyzer - Stage 4 (Paragraph Batch Processing)
- * 
- * 按段落批量分析语法结构，优化 LLM 调用次数。
- * 
- * 核心特性：
- * 1. 预处理：使用 Intl.Segmenter 分句
- * 2. 按段落批量调用 LLM：同一段落的句子一起分析，保持上下文
- * 3. Checkpoint：每完成一个 Article Level 保存进度
- * 4. 恢复：支持从中断的 Level 继续
  */
 
-import { type GeminiClient, type GeminiRequest, extractGeminiText, safeGeminiCall, stripMarkdownCodeBlock } from './geminiClient';
-import type { GeminiResponse } from './geminiClient';
+// Reusing generic utility or move it? 
+// Actually stripMarkdownCodeBlock is in geminiClient.ts which we want to delete.
+// Let's implement a local helper or import from helpers.ts if available.
+// pipeline.ts creates helpers.ts but it doesn't have stripMarkdownCodeBlock.
+// I'll inline a simple strip helper or use the one I used in stages.ts.
+
+import { extractJson, type AgnosticMessage, type ILLMClient } from './utils';
 
 // ============ Types ============
 
@@ -20,6 +17,12 @@ export type AnalysisRole =
     | 'rc' | 'pp' | 'adv' | 'app'     // Clauses & Phrases
     | 'pas' | 'con'                   // Voice & Connectives
     | 'inf' | 'ger' | 'ptc';          // Non-finite
+
+export interface TokenUsage {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+}
 
 /** 句子数据 */
 export interface SentenceData {
@@ -54,19 +57,18 @@ export interface ArticleInput {
     level: 1 | 2 | 3;
     content: string;
     level_name: string;
-    difficulty_desc: string;
     title?: string;
 }
 
 /** 单个 Article 输出格式 (包含分析结果) */
 export interface ArticleWithAnalysis extends ArticleInput {
     sentences: SentenceData[];
-    structure: AnalysisAnnotation[]; // Staying with 'structure' for DB compatibility
+    structure: AnalysisAnnotation[];
 }
 
 /** Stage 4 输入 */
 interface AnalyzerInput {
-    client: GeminiClient;
+    client: ILLMClient;
     model: string;
     articles: ArticleInput[];
     /** 已完成的 levels (用于恢复) */
@@ -78,7 +80,7 @@ interface AnalyzerInput {
 /** Stage 4 输出 */
 interface AnalyzerOutput {
     articles: ArticleWithAnalysis[];
-    usage: Record<string, GeminiResponse['usageMetadata']>;
+    usage: Record<string, TokenUsage>;
 }
 
 // ============ Constants ============
@@ -90,6 +92,10 @@ const VALID_ROLES: readonly AnalysisRole[] = [
 ];
 
 // ============ Helper Functions ============
+
+function stripJsonBlock(text: string): string {
+    return text.replace(/```json\n?|\n?```/g, '').trim();
+}
 
 /**
  * 使用 Intl.Segmenter 将文章分割为句子
@@ -110,8 +116,6 @@ function splitIntoSentences(content: string): SentenceData[] {
 
 /**
  * 按段落分组句子
- * 
- * 检测逻辑：如果两个句子之间存在换行符，则认为是段落边界
  */
 function groupSentencesByParagraph(content: string, sentences: SentenceData[]): ParagraphGroup[] {
     const groups: ParagraphGroup[] = [];
@@ -123,7 +127,6 @@ function groupSentencesByParagraph(content: string, sentences: SentenceData[]): 
         const prevEnd = i > 0 ? sentences[i - 1]!.end : 0;
         const gap = content.substring(prevEnd, sentence.start);
 
-        // 检测段落边界：句子间是否有换行符
         const hasParagraphBreak = i > 0 && gap.includes('\n');
 
         if (hasParagraphBreak && currentSentences.length > 0) {
@@ -134,7 +137,6 @@ function groupSentencesByParagraph(content: string, sentences: SentenceData[]): 
         currentSentences.push(sentence);
     }
 
-    // 处理最后一组
     if (currentSentences.length > 0) {
         groups.push({ index: groupIndex, sentences: currentSentences });
     }
@@ -187,13 +189,12 @@ pas=被动语态, con=连接词, inf=不定式, ger=动名词, ptc=分词
 function parseParagraphResponse(text: string, sentenceCount: number): Map<number, LLMAnnotation[]> {
     const result = new Map<number, LLMAnnotation[]>();
 
-    // 初始化所有句子为空数组
     for (let i = 0; i < sentenceCount; i++) {
         result.set(i, []);
     }
 
     try {
-        const jsonStr = stripMarkdownCodeBlock(text);
+        const jsonStr = extractJson(text);
         const parsed = JSON.parse(jsonStr);
 
         if (typeof parsed !== 'object' || parsed === null) {
@@ -202,7 +203,6 @@ function parseParagraphResponse(text: string, sentenceCount: number): Map<number
         }
 
         for (const [key, value] of Object.entries(parsed)) {
-            // 支持 "S0" 或 "0" 格式
             const idxMatch = key.match(/^S?(\d+)$/);
             if (!idxMatch) continue;
 
@@ -238,16 +238,13 @@ function convertToGlobalOffsets(
     for (const ann of annotations) {
         const role = ann.role.toLowerCase() as AnalysisRole;
         if (!VALID_ROLES.includes(role)) {
-            console.warn(`[SentenceAnalyzer] Invalid role: ${ann.role}`);
             continue;
         }
 
-        // 在原始内容的句子范围内查找
         const sentenceContent = originalContent.substring(sentence.start, sentence.end);
         const localIndex = sentenceContent.indexOf(ann.text);
 
         if (localIndex === -1) {
-            console.warn(`[SentenceAnalyzer] Text not found: "${ann.text}"`);
             continue;
         }
 
@@ -265,11 +262,12 @@ function convertToGlobalOffsets(
 /**
  * 分析单个 Article Level (按段落批处理)
  */
-async function analyzeArticle(
-    client: GeminiClient,
-    model: string,
-    article: ArticleInput
-): Promise<{ result: ArticleWithAnalysis; usage: GeminiResponse['usageMetadata'] }> {
+async function analyzeArticle(args: {
+    client: ILLMClient;
+    model: string;
+    article: ArticleInput;
+}): Promise<{ result: ArticleWithAnalysis; usage: TokenUsage | undefined }> {
+    const { article, client, model } = args;
 
     if (!article.content) {
         return {
@@ -282,56 +280,41 @@ async function analyzeArticle(
 
     // 1. 分句
     const sentences = splitIntoSentences(article.content);
-    console.log(`[SentenceAnalyzer] Level ${article.level}: ${sentences.length} sentences`);
-
     // 2. 按段落分组
     const paragraphs = groupSentencesByParagraph(article.content, sentences);
-    console.log(`[SentenceAnalyzer] Level ${article.level}: ${paragraphs.length} paragraphs`);
 
-    // 3. 逐段落分析
     const allAnalyses: AnalysisAnnotation[] = [];
-    let totalUsage: GeminiResponse['usageMetadata'] = undefined;
+    let totalUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
 
     for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
         const para = paragraphs[pIdx]!;
 
-        // 跳过所有句子都太短的段落
         const totalWords = para.sentences.reduce(
             (sum, s) => sum + s.text.split(/\s+/).length, 0
         );
         if (totalWords < 5) {
-            console.log(`[SentenceAnalyzer] Skipping paragraph ${pIdx} (too short: ${totalWords} words)`);
             continue;
         }
 
         const prompt = buildParagraphPrompt(para.sentences);
-        const request: GeminiRequest = {
-            contents: [{ role: 'user', parts: [{ text: prompt }] }]
-        };
 
         try {
-            const response = await safeGeminiCall(
-                `Stage4_L${article.level}_P${pIdx}`,
-                () => client.generateContent(model, request)
-            );
+            const response = await client.generateContent([{ role: 'user', content: prompt }], {
+                system: 'You are a grammar analyzer specialized in English linguistic structure. Your task is to identify key structural roles like Subject, Verb, Object, and various clauses/phrases in the given text. Output strictly valid JSON.',
+                model
+            });
 
-            // 累积 usage
-            if (response.usageMetadata) {
-                if (!totalUsage) {
-                    totalUsage = { ...response.usageMetadata };
-                } else {
-                    totalUsage.promptTokenCount = (totalUsage.promptTokenCount || 0) +
-                        (response.usageMetadata.promptTokenCount || 0);
-                    totalUsage.candidatesTokenCount = (totalUsage.candidatesTokenCount || 0) +
-                        (response.usageMetadata.candidatesTokenCount || 0);
-                }
+            const responseText = response.text;
+            const usage = response.usage;
+
+            if (usage) {
+                totalUsage.inputTokens += usage.inputTokens;
+                totalUsage.outputTokens += usage.outputTokens;
+                totalUsage.totalTokens += usage.totalTokens;
             }
 
-            // 解析响应
-            const responseText = extractGeminiText(response);
             const paragraphAnalyses = parseParagraphResponse(responseText, para.sentences.length);
 
-            // 转换每个句子的偏移量
             for (let sIdx = 0; sIdx < para.sentences.length; sIdx++) {
                 const sentence = para.sentences[sIdx]!;
                 const annotations = paragraphAnalyses.get(sIdx) || [];
@@ -341,12 +324,9 @@ async function analyzeArticle(
 
         } catch (e) {
             console.error(`[SentenceAnalyzer] Failed on paragraph ${pIdx}:`, e);
-            // 失败时抛出错误，让上层处理（checkpoint 恢复）
             throw e;
         }
     }
-
-    console.log(`[SentenceAnalyzer] Level ${article.level}: ${allAnalyses.length} annotations`);
 
     return {
         result: {
@@ -364,35 +344,34 @@ async function analyzeArticle(
  * 运行语法分析（支持 Checkpoint 恢复）
  */
 export async function runSentenceAnalysis(args: AnalyzerInput): Promise<AnalyzerOutput> {
-    const usageAccumulator: Record<string, GeminiResponse['usageMetadata']> = {};
+    const usageAccumulator: Record<string, TokenUsage> = {};
+    const { client, model, articles, completedLevels = [], onLevelComplete } = args;
 
-    // 从 checkpoint 恢复已完成的 levels
-    const completedArticles: ArticleWithAnalysis[] = args.completedLevels ? [...args.completedLevels] : [];
+    const completedArticles: ArticleWithAnalysis[] = [...completedLevels];
     const completedLevelNums = new Set(completedArticles.map(a => a.level));
 
-    // 过滤出需要处理的 articles
-    const pendingArticles = args.articles.filter(a => !completedLevelNums.has(a.level));
+    const pendingArticles = articles.filter(a => !completedLevelNums.has(a.level));
 
     if (completedArticles.length > 0) {
         console.log(`[SentenceAnalyzer] Resuming from checkpoint. Completed: ${completedArticles.map(a => a.level).join(', ')}`);
     }
 
-    // 逐个 Level 处理
     for (const article of pendingArticles) {
-        const { result, usage } = await analyzeArticle(args.client, args.model, article);
+        const { result, usage } = await analyzeArticle({ client, model, article });
 
         completedArticles.push(result);
-        usageAccumulator[`level_${article.level}`] = usage;
+        if (usage) {
+            usageAccumulator[`level_${article.level}`] = usage;
+        }
 
-        // 每完成一个 Level 保存 checkpoint
         if (args.onLevelComplete) {
             console.log(`[SentenceAnalyzer] Checkpoint: Level ${article.level} complete`);
             await args.onLevelComplete(completedArticles);
         }
     }
 
-    // 按 level 排序
     completedArticles.sort((a, b) => a.level - b.level);
 
     return { articles: completedArticles, usage: usageAccumulator };
 }
+

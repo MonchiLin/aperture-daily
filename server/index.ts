@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import { db } from './src/db/client';
-import { TaskQueue } from './src/services/tasks/TaskQueue';
+import { TaskQueue } from './src/services/tasks/queue';
 import { AppError, formatErrorResponse } from './src/errors/AppError';
 
 // Import routes

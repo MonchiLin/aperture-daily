@@ -51,7 +51,14 @@ async function getArticleDetails(id: string) {
 
     let task = null;
     if (article.generation_task_id) {
-        const taskRows = await db.all(sql`SELECT * FROM tasks WHERE id = ${article.generation_task_id} LIMIT 1`);
+        // Join with profiles to get the friendly name
+        const taskRows = await db.all(sql`
+            SELECT t.*, p.name as profileName 
+            FROM tasks t
+            LEFT JOIN generation_profiles p ON t.profile_id = p.id
+            WHERE t.id = ${article.generation_task_id} 
+            LIMIT 1
+        `);
         task = taskRows.length > 0 ? taskRows[0] : null;
     }
 

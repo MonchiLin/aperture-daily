@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { sql } from 'drizzle-orm';
 import { db } from '../src/db/client';
-import { TaskQueue } from '../src/services/tasks/TaskQueue';
+import { TaskQueue } from '../src/services/tasks/queue';
 
 interface IdRow { id: string; }
 interface AdminBody { task_date?: string; }

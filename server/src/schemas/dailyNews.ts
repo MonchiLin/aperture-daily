@@ -4,7 +4,6 @@ export const dailyNewsArticleSchema = z.object({
     level: z.number().int().min(1).max(3),
     level_name: z.string().min(1),
     content: z.string().min(1),
-    difficulty_desc: z.string().min(1),
     structure: z.any().optional() // Standoff Grammar Data
 });
 

@@ -1,6 +1,24 @@
+/**
+ * LLM Utilities - 工具函数、类型和常量
+ */
+
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
-import type { GeminiMessage, GeminiResponse } from './geminiClient';
-import { WORD_SELECTION_MAX_WORDS } from './limits';
+
+// ============ Constants ============
+
+export const WORD_SELECTION_MIN_WORDS = 1;
+export const WORD_SELECTION_MAX_WORDS = 8;
+export const SOURCE_URL_LIMIT = 1;
+
+// ============ Types ============
+
+/** 候选词类型 */
+export type CandidateWord = {
+    word: string;
+    type: 'new' | 'review';
+};
+
+// ============ Functions ============
 
 // 确保文章内容有正确的段落分隔
 function ensureContentParagraphs(content: string, level: number) {
@@ -35,7 +53,7 @@ export function normalizeDailyNewsOutput(output: DailyNewsOutput): DailyNewsOutp
         ...output,
         articles: output.articles.map((a) => ({
             ...a,
-            content: ensureContentParagraphs(a.content, a.level)
+            content: ensureContentParagraphs(a.content, a.level),
         }))
     };
 }
@@ -140,6 +158,7 @@ export function collectHttpUrlsFromUnknown(value: unknown): string[] {
     return urls;
 }
 
+
 /** 解析 Gemini Google Search 返回的重定向 URL，获取真实来源地址 */
 export async function resolveRedirectUrl(url: string): Promise<string> {
     // 如果不是 Google 重定向 URL，直接返回
@@ -181,11 +200,63 @@ export async function resolveRedirectUrls(urls: string[]): Promise<string[]> {
     return Array.from(new Set(resolved));
 }
 
+/**
+ * 从模糊文本中精准提取 JSON 部分
+ */
+export function extractJson(text: string): string {
+    // 1. 优先尝试提取带有 json 标记的 markdown 代码块
+    const codeBlockMatch = text.match(/```json\n?([\s\S]*?)\n?```/i);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+        return codeBlockMatch[1].trim();
+    }
+
+    // 2. 尝试提取任意 markdown 代码块 (如果有多个，取第一个)
+    const genericBlockMatch = text.match(/```\n?([\s\S]*?)\n?```/);
+    if (genericBlockMatch && genericBlockMatch[1]) {
+        const potential = genericBlockMatch[1].trim();
+        if (potential.startsWith('{')) return potential;
+    }
+
+    // 3. 兜底方案：查找第一个 { 和最后一个 }
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+
+    if (start !== -1 && end !== -1 && end > start) {
+        return text.substring(start, end + 1).trim();
+    }
+
+    // 4. 原样返回，交给 JSON.parse 报错或进一步处理
+    return text.trim();
+}
+
+// Message type for conversation history
+export interface AgnosticMessage {
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+}
+
+// LLM Client interface (simple adapter)
+export interface ILLMClient {
+    generateContent(
+        messages: AgnosticMessage[],
+        options?: {
+            system?: string;
+            model?: string;
+        }
+    ): Promise<{
+        text: string;
+        usage?: {
+            inputTokens: number;
+            outputTokens: number;
+            totalTokens: number;
+        };
+    }>;
+}
+
 // 将响应输出追加到历史（多轮对话）
-export function appendResponseToHistory(history: GeminiMessage[], response: GeminiResponse): GeminiMessage[] {
-    const parts = response.candidates?.[0]?.content?.parts ?? [];
+export function appendResponseToHistory(history: AgnosticMessage[], responseText: string): AgnosticMessage[] {
     return [
         ...history,
-        ...parts.filter(p => p.text && !p.thought).map(p => ({ role: 'model' as const, parts: [{ text: p.text! }] }))
+        { role: 'assistant', content: responseText }
     ];
 }

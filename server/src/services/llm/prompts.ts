@@ -203,9 +203,9 @@ const JSON_SCHEMA_DEF = `{
   "topic": "String",
   "sources": ["Url1"],
   "articles": [
-    { "level": 1, "level_name": "Easy", "content": "...", "difficulty_desc": "Elementary (A1-A2)" },
-    { "level": 2, "level_name": "Medium", "content": "...", "difficulty_desc": "Intermediate (B1-B2)" },
-    { "level": 3, "level_name": "Hard", "content": "...", "difficulty_desc": "Advanced (C1+)" }
+    { "level": 1, "level_name": "Easy", "content": "..." },
+    { "level": 2, "level_name": "Medium", "content": "..." },
+    { "level": 3, "level_name": "Hard", "content": "..." }
   ],
   "word_usage_check": { "target_words_count": 5, "used_count": 5, "missing_words": [] },
     "word_definitions": [
@@ -235,7 +235,7 @@ ${JSON_SCHEMA_DEF}
 
 <constraints>
   <rule>必须生成符合 schema 的有效 JSON。</rule>
-  <rule>articles.content 保留段落换行符 (\\n\\n)，但不得包含任何 markdown 加粗或斜体标记（如 **、*、__）。</rule>
+  <rule>articles.content MUST preserve paragraph breaks using explicit "\n\n" characters. Do NOT produce a single block of text.</rule>
   <rule priority="CRITICAL">
     word_definitions 必须基于该词在文章中的实际语境：
     1. 只提供文章中使用的那个义项（如 "appeal" 用作"呼吁"，则只给"呼吁"的释义）

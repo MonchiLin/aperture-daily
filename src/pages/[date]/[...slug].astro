@@ -221,7 +221,7 @@ const isAdmin = !!adminKey;
                         articleId={id || ""} 
                     />
                     <FloatingAudioPlayer client:only="react" />
-                    <WordSidebarAstro words={sidebarWords} />
+                    <WordSidebarAstro words={sidebarWords} articleId={id} />
                 </div>
             </aside>
         )}

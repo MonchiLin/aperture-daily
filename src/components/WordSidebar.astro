@@ -3,6 +3,7 @@
  * 词汇侧边栏 - Astro 版本 (Wrapper for React Cards)
  */
 import WordReflectionCard from "./WordReflectionCard";
+import ArticleInfoButton from "./ArticleInfoButton";
 
 interface Definition {
     pos: string;
@@ -17,16 +18,20 @@ interface Word {
 
 interface Props {
     words: Word[];
+    articleId?: string;
 }
 
-const { words } = Astro.props;
+const { words, articleId } = Astro.props;
 ---
 
 <div class="space-y-4">
     <!-- 标题 -->
-    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900 pb-2 mb-4 border-b-2 border-slate-900">
-        Margin Notes
-    </h2>
+    <div class="flex items-center justify-between pb-2 mb-4 border-b-2 border-slate-900">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900">
+            Margin Notes
+        </h2>
+        {articleId && <ArticleInfoButton client:idle articleId={articleId} />}
+    </div>
     
     <!-- 词汇列表 (React Components) -->
     <div class="space-y-1">
