@@ -35,6 +35,7 @@ export const tasks = sqliteTable(
             .notNull()
             .default('manual'),
         status: text('status', { enum: ['queued', 'running', 'succeeded', 'failed', 'canceled'] }).notNull(),
+        llm: text('llm'), // 'gemini', 'openai', 'claude'
         profileId: text('profile_id')
             .notNull()
             .references(() => generationProfiles.id),

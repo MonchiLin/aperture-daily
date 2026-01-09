@@ -4,6 +4,7 @@
 export const env = {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     GEMINI_BASE_URL: process.env.GEMINI_BASE_URL || '',
+    GEMINI_MODEL: process.env.GEMINI_MODEL || '',
     LLM_MODEL_DEFAULT: process.env.LLM_MODEL || '',
     ADMIN_KEY: process.env.ADMIN_KEY || '',
     SHANBAY_COOKIE: process.env.SHANBAY_COOKIE || '',

@@ -35,7 +35,10 @@ export default function SettingsPanel() {
 		setTab,
 		hasKey,
 		save,
-		clearKey
+		clearKey,
+		llmProvider,
+		setLlmProvider,
+		availableLLMs
 	} = useSettings();
 
 	return (
@@ -99,6 +102,9 @@ export default function SettingsPanel() {
 						clearKey={clearKey}
 						savedAt={savedAt}
 						save={save}
+						llmProvider={llmProvider}
+						setLlmProvider={setLlmProvider}
+						availableLLMs={availableLLMs}
 					/>
 				) : tab === 'audio' ? (
 					<AudioTab

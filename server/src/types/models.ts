@@ -26,6 +26,7 @@ export interface TaskRow {
     error_message: string | null;
     error_context_json: string | null;
     published_at: string | null;
+    llm?: string | null; // Selected Provider (gemini, openai, claude)
 }
 
 // Generation profile model (from generation_profiles table)

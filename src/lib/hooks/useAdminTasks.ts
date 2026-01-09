@@ -75,10 +75,11 @@ export function useAdminTasks({ date, initialTasks, onSucceeded }: UseAdminTasks
         setLoading(true);
         setError(null);
         try {
+            const llm = localStorage.getItem('admin_selected_llm');
             await apiFetch('/api/generate', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ task_date: date })
+                body: JSON.stringify({ task_date: date, llm })
             });
             await refresh();
         } catch (e) {

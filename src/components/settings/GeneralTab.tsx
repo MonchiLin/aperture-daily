@@ -12,9 +12,12 @@ interface Props {
     clearKey: () => void;
     savedAt: number | null;
     save: () => void;
+    llmProvider: string;
+    setLlmProvider: (llm: string) => void;
+    availableLLMs: string[];
 }
 
-export default function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, savedAt, save }: Props) {
+export default function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, savedAt, save, llmProvider, setLlmProvider, availableLLMs }: Props) {
     return (
         <div className="space-y-6">
             <div className="space-y-2">
@@ -67,6 +70,35 @@ export default function GeneralTab({ adminKey, setAdminKey, hasKey, clearKey, sa
                     </div>
                     <DefaultLevelSelector />
                 </div>
+
+                <div className="space-y-2 pt-2 border-t border-stone-100">
+                    <div className="space-y-0.5">
+                        <label className="text-sm font-bold text-stone-800 block">
+                            LLM Provider
+                        </label>
+                        <p className="text-xs text-stone-500 font-serif italic">
+                            Select the AI model provider for generating articles.
+                        </p>
+                    </div>
+                    {availableLLMs.length > 0 ? (
+                        <div className="flex bg-stone-100 p-1 rounded-md">
+                            {availableLLMs.map(llm => (
+                                <button
+                                    key={llm}
+                                    onClick={() => setLlmProvider(llm)}
+                                    className={`flex-1 py-1.5 px-3 text-xs font-bold uppercase tracking-wider rounded-sm transition-all ${llmProvider === llm
+                                        ? 'bg-white text-orange-600 shadow-sm'
+                                        : 'text-stone-500 hover:text-stone-800'
+                                        }`}
+                                >
+                                    {llm}
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-xs text-stone-400 italic">No providers available</div>
+                    )}
+                </div>
             </div>
 
             {savedAt && (
@@ -117,8 +149,8 @@ function DefaultLevelSelector() {
                     type="button"
                     onClick={() => updateSetting('defaultLevel', level)}
                     className={`w-8 h-6 flex items-center justify-center text-xs font-bold transition-all rounded-sm border leading-none ${settings.defaultLevel === level
-                            ? 'bg-slate-900 text-white border-slate-900'
-                            : 'bg-transparent text-stone-400 border-stone-200 hover:border-stone-400 hover:text-stone-600'
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-transparent text-stone-400 border-stone-200 hover:border-stone-400 hover:text-stone-600'
                         }`}
                 >
                     L{level}

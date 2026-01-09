@@ -6,7 +6,7 @@ import { getBusinessDate } from '../src/lib/time';
 
 import { AppError } from '../src/errors/AppError';
 
-interface GenerateBody { task_date?: string; date?: string; }
+interface GenerateBody { task_date?: string; date?: string; llm?: string; }
 
 export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
     .post('/generate', async ({ body }) => {
@@ -14,7 +14,7 @@ export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
         console.log("Receive generation request:", b);
         const date = b.task_date || b.date || getBusinessDate();
 
-        const tasks = await queue.enqueue(date, 'manual');
+        const tasks = await queue.enqueue(date, 'manual', b.llm);
         return { status: "ok", tasks };
     })
     .get('/tasks', async ({ query: { task_date } }) => {

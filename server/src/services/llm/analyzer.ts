@@ -2,12 +2,6 @@
  * Sentence Analyzer - Stage 4 (Paragraph Batch Processing)
  */
 
-// Reusing generic utility or move it? 
-// Actually stripMarkdownCodeBlock is in geminiClient.ts which we want to delete.
-// Let's implement a local helper or import from helpers.ts if available.
-// pipeline.ts creates helpers.ts but it doesn't have stripMarkdownCodeBlock.
-// I'll inline a simple strip helper or use the one I used in stages.ts.
-
 import { extractJson } from './utils';
 import type { LLMProvider } from './types';
 
@@ -93,10 +87,6 @@ const VALID_ROLES: readonly AnalysisRole[] = [
 ];
 
 // ============ Helper Functions ============
-
-function stripJsonBlock(text: string): string {
-    return text.replace(/```json\n?|\n?```/g, '').trim();
-}
 
 /**
  * 使用 Intl.Segmenter 将文章分割为句子
@@ -265,10 +255,10 @@ function convertToGlobalOffsets(
  */
 async function analyzeArticle(args: {
     client: LLMProvider;
-    model: string;
+    // model: string; // Removed unused model
     article: ArticleInput;
 }): Promise<{ result: ArticleWithAnalysis; usage: TokenUsage | undefined }> {
-    const { article, client, model } = args;
+    const { article, client } = args;
 
     if (!article.content) {
         return {
@@ -347,7 +337,7 @@ async function analyzeArticle(args: {
  */
 export async function runSentenceAnalysis(args: AnalyzerInput): Promise<AnalyzerOutput> {
     const usageAccumulator: Record<string, TokenUsage> = {};
-    const { client, model, articles, completedLevels = [], onLevelComplete } = args;
+    const { client, articles, completedLevels = [], onLevelComplete } = args; // Removed unused model
 
     const completedArticles: ArticleWithAnalysis[] = [...completedLevels];
     const completedLevelNums = new Set(completedArticles.map(a => a.level));
@@ -359,16 +349,16 @@ export async function runSentenceAnalysis(args: AnalyzerInput): Promise<Analyzer
     }
 
     for (const article of pendingArticles) {
-        const { result, usage } = await analyzeArticle({ client, model, article });
+        const { result, usage } = await analyzeArticle({ client, article });
 
         completedArticles.push(result);
         if (usage) {
             usageAccumulator[`level_${article.level}`] = usage;
         }
 
-        if (args.onLevelComplete) {
+        if (onLevelComplete) {
             console.log(`[SentenceAnalyzer] Checkpoint: Level ${article.level} complete`);
-            await args.onLevelComplete(completedArticles);
+            await onLevelComplete(completedArticles);
         }
     }
 
@@ -376,4 +366,3 @@ export async function runSentenceAnalysis(args: AnalyzerInput): Promise<Analyzer
 
     return { articles: completedArticles, usage: usageAccumulator };
 }
-

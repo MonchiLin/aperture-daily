@@ -1,5 +1,4 @@
 import { TaskQueue } from '../src/services/tasks/queue';
-import { env } from '../config/env';
 
 const WORKER_INTERVAL_MS = 10000; // Check every 10 seconds
 let isWorking = false;

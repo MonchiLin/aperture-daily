@@ -43,11 +43,6 @@ const DEFAULT_HEADERS = {
     'x-title': 'Cherry Studio'
 };
 
-interface ClaudeMessage {
-    role: 'user' | 'assistant';
-    content: string | Array<{ type: string; text: string }>;
-}
-
 export class ClaudeProvider implements DailyNewsProvider {
     private apiKey: string;
     private baseUrl: string;

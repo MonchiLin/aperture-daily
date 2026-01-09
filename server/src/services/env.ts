@@ -22,9 +22,14 @@ export const env = {
     get OPENAI_MODEL() { return process.env.OPENAI_MODEL; },
 
     // --- Claude Configuration ---
-    get CLAUDE_API_KEY() { return process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY; },
-    get CLAUDE_BASE_URL() { return process.env.CLAUDE_BASE_URL; },
-    get CLAUDE_MODEL() { return process.env.CLAUDE_MODEL; },
+    get ANTHROPIC_API_KEY() { return process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY; },
+    get ANTHROPIC_BASE_URL() { return process.env.ANTHROPIC_BASE_URL || process.env.CLAUDE_BASE_URL; },
+    get ANTHROPIC_MODEL() { return process.env.ANTHROPIC_MODEL || process.env.CLAUDE_MODEL; },
+
+    // Aliases for compatibility
+    get CLAUDE_API_KEY() { return this.ANTHROPIC_API_KEY; },
+    get CLAUDE_BASE_URL() { return this.ANTHROPIC_BASE_URL; },
+    get CLAUDE_MODEL() { return this.ANTHROPIC_MODEL; },
 
     // --- Security & Admin ---
     get ADMIN_KEY() { return process.env.ADMIN_KEY; },

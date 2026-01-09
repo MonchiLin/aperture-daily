@@ -15,7 +15,6 @@ import {
     SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
     DRAFT_SYSTEM_INSTRUCTION,
     JSON_SYSTEM_INSTRUCTION,
-    ANALYSIS_SYSTEM_INSTRUCTION,
     buildSearchAndSelectionUserPrompt,
     buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
@@ -326,7 +325,7 @@ export class GeminiProvider implements DailyNewsProvider {
         return trimmed;
     }
 
-    private extractGroundingUrls(response: GeminiApiResponse): string[] {
+    private extractGroundingUrls(_response: GeminiApiResponse): string[] {
         // Logic to extract URLs from groundingMetadata if strictly needed
         // For now return empty or implement if we find useful metadata structure
         return [];

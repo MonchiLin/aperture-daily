@@ -38,7 +38,8 @@ export class TaskExecutor {
         if (candidates.length === 0) throw new Error('All words have been used today');
 
         // ==== Genkit Configuration ====
-        const provider = (env.LLM_PROVIDER || 'gemini') as 'gemini' | 'openai' | 'claude';
+        // ==== Genkit Configuration ====
+        const provider = (task.llm || env.LLM_PROVIDER || 'gemini') as 'gemini' | 'openai' | 'claude';
 
         let clientConfig: LLMClientConfig;
         if (provider === 'openai') {

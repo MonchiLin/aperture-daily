@@ -40,6 +40,7 @@ export type Stage3OutputDTO = z.infer<typeof Stage3OutputSchema>;
 // but the Provider method returns the full ArticleWithAnalysis[].
 
 export const ParagraphAnalysisSchema = z.record(
+    z.string(),
     z.array(
         z.object({
             text: z.string(),

@@ -16,7 +16,7 @@ export class TaskQueue {
     /**
      * Enqueue a new task for each profile
      */
-    async enqueue(taskDate: string, triggerSource: 'manual' | 'cron' = 'manual') {
+    async enqueue(taskDate: string, triggerSource: 'manual' | 'cron' = 'manual', llm?: string) {
         const profiles = await this.db.all(sql`SELECT * FROM generation_profiles`) as ProfileRow[];
 
         if (profiles.length === 0) {
@@ -44,8 +44,8 @@ export class TaskQueue {
             const now = new Date().toISOString();
 
             await this.db.run(sql`
-                INSERT INTO tasks (id, task_date, type, trigger_source, status, profile_id, version, created_at)
-                VALUES (${taskId}, ${taskDate}, 'article_generation', ${triggerSource}, 'queued', ${profile.id}, 0, ${now})
+                INSERT INTO tasks (id, task_date, type, trigger_source, status, profile_id, version, created_at, llm)
+                VALUES (${taskId}, ${taskDate}, 'article_generation', ${triggerSource}, 'queued', ${profile.id}, 0, ${now}, ${llm || null})
             `);
 
             newTasks.push({ id: taskId, profileId: profile.id, profileName: profile.name });

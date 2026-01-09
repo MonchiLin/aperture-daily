@@ -6,6 +6,8 @@ import { useStore } from '@nanostores/react';
 import { isAdminStore, login } from '../../lib/store/adminStore';
 import { setVoice } from '../../lib/store/audioStore';
 
+import { apiFetch } from '../../lib/api';
+
 export type SettingsTab = 'general' | 'audio' | 'profiles';
 
 export function useSettings() {
@@ -13,6 +15,10 @@ export function useSettings() {
     const [savedAt, setSavedAt] = useState<number | null>(null);
     const [voice, setVoiceSettings] = useState('en-US-GuyNeural');
     const [tab, setTab] = useState<SettingsTab>('general');
+
+    // LLM Settings
+    const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
+    const [llmProvider, setLlmProvider] = useState<string>('');
 
     const isAdmin = useStore(isAdminStore);
 
@@ -22,6 +28,21 @@ export function useSettings() {
         try {
             const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
             if (storedVoice) setVoiceSettings(storedVoice);
+
+            // Fetch LLM Config and sync with local storage
+            apiFetch<{ current_llm: string; available_llms: string[] }>('/api/config/llm')
+                .then(data => {
+                    if (data) {
+                        setAvailableLLMs(data.available_llms);
+                        const savedLlm = localStorage.getItem('admin_selected_llm');
+                        if (savedLlm && data.available_llms.includes(savedLlm)) {
+                            setLlmProvider(savedLlm);
+                        } else {
+                            setLlmProvider(data.current_llm);
+                        }
+                    }
+                })
+                .catch(console.error);
         } catch { /* ignore */ }
     }, []);
 
@@ -37,6 +58,9 @@ export function useSettings() {
         try {
             localStorage.setItem('aperture-daily_voice_preference', voice);
             setVoice(voice);
+            if (llmProvider) {
+                localStorage.setItem('admin_selected_llm', llmProvider);
+            }
         } catch { /* ignore */ }
 
         // 调用登录 API 设置 HttpOnly Cookie
@@ -67,6 +91,9 @@ export function useSettings() {
         setTab,
         hasKey,
         save,
-        clearKey
+        clearKey,
+        llmProvider,
+        setLlmProvider,
+        availableLLMs
     };
 }
