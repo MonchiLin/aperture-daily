@@ -9,9 +9,10 @@ type ModalProps = {
     title?: React.ReactNode;
     children: React.ReactNode;
     width?: number | string;
+    minHeight?: number | string;
 };
 
-export default function Modal({ open, onClose, title, children, width = 600 }: ModalProps) {
+export default function Modal({ open, onClose, title, children, width = 600, minHeight }: ModalProps) {
     const [mounted, setMounted] = React.useState(false);
 
     useEffect(() => {
@@ -50,7 +51,10 @@ export default function Modal({ open, onClose, title, children, width = 600 }: M
                         className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto outline-none"
                         style={{ width }}
                     >
-                        <div className="relative bg-[#F3F2EE] border border-stone-300 shadow-xl p-6 md:p-8">
+                        <div
+                            className="relative bg-[#F3F2EE] border border-stone-300 shadow-xl p-6 md:p-8"
+                            style={{ minHeight }}
+                        >
                             {/* Header */}
                             <div className="flex items-center justify-between mb-6 border-b border-stone-200 pb-4">
                                 <div className="text-xl font-serif font-bold text-stone-900">

@@ -68,6 +68,7 @@ export default function SettingsPanel() {
 				open={open}
 				onClose={() => setOpen(false)}
 				width={800}
+				minHeight={700}
 			>
 				{/* Tab Navigation */}
 				<div className="flex border-b border-stone-200 mb-6">
@@ -105,6 +106,7 @@ export default function SettingsPanel() {
 						llmProvider={llmProvider}
 						setLlmProvider={setLlmProvider}
 						availableLLMs={availableLLMs}
+						isAdmin={isAdmin}
 					/>
 				) : tab === 'audio' ? (
 					<AudioTab

@@ -5,6 +5,7 @@ import { useStore } from '@nanostores/react';
 import { Cpu, Sparkles, Brain } from 'lucide-react';
 import Toggle from '../ui/Toggle';
 import SegmentedControl from '../ui/SegmentedControl';
+import { clsx } from 'clsx';
 import { settingsStore, updateSetting } from '../../lib/store/settingsStore';
 import { dayjs } from '@server/lib/time';
 
@@ -18,6 +19,7 @@ interface Props {
     llmProvider: string;
     setLlmProvider: (llm: string) => void;
     availableLLMs: string[];
+    isAdmin?: boolean;
 }
 
 export default function GeneralTab({
@@ -29,7 +31,8 @@ export default function GeneralTab({
     save,
     llmProvider,
     setLlmProvider,
-    availableLLMs
+    availableLLMs,
+    isAdmin
 }: Props) {
     const llmOptions = [
         {
@@ -66,8 +69,11 @@ export default function GeneralTab({
                     className="w-full px-4 py-2 bg-white border border-stone-300 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 text-stone-900 placeholder:text-stone-400 text-sm"
                 />
                 <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-stone-500 font-serif italic">
-                        Status: {hasKey ? 'Configured' : 'Not Configured'}
+                    <span className={clsx(
+                        "text-xs font-serif italic",
+                        adminKey.trim() ? "text-amber-600" : isAdmin ? "text-green-600" : "text-stone-500"
+                    )}>
+                        Status: {adminKey.trim() ? 'Ready to verify' : isAdmin ? 'Active (Authenticated)' : 'Not Configured'}
                     </span>
                     <button
                         type="button"
