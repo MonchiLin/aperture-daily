@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import "../styles/grain-overlay.css";
 import "../styles/analysis.css";
+import SetupEnforcer from '../components/onboarding/SetupEnforcer';
 import SettingsPanel from "../components/SettingsPanel";
 import HelpPanel from "../components/HelpPanel";
 import { ClientRouter } from "astro:transitions";
@@ -48,6 +49,7 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 					>Aperture Daily</a
 				>
 				<div class="flex items-center gap-1">
+					<SetupEnforcer client:only="react" />
 					<SettingsPanel client:load />
 					<HelpPanel client:load />
 				</div>
