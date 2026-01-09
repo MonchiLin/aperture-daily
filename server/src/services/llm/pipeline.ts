@@ -3,16 +3,9 @@
  */
 
 import type { LLMClient } from './client';
-
-import {
-    runSearchAndSelection,
-    runDraftGeneration,
-    runJsonConversion,
-    type PipelineConfig,
-} from './stages';
-
-import { runSentenceAnalysis, type ArticleWithAnalysis } from './analyzer';
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
+import { type ArticleWithAnalysis } from './analyzer';
+import type { PipelineConfig } from './types';
 
 // ============ Types ============
 
@@ -57,13 +50,12 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
 
     // Stage 1: Search + Selection
     if (currentStage === 'start') {
-        const res = await runSearchAndSelection({
-            client: args.client,
-            config,
+        const res = await args.client.runStage1_SearchAndSelection({
             candidateWords: args.candidateWords,
             topicPreference: args.topicPreference,
             currentDate: args.currentDate,
-            recentTitles: args.recentTitles
+            recentTitles: args.recentTitles,
+            config // Pass pipeline config if needed for tools override
         });
 
         selectedWords = res.selectedWords;
@@ -86,14 +78,13 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
 
     // Stage 2: Draft Generation
     if (currentStage === 'start' || currentStage === 'search_selection') {
-        const res = await runDraftGeneration({
-            client: args.client,
-            config,
+        const res = await args.client.runStage2_DraftGeneration({
             selectedWords,
             newsSummary,
             sourceUrls,
             currentDate: args.currentDate,
-            topicPreference: args.topicPreference
+            topicPreference: args.topicPreference,
+            config
         });
 
         draftText = res.draftText;
@@ -114,12 +105,14 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     }
 
     // Stage 3: JSON Conversion
-    const generation = await runJsonConversion({
-        client: args.client,
-        config,
+    // Note: Stage 3 usually happens after draft, but pipeline logic flows through. 
+    // If we wanted checkpointing here we'd add another if block, but existing logic runs it immediately.
+
+    const generation = await args.client.runStage3_JsonConversion({
         draftText,
         sourceUrls,
-        selectedWords
+        selectedWords,
+        config
     });
 
     console.log(`[Pipeline] Stage 3 Complete. Title: ${generation.output.title}`);
@@ -142,29 +135,10 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
 
         console.log(`[Pipeline] Starting Stage 4 (Sentence Analysis)...`);
 
-        // Create adapter for sentenceAnalyzer (ILLMClient interface)
-        const clientAdapter = {
-            generateContent: async (messages: Array<{ role: string; content: string }>, options: any) => {
-                const response = await args.client.generate({
-                    system: options?.system,
-                    prompt: messages.map(m => m.content).join('\n'),
-                });
-                return {
-                    text: response.text,
-                    usage: response.usage ? {
-                        inputTokens: response.usage.inputTokens ?? 0,
-                        outputTokens: response.usage.outputTokens ?? 0,
-                        totalTokens: response.usage.totalTokens ?? 0,
-                    } : undefined
-                };
-            }
-        };
-
-        const analysisRes = await runSentenceAnalysis({
-            client: clientAdapter as any,
-            model: args.client.modelName,
-            articles: generation.output.articles as any,
-            completedLevels: completedFromCheckpoint as any,
+        const analysisRes = await args.client.runStage4_SentenceAnalysis({
+            articles: generation.output.articles,
+            completedLevels: completedFromCheckpoint,
+            config,
             onLevelComplete: args.onCheckpoint ? async (completedArticles) => {
                 await args.onCheckpoint!({
                     stage: 'grammar_analysis',

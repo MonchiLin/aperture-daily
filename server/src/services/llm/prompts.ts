@@ -151,6 +151,7 @@ ${WRITING_GUIDELINES_XML}
   <rule>先写 Level 1，再写 Level 2，最后 Level 3。</rule>
   <rule priority="HIGH">文章标题应与原新闻标题风格相近，简洁有力，避免自创无关标题。</rule>
   <rule priority="CRITICAL">目标单词必须以纯文本形式书写，禁止使用任何 markdown 符号（如 **、*、__ 等）进行标记。</rule>
+  <rule priority="CRITICAL">正文中严禁包含任何行内引用、数字角标或脚注（如 [1], [2], [1, 2]）。文章必须保持纯净。</rule>
 </constraints>`;
 
 export function buildDraftGenerationUserPrompt(args: {
@@ -274,3 +275,16 @@ ${args.draftText}
 
 // 兼容性导出
 export const DAILY_NEWS_SYSTEM_PROMPT = BASE_SYSTEM_ROLE;
+
+// Stage 4: Sentence Analysis
+export const ANALYSIS_SYSTEM_INSTRUCTION = `You are a grammar analyzer specialized in English linguistic structure. 
+Your task is to identify key structural roles like Subject, Verb, Object, and various clauses/phrases in the given text. 
+Output strictly valid JSON.
+
+<critical_rule priority="HIGHEST">
+Even if you use search tools or have grounding metadata, you MUST generate the JSON output in the text field. 
+Do NOT return empty text. 
+Do NOT return only thoughts. 
+The final output must be the JSON analysis.
+</critical_rule>`;
+

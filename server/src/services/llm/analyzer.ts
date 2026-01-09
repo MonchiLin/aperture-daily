@@ -8,7 +8,8 @@
 // pipeline.ts creates helpers.ts but it doesn't have stripMarkdownCodeBlock.
 // I'll inline a simple strip helper or use the one I used in stages.ts.
 
-import { extractJson, type AgnosticMessage, type ILLMClient } from './utils';
+import { extractJson } from './utils';
+import type { LLMProvider } from './types';
 
 // ============ Types ============
 
@@ -68,7 +69,7 @@ export interface ArticleWithAnalysis extends ArticleInput {
 
 /** Stage 4 输入 */
 interface AnalyzerInput {
-    client: ILLMClient;
+    client: LLMProvider;
     model: string;
     articles: ArticleInput[];
     /** 已完成的 levels (用于恢复) */
@@ -263,7 +264,7 @@ function convertToGlobalOffsets(
  * 分析单个 Article Level (按段落批处理)
  */
 async function analyzeArticle(args: {
-    client: ILLMClient;
+    client: LLMProvider;
     model: string;
     article: ArticleInput;
 }): Promise<{ result: ArticleWithAnalysis; usage: TokenUsage | undefined }> {
@@ -299,9 +300,10 @@ async function analyzeArticle(args: {
         const prompt = buildParagraphPrompt(para.sentences);
 
         try {
-            const response = await client.generateContent([{ role: 'user', content: prompt }], {
+            const response = await client.generate({
+                prompt: prompt,
                 system: 'You are a grammar analyzer specialized in English linguistic structure. Your task is to identify key structural roles like Subject, Verb, Object, and various clauses/phrases in the given text. Output strictly valid JSON.',
-                model
+                // config logic handled by provider
             });
 
             const responseText = response.text;
