@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import { createClient, type LLMClientConfig } from '../../src/services/llm/client';
 import { runPipeline, type PipelineCheckpoint } from '../../src/services/llm/pipeline';
+import { saveTestPipelineResult } from './saveResult';
 
 // Get today's date in YYYY-MM-DD format
 const TODAY = new Date().toISOString().split('T')[0]!;
@@ -15,28 +16,29 @@ const TODAY = new Date().toISOString().split('T')[0]!;
 // Claude Configuration from env
 const config: LLMClientConfig = {
     provider: 'claude',
-    apiKey: process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY || '',
-    model: process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022',
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+    baseUrl: process.env.ANTHROPIC_BASE_URL,
+    model: process.env.ANTHROPIC_MODEL || '',
 };
 
 // Test data - simulating real candidate words
 const TEST_CANDIDATE_WORDS = [
-    'algorithm', 'neural', 'quantum', 'interface', 'latency',
-    'optimize', 'infrastructure', 'resilience', 'paradigm', 'scalable'
+    'serendipity', 'ephemeral', 'resilience', 'paradigm', 'nuance',
+    'meticulous', 'pragmatic', 'cognitive', 'aesthetic', 'innovative'
 ];
 
-const TEST_TOPIC_PREFERENCE = 'Technology & AI';
+const TEST_TOPIC_PREFERENCE = 'Technology & Culture';
 
 describe('Claude Provider - Full Pipeline Test', () => {
     beforeAll(() => {
-        if (!config.apiKey) {
-            console.warn('[Skip] CLAUDE_API_KEY or ANTHROPIC_API_KEY not set');
+        if (!config.apiKey || !config.model) {
+            console.warn('[Skip] ANTHROPIC_API_KEY or ANTHROPIC_MODEL not set');
         }
         console.log(`[Claude Test] Date: ${TODAY}, Model: ${config.model}`);
     });
 
     it('should complete full 4-stage pipeline', async () => {
-        if (!config.apiKey) {
+        if (!config.apiKey || !config.model) {
             console.log('[Skip] No Claude credentials');
             return;
         }
@@ -69,10 +71,13 @@ describe('Claude Provider - Full Pipeline Test', () => {
         console.log('[Claude] Generated:', result.output.title);
         console.log('[Claude] Selected words:', result.selectedWords);
         console.log('[Claude] Article levels:', result.output.articles.length);
-    }, 300000); // 5 minute timeout for full pipeline
+
+        // Save to Database
+        await saveTestPipelineResult(result, config);
+    }, 3600000); // 60 minute timeout for full pipeline as it includes thinking
 
     it('should support basic generation', async () => {
-        if (!config.apiKey) {
+        if (!config.apiKey || !config.model) {
             console.log('[Skip] No Claude credentials');
             return;
         }

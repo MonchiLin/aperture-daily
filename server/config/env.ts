@@ -7,6 +7,13 @@ export const env = {
     LLM_MODEL_DEFAULT: process.env.LLM_MODEL || '',
     ADMIN_KEY: process.env.ADMIN_KEY || '',
     SHANBAY_COOKIE: process.env.SHANBAY_COOKIE || '',
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+    ANTHROPIC_BASE_URL: process.env.ANTHROPIC_BASE_URL || '',
+    ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL || '',
+    LLM_PROVIDER: process.env.LLM_PROVIDER || 'gemini',
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL || '',
+    OPENAI_MODEL: process.env.OPENAI_MODEL || '',
     BUILD_TIME: process.env.BUILD_TIME || 'Dev'
 };
 

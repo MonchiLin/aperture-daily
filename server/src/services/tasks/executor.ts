@@ -38,7 +38,7 @@ export class TaskExecutor {
         if (candidates.length === 0) throw new Error('All words have been used today');
 
         // ==== Genkit Configuration ====
-        const provider = (env.LLM_PROVIDER || 'gemini') as 'gemini' | 'openai';
+        const provider = (env.LLM_PROVIDER || 'gemini') as 'gemini' | 'openai' | 'claude';
 
         let clientConfig: LLMClientConfig;
         if (provider === 'openai') {
@@ -49,6 +49,15 @@ export class TaskExecutor {
                 apiKey: env.OPENAI_API_KEY,
                 baseUrl: env.OPENAI_BASE_URL,
                 model: env.OPENAI_MODEL
+            };
+        } else if (provider === 'claude') {
+            if (!env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is required');
+            if (!env.ANTHROPIC_MODEL) throw new Error('ANTHROPIC_MODEL is required');
+            clientConfig = {
+                provider: 'claude',
+                apiKey: env.ANTHROPIC_API_KEY,
+                baseUrl: env.ANTHROPIC_BASE_URL,
+                model: env.ANTHROPIC_MODEL
             };
         } else {
             if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is required');

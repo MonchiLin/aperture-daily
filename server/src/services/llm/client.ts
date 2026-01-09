@@ -41,7 +41,7 @@ export class LLMClient implements DailyNewsProvider {
             case 'openai':
                 return new OpenAIProvider(config.apiKey, config.model, config.baseUrl);
             case 'claude':
-                return new ClaudeProvider(config.apiKey, config.model);
+                return new ClaudeProvider(config.apiKey, config.model, config.baseUrl);
             default:
                 throw new Error(`Unsupported provider: ${config.provider}`);
         }

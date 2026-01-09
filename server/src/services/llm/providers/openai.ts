@@ -38,7 +38,7 @@ export class OpenAIProvider implements DailyNewsProvider {
 
     async generate(options: GenerateOptions): Promise<GenerateResponse> {
         try {
-            console.log('[OpenAIProvider] Using Responses API (forced)...');
+            console.log('[OpenAI] Using Responses API (forced)...');
 
             // Combine system prompt with user prompt for Responses API
             const fullInput = options.system
@@ -60,10 +60,10 @@ export class OpenAIProvider implements DailyNewsProvider {
             };
 
         } catch (error: any) {
-            console.error('[OpenAIProvider] Generation failed:', error);
+            console.error('[OpenAI] Generation failed:', error);
             if (error.response) {
-                console.error('[OpenAIProvider] Error Response Headrs:', error.response.headers);
-                console.error('[OpenAIProvider] Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+                console.error('[OpenAI] Error Response Headrs:', error.response.headers);
+                console.error('[OpenAI] Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
             }
             throw error;
         }
