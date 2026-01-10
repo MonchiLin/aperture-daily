@@ -122,6 +122,50 @@ export function createDatabase(env?: Env): AppKysely {
         });
     }
 
+    // [7] mssql: SQL Server (via tedious + tarn)
+    if (driver === 'mssql') {
+        const connectionString = process.env.DB_CONNECTION;
+        if (!connectionString) throw new Error("DB_DRIVER=mssql requires DB_CONNECTION to be set (mssql://user:password@host:port/database)");
+
+        console.log(`[DB] Kysely Provider: mssql`);
+
+        const { MssqlDialect } = require('kysely');
+        const tedious = require('tedious');
+        const tarn = require('tarn');
+
+        // Parse connection string manually since tedious doesn't support it standardly
+        const url = new URL(connectionString);
+        const database = url.pathname.slice(1); // Remove leading slash
+
+        return new Kysely<Database>({
+            dialect: new MssqlDialect({
+                tarn: {
+                    ...tarn,
+                    options: { min: 0, max: 10 }
+                },
+                tedious: {
+                    ...tedious,
+                    connectionFactory: () => new tedious.Connection({
+                        authentication: {
+                            type: 'default',
+                            options: {
+                                userName: url.username,
+                                password: url.password,
+                            }
+                        },
+                        server: url.hostname,
+                        options: {
+                            port: url.port ? parseInt(url.port) : 1433,
+                            database: database,
+                            trustServerCertificate: true, // Often needed for local dev/self-signed certs
+                        }
+                    })
+                }
+            }),
+            plugins,
+        });
+    }
+
     throw new Error(`Unknown DB_DRIVER: ${driver}`);
 }
 
