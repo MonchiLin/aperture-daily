@@ -7,9 +7,23 @@ const SPEEDS = [0.75, 1, 1.25, 1.5];
 const VOICE_STORAGE_KEY = 'aperture-daily_voice_preference';
 
 /**
- * Audio Player Engine Hook
+ * Audio Player Engine Hook (音频播放引擎钩子)
  * 
- * Uses preloaded whole-article audio with time-based sentence tracking.
+ * 架构核心：Time-Sentence Synchronization (时间-句子同步机制)
+ * 
+ * 挑战：
+ * 浏览器原生 `<audio>` 播放是基于连续的时间 (Time-Based)，而我们的阅读体验是基于离散的句子单元 (Index-Based)。
+ * 这是一个典型的 "Continuous to Discrete" 映射问题。
+ * 
+ * 解决方案：
+ * 1. 单向数据流: Audio Time -> Sentence Index。使用 `getSentenceIndexAtTime` 实时计算当前高亮的句子。
+ * 2. 双向交互处理: 
+ *    - 自然播放时：Time 驱动 Index 更新。
+ *    - 用户点击句子时 (`jumpToSentence`)：Index 驱动 Time 更新 (Seek)。
+ *    - 为了防止冲突，引入 `userSeekRef` 标志位，在用户 Seek 期间暂时屏蔽 Time 的自动更新。
+ * 
+ * 依赖：
+ * 使用 `audioPreloader` 提供的预加载和缓存能力，确保音频资源立即可用。
  */
 export function useAudioPlayer() {
     const state = useStore(audioState);

@@ -1,15 +1,15 @@
 /**
- * Database Model Types
+ * 数据库模型类型
  * 
- * These interfaces mirror the database schema for type-safe access
- * when using raw SQL queries that return untyped results.
+ * 当使用原生 SQL 查询返回非类型化结果时，
+ * 这些接口映射了数据库 schema 以提供类型安全访问。
  */
 
-// Task status enum
+// 任务状态枚举
 export type TaskStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'canceled';
 export type TriggerSource = 'manual' | 'cron';
 
-// Task model (from tasks table)
+// 任务模型 (来自 tasks 表)
 export interface TaskRow {
     id: string;
     type: 'article_generation';
@@ -26,10 +26,10 @@ export interface TaskRow {
     error_message: string | null;
     error_context_json: string | null;
     published_at: string | null;
-    llm?: string | null; // Selected Provider (gemini, openai, claude)
+    llm?: string | null; // 选用的 Provider (gemini, openai, claude)
 }
 
-// Generation profile model (from generation_profiles table)
+// 生成配置模型 (来自 generation_profiles 表)
 export interface ProfileRow {
     id: string;
     name: string;
@@ -40,7 +40,7 @@ export interface ProfileRow {
     updated_at: string;
 }
 
-// Daily words model (from daily_words table)
+// 每日单词模型 (来自 daily_words 表)
 export interface DailyWordsRow {
     date: string;
     new_words_json: string;
@@ -49,7 +49,7 @@ export interface DailyWordsRow {
     updated_at: string;
 }
 
-// Article model (from articles table)
+// 文章模型 (来自 articles 表)
 export interface ArticleRow {
     id: string;
     generation_task_id: string;
@@ -62,7 +62,7 @@ export interface ArticleRow {
     published_at: string | null;
 }
 
-// ID-only row type for common queries
+// 仅包含 ID 的行类型，用于通用查询
 export interface IdRow {
     id: string;
 }

@@ -26,9 +26,13 @@ export default function WordReflectionCard({ word, phonetic, definitions }: Prop
     }, []);
 
     const lowercaseWord = word.toLowerCase();
-    // During SSR and first client pass, keep it inactive to match.
+    // [SSR Hydration Strategy]
+    // 只有当组件挂载后 (mounted = true) 才响应 activeWord 状态。
+    // 这防止了服务器端渲染的 HTML (无 active) 与客户端首次渲染 (有 active) 不匹配导致的 Hydration Mismatch 警告。
     const isActive = mounted && activeWord === lowercaseWord;
 
+    // Hover Interaction: Driven by global store
+    // 鼠标悬停 -> 更新 store -> 触发 Tether (连线) 绘制
     const handleMouseEnter = () => setActiveWord(lowercaseWord);
     const handleMouseLeave = () => setActiveWord(null);
 
@@ -40,6 +44,8 @@ export default function WordReflectionCard({ word, phonetic, definitions }: Prop
 
         try {
             setIsPlaying(true);
+            // EdgeTTS: 使用 Edge 的免费高质量语音合成服务
+            // 它是实时的，不依赖预生成的音频文件。
             await EdgeTTSClient.play(word, voice);
         } catch (error) {
             console.error("TTS Playback failed:", error);

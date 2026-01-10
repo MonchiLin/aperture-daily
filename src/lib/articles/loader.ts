@@ -1,7 +1,10 @@
 /**
- * Article Loader - 文章数据加载器
+ * Article Loader (文章数据加载与注水层)
  * 
- * 集中处理文章数据的获取和解析逻辑
+ * 核心职责：
+ * 1. 数据聚合：从 SQLite 主表、Echoes 服务获取原始数据。
+ * 2. 数据注水 (Hydration)：将原始 JSON 文本和稀疏数据转换为前端组件可直接消费的富对象 (ArticleData)。
+ * 3. 性能优化：利用 Promise.all 并行请求核心数据和辅助数据 (Memories/Echoes)，减少首屏加载延迟。
  */
 import { apiFetch } from '../api';
 import type { ArticleParsedContent, ArticleRow, ArticleLevelContent, WordDefinition, SidebarWord } from './types';
@@ -32,7 +35,13 @@ export interface WordMatchConfig {
 }
 
 /**
- * 加载文章数据（包含并行获取 memories）
+ * 加载并组装完整的文章页面数据
+ * 
+ * 该函数实现了"瀑布流"式的并行加载策略：
+ * - 关键路径 (Critical Path): 获取 ArticleRow (包含 JSON 内容)。
+ * - 辅助路径 (Secondary): 获取 Echoes (关联记忆)。
+ * 
+ * 两者并行发起，但页面渲染强依赖 ArticleRow。Echoes 如果失败，会静默降级为空对象，不阻塞页面展示。
  */
 export async function loadArticle(id: string): Promise<ArticleData | null> {
     try {
@@ -55,7 +64,12 @@ export async function loadArticle(id: string): Promise<ArticleData | null> {
 }
 
 /**
- * 构建单词匹配配置 (用于形态学匹配)
+ * 构建高亮系统的形态学匹配配置
+ * 
+ * 将单词定义的 lemma (原形) 和 used_form (文中出现的变形) 组合，
+ * 生成用于前端文本匹配的正则配置。
+ * 
+ * 例如：word="Run", used_form="running" -> ["run", "running"]
  */
 export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMatchConfig[] {
     return wordDefinitions.map((w) => ({
@@ -68,7 +82,7 @@ export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMa
 }
 
 /**
- * @deprecated Use loadArticle() which includes memories via parallel fetch
+ * @deprecated 请使用包含并行获取 memories 逻辑的 loadArticle() 替代
  */
 export async function fetchEchoes(
     _targetWords: string[],
@@ -141,7 +155,16 @@ export async function loadArticleBySlug(date: string, slug: string): Promise<Art
     }
 }
 
-// Factor out processing logic to reuse
+/**
+ * 核心数据处理管道
+ * 
+ * 负责将后端原始的 DB Row 转换为前端可用的 ArticleData 视图模型。
+ * 包含以下规范化步骤：
+ * 1. 解析 content_json 为结构化对象。
+ * 2. 提取并去重 Sources URL。
+ * 3. 提取单词定义并转换为侧边栏格式。
+ * 4. 格式化日期和阅读时间。
+ */
 function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): ArticleData {
     let parsed: ArticleParsedContent = {};
     let sources: string[] = [];

@@ -1,19 +1,20 @@
 /**
- * LLM Client - Unified Facade for Multiple Providers
+ * LLM Cross-Provider Client (LLM 客户端门面)
  * 
- * Delegates to specific provider implementations:
- * - Gemini -> providers/gemini.ts (Genkit)
- * - Claude -> providers/claude.ts (Genkit)
- * - OpenAI -> providers/openai.ts (Native SDK)
+ * 设计模式：Facade (门面模式) + Factory (工厂模式)
+ * 
+ * 核心职责：
+ * 1. 统一接口：对外屏蔽 Gemini(REST), Claude(Proxy), OpenAI(SDK) 的实现差异。
+ * 2. 动态切换：支持基于配置 (Config) 在运行时无缝切换不同的模型提供商。
+ * 3. 类型安全：强制所有 Provider 必须实现 `DailyNewsProvider` 接口，确保 Pipeline 的稳定性。
  */
-
 
 import { GeminiProvider } from './providers/gemini';
 import { ClaudeProvider } from './providers/claude';
 import { OpenAIProvider } from './providers/openai';
 import type { DailyNewsProvider, GenerateOptions, GenerateResponse, Stage1Input, Stage1Output, Stage2Input, Stage2Output, Stage3Input, Stage3Output, Stage4Input, Stage4Output } from './types';
 
-// Re-export types for consumers
+// 向消费者重新导出类型
 export type { GenerateOptions, GenerateResponse };
 
 export type LLMProviderType = 'gemini' | 'openai' | 'claude';
@@ -26,6 +27,7 @@ export interface LLMClientConfig {
 }
 
 export class LLMClient implements DailyNewsProvider {
+    // 委托 (Delegation)：主要逻辑转发给具体的 Provider 实例
     private provider: DailyNewsProvider;
     private config: LLMClientConfig;
 
@@ -73,7 +75,7 @@ export class LLMClient implements DailyNewsProvider {
 }
 
 /**
- * Factory function to create an LLM client
+ * 创建 LLM 客户端的工厂函数
  */
 export function createClient(config: LLMClientConfig) {
     return new LLMClient(config);

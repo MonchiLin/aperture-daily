@@ -11,6 +11,17 @@ interface ProfileBody {
     timeoutMs?: number | string;
 }
 
+/**
+ * Profile Routes (生成配置管理)
+ * 
+ * 职责：
+ * 管理 LLM 生成任务的参数模板 (Profiles)。
+ * 包含了 Topic Preference (偏好主题), Concurrency (并发限制), Timeout 等运行时配置。
+ * 
+ * 安全性注意：
+ * 删除 Profile 时是一个高危操作，会级联删除所有使用该 Profile 生成的任务及文章历史。
+ * 必须小心处理事务一致性（目前通过手动顺序 DELETE 模拟）。
+ */
 export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
     .get('/', async () => {
         return await db.all(sql`SELECT * FROM generation_profiles ORDER BY updated_at DESC`);

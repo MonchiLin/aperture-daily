@@ -1,14 +1,15 @@
 ---
 /**
- * 文章页 - SSR 渲染 (支持 Level 路由)
+ * Article Page (核心阅读页 / SSR)
  * 
- * 路由模式:
- *   - /[date]/[slug] → 默认 L1
- *   - /[date]/[slug]/L1 → L1
- *   - /[date]/[slug]/L2 → L2
- *   - /[date]/[slug]/L3 → L3
+ * 路由架构 (Virtual Routing Pattern):
+ * 本页面处理所有难度等级的访问请求，通过 URL 后缀区分。
+ *   - /2023-10-01/my-article      -> 渲染 L1 (默认)
+ *   - /2023-10-01/my-article/L2   -> 渲染 L2
+ *   - /2023-10-01/my-article/L3   -> 渲染 L3
  * 
- * 使用 slug 查找文章，无 ID 依赖
+ * 为什么不使用 Query Param (?level=2)?
+ * 为了 SEO 和 CDN 缓存。不同的 URL 代表不同的资源实体，有利于搜索引擎索引不同难度的内容。
  */
 import Layout from "@/layouts/Layout.astro";
 import WordSidebarAstro from "@/components/WordSidebar.astro";
@@ -30,14 +31,16 @@ import AnnotatedText from "@/components/analysis/AnnotatedText.astro";
 // 解析 date 和 slug 参数
 const { date, slug } = Astro.params;
 
-// slug 可能是数组 (catch-all) e.g. ["my-article", "L2"]
-// 或者 just "my-article"
+// 路由解析逻辑
+// slug 参数是贪婪匹配 (catch-all)，可能包含 "/L2"。
+// 例如: slug = "my-article/L2" -> parts = ["my-article", "L2"]
+// 我们需要分离出纯净的 'articleSlug' 和 'level'。
 const slugParts = (slug || '').split('/');
 const levelPart = slugParts[slugParts.length - 1]?.toUpperCase();
 const isLevelParam = ['L1', 'L2', 'L3'].includes(levelPart);
 
 const articleSlug = isLevelParam 
-    ? slugParts.slice(0, -1).join('/') // Remove level part
+    ? slugParts.slice(0, -1).join('/') // 移除末尾的等级标识
     : slugParts.join('/'); 
 
 const initialLevel = isLevelParam
@@ -72,7 +75,11 @@ const {
 
 const id = row?.articles?.id; // Needed for client side logic
 
-// 设置缓存
+// 缓存策略 (ISR-Lite)
+// 
+// - s-maxage=86400 (1天): CDN 边缘节点缓存一天。
+// - stale-while-revalidate=1year: 如果缓存过期，CDN 先返回旧内容，后台异步更新。
+// 这确保了文章页面的访问速度极快 (Edge Hit)。
 if (row) {
     Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
 }
@@ -99,7 +106,11 @@ const isAdmin = !!adminKey;
             transition:animate="slide"
         >
             <div class="space-y-8">
-                <!-- Memories Data Injection (Robust) -->
+                <!-- Data Injection (SSR -> Client Store)
+                     我们将后端计算好的 Echoes 数据序列化为 JSON 注入到 DOM 中。
+                     客户端 JS (initArticlePage) 会读取此 Script 标签并初始化 NanoStore。
+                     这比 API 请求更快，且避免了 hydration mismatch。
+                -->
                 <script is:inline id="memories-data" type="application/json" set:html={JSON.stringify(echoes)} />
 
                 <!-- 文章容器 (去卡片化) -->

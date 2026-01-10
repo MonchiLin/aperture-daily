@@ -1,9 +1,10 @@
 /**
- * OpenAI Provider (Native Implementation)
+ * OpenAI Provider (OpenAI 原生支持)
  * 
- * Directly uses 'openai' SDK to support advanced features like:
- * - Responses API (experimental)
- * - Native Tool Calling with 'web_search'
+ * 核心特性：
+ * 1. 使用官方 `openai` Node.js SDK。
+ * 2. 强制启用 `web_search` 工具：利用 OpenAI 强大的内置联网搜索能力，确保新闻的时效性。
+ * 3. 实验性 Responses API 支持：虽然代码中保留了相关调用结构，但主要逻辑仍复用通用的 Stage IO。
  */
 
 import OpenAI from 'openai';
@@ -40,7 +41,9 @@ export class OpenAIProvider implements DailyNewsProvider {
         try {
             console.log('[OpenAI] Using Responses API (forced)...');
 
-            // Combine system prompt with user prompt for Responses API
+            // [Prompt Engineering]
+            // 将 System Prompt 和 User Prompt 合并。
+            // 某些 OpenAI 模型/端点对 System 角色支持不同，这种拼接方式通常更稳健。
             const fullInput = options.system
                 ? `${options.system}\n\n${options.prompt}`
                 : options.prompt;
@@ -72,10 +75,13 @@ export class OpenAIProvider implements DailyNewsProvider {
     // ============ Implementation of 4 Stages ============
 
     async runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output> {
-        console.log('[OpenAI] Running Stage 1: Search & Selection');
+        console.log('[OpenAI] 执行阶段 1: 搜索与选题');
 
-        // Note: OpenAI 'Responses' API might handle structured output differently if we pass a schema.
-        // For now, we use the text-based prompt strategy identical to Gemini for consistency.
+        // [Stage 1 Strategy]
+        // 目标：从候选词生成新闻摘要和选题。
+        // 工具：强制开启 `web_search`，让模型先搜索最新的相关新闻，再做决策。
+        // 目前为为了保持跨模型一致性，我们要求输出 JSON 字符串，而不是直接使用 OpenAI Functions (虽然那样更结构化)，
+        // 这样可以复用通用的 Zod Schema 校验逻辑。
 
         const userPrompt = buildSearchAndSelectionUserPrompt({
             candidateWords: input.candidateWords,

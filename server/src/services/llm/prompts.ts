@@ -13,6 +13,11 @@ You are an ESL content expert specializing in CEFR-aligned graded reading materi
 <language priority="CRITICAL">All article content MUST be written in English.</language>`;
 
 // Stage 1: 搜索 + 选词
+// 
+// 策略：Research-First (先调研后决策)
+// 为什么要强制 "Search First"? 
+// 因为 LLM 的训练数据有截止日期。为了生成“最新”新闻，必须让它先联网获取 Context，再基于真实 Context 进行选词。
+// 否则它可能会编造假新闻或使用过时信息。
 export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
 <stage_role>
 你目前的身份是：智能新闻策展人。
@@ -89,10 +94,11 @@ ${candidateWordsText}
 }
 
 /**
- * 分级写作规范
- * L1: 80-110词, 3段, 简单句, 现在时
- * L2: 140-170词, 4段, 复合句, 过去时
- * L3: 200-250词, 4-5段, 分析句, 混合时态
+ * 分级写作规范 (Graded Reading Standards)
+ * 
+ * 为什么选择 XML 格式?
+ * XML 标签 (<level>, <target>, <style>) 比 Markdown 或自然语言更能明确地界定“上下文边界”。
+ * LLM 处理 XML 结构的指令时，通常表现出更好的遵循性 (Compliance)，尤其是在复杂的条件约束下。
  */
 const WRITING_GUIDELINES_XML = `
 <guidelines>
@@ -190,10 +196,12 @@ ${args.sourceUrls.join('\n')}
 
 <critical_reminder>
 Target words must be PLAIN TEXT. NO markdown formatting.
-**Morphological Freedom**: You may adapt the target word's form (tense, plurality, part of speech) to fit the grammatical context naturally.
+**Morphological Freedom (形态自由)**: 
+为了让文章读起来更自然，避免"机器味"：
+You may adapt the target word's form (tense, plurality, part of speech) to fit the grammatical context naturally.
 - Example: If target is "go", you may write "went" or "gone".
 - Example: If target is "beauty", you may write "beautiful".
-**Do NOT shoehorn the exact string if it sounds robotic.**
+**Do NOT shoehorn (生硬插入) the exact string if it sounds robotic.**
 </critical_reminder>
 </task>`;
 }

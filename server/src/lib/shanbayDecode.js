@@ -1,9 +1,20 @@
+// ============ 扇贝单词 API 解密核心算法 ============
+// 
+// 这是一个逆向工程 (Reverse Engineering) 的实现，用于解析扇贝单词 App v4.0+ 接口返回的混淆数据。
+// 扇贝使用了自定义的位移混淆算法来防止爬虫。
+// 这里的实现完全移植自客户端 JS 逻辑。
+
 class Func {
     static loop(cnt, func) {
         for (let i = 0; i < cnt; i++) func(i);
     }
 }
 
+/**
+ * 32位无符号整数运算库
+ * JS 的位运算默认是 32 位有符号整数。为了模拟 C/Java 风格的无符号行为，
+ * 我们需要频繁使用 `>>> 0` 操作符。
+ */
 class Num {
     static get(num) {
         return num >>> 0;
@@ -14,6 +25,7 @@ class Num {
     static and(a, b) {
         return this.get(this.get(a) & this.get(b));
     }
+    // 模拟 32位 溢出乘法
     static mul(a, b) {
         const high16 = ((a & 0xffff0000) >>> 0) * b;
         const low16 = (a & 0x0000ffff) * b;
@@ -217,6 +229,16 @@ const base64ToBytes = (b64) => {
     throw new Error('Shanbay: no base64 decoder available');
 };
 
+/**
+ * 扇贝单词 API 响应解码器 (Main Entry)
+ * 
+ * 算法流程：
+ * 1. 版本检查：前 4 字节包含版本和校验位。
+ * 2. 随机数种子初始化：基于前 4 字节初始化 `Random` 状态机。
+ * 3. 霍夫曼树重建：利用随机生成的序列动态构建解码树 (`Tree`)。
+ * 4. 字符串解码：遍历树结构将混淆字符串还原为原始 Base64。
+ * 5. 最终解析：Base64 -> Bytes -> UDP-8 String -> JSON
+ */
 export function decodeShanbayData(enc) {
     if (!checkVersion(enc)) {
         throw new Error('Shanbay: unsupported data version');

@@ -1,13 +1,14 @@
 /**
- * Level Switcher - 难度切换器
+ * Level Switcher Engine (难度切换引擎)
  * 
- * 优先级: URL > 单篇文章记录 > 设置默认值 > 兜底 L1
+ * 核心逻辑：State Reconciliation (状态协调)
  * 
- * URL 模式:
- *   - /article/{id} → 使用设置默认值
- *   - /article/{id}/L1 → L1 (算手动选择)
- *   - /article/{id}/L2 → L2 (算手动选择)
- *   - /article/{id}/L3 → L3 (算手动选择)
+ * 我们的难度状态 (Level 1/2/3) 来自三个来源，必须按优先级合并：
+ * 1. URL Path (最高优先级): 用户直接访问 `/L2` 或分享链接。这是 Source of Truth。
+ * 2. Per-Article Persistence (中优先级): 用户上次阅读这篇文章时选择的难度。存储在 LocalStorage。
+ * 3. Global Default (最低优先级): 用户在设置面板的“默认难度”。
+ * 
+ * 下面的代码实现了这个“三层回退” (Three-Tier Fallback) 逻辑。
  */
 
 import { setLevel as storeSetLevel } from '../../store/interactionStore';
@@ -76,11 +77,18 @@ const getDefaultLevel = (): number => {
     }
 };
 
-/** 更新 URL 中的级别 (使用 replaceState 避免历史堆积) */
+/** 更新 URL 中的级别 
+ * 
+ * 策略：Silent Replacement (静默替换)
+ * 我们使用 `history.replaceState` 而不是 `pushState`。
+ * 为什么？
+ * 用户只是切换阅读难度，这不应该被视为所谓的“新页面浏览”。
+ * 如果用户点“后退”按钮，他们应该回到上一篇文章或首页，而不是回到“Level 1”。
+ */
 const updateUrlLevel = (level: number) => {
     // 移除现有的 /L1, /L2, /L3 后缀
     const base = window.location.pathname.replace(/\/L[1-3]$/i, '');
-    // L1 使用简洁路径，L2/L3 显式包含
+    // L1 使用简洁路径 (Canonical URL)，L2/L3 显式包含
     const newPath = level === 1 ? base : `${base}/L${level}`;
     if (window.location.pathname !== newPath) {
         history.replaceState(null, '', newPath);

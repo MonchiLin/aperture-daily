@@ -26,11 +26,20 @@ export function trackReading() {
     const level = parseInt(activeLevel.getAttribute('data-level') || '1');
     const minutes = parseInt(activeLevel.getAttribute('data-minutes') || '1');
 
-    // Check if fully covered (downward inclusion)
+    // [Downward Inclusion Strategy]
+    // 逻辑：如果你把 "Level 3" 的文章读完了，通常意味着你也理解了 Level 1 和 Level 2 的内容。
+    // 为了简化用户操作，我们假设阅读高等级会自动解锁低等级的阅读状态。
+    // targetMask (111 for L3, 011 for L2, 001 for L1).
     const targetMask = (1 << level) - 1;
+
+    // 位运算检查：(Current & Target) === Target
+    // 意味着 Target 的所有位都已经在 Current 中置 1 了，无需重复提交。
     if ((currentMask & targetMask) === targetMask) return;
 
-    // Threshold: 50% of estimated time, minimum 10 seconds
+    // [Smart Thresholding]
+    // 为了防止“误触”或“每秒提交”，我们设置一个动态阈值。
+    // 阈值 = 估算阅读时间的 50%，且至少 10 秒。
+    // 只有当用户停留在页面超过此时间，才算“有效阅读”。
     const threshold = Math.max(10000, minutes * 30 * 1000);
 
     readTimer = window.setTimeout(async () => {
@@ -39,6 +48,7 @@ export function trackReading() {
                 method: 'PATCH',
                 body: JSON.stringify({ level })
             });
+            // Update DOM state optimistically
             main?.setAttribute('data-read-levels', String(currentMask | targetMask));
             console.log('[ReadTracker] Marked as read:', level);
         } catch (e) {

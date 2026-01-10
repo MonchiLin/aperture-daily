@@ -1,9 +1,18 @@
 import { sql } from 'drizzle-orm';
 import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
+// 垂直分库/分表策略：
+// 虽然目前是单体应用，但表结构设计考虑了模块化。
+// - `generation_profiles`: 配置中心 (Configuration)
+// - `tasks`: 任务调度中心 (Orchestration)
+// - `articles` + `article_variants`: 内容中心 (CMS)
+// - `words` + `daily_word_references`: 知识库 (Knowledge Graph)
+// - `highlights`: 用户交互 (User Data)
+
 export const generationProfiles = sqliteTable(
     'generation_profiles',
     {
+        // ID 使用 UUID 以便于分布式生成，避免自增 ID 带来的数据同步冲突
         id: text('id').primaryKey(),
         name: text('name').notNull(),
         topicPreference: text('topic_preference').notNull(),
@@ -147,7 +156,12 @@ export const articles = sqliteTable(
     ]
 );
 
-// [New] Stores the actual content for each difficulty level
+// [New] Article Variants (内容变体表)
+// 
+// 设计决策：为什么将内容 (Content) 剥离出 Articles 表？
+// 1. **垂直拆分 (Vertical Partitioning)**: Articles 表仅存储元数据 (Metadata)，如标题、状态、发布时间。这使得列表查询 (SELECT *) 极快。
+// 2. **多态支持**: 一篇文章可能有多个版本 (L1, L2, L3)。使用 Variants 表可以灵活扩展，甚至支持多语言版本。
+// 3. **Payload 优化**: Content 字段通常很大 (KB~MB级)，分离后可以避免在不需要内容时产生大量 IO。
 export const articleVariants = sqliteTable(
     'article_variants',
     {

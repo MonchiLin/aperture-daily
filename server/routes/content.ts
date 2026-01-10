@@ -31,7 +31,7 @@ export const contentRoutes = new Elysia({ prefix: '/api' })
     })
 
     .get('/day/:date/words', async ({ params: { date }, set }) => {
-        // Read from normalized table
+        // 从规范化表读取
         const refs = await db.all(sql`
             SELECT word, type 
             FROM daily_word_references 
@@ -39,10 +39,8 @@ export const contentRoutes = new Elysia({ prefix: '/api' })
         `) as { word: string; type: 'new' | 'review' }[];
 
         if (refs.length === 0) {
-            // Fallback to old table if normalized data is missing (backward compatibility not strictly needed if migrated, but good to have safety? 
-            // Actually, if migrated, references should exist. If 0 references, maybe day doesn't exist.
-            // Let's also check if the day exists in daily_words at all to return 404 vs empty list?
-            // The existing logic returned empty list if row missing.
+            // 如果缺失，暂不需要回退到旧表 (假设已迁移)。
+            // 返回空列表。
             return { date, words: [], word_count: 0 };
         }
 

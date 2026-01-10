@@ -46,17 +46,23 @@ export type RenderNode =
 // ============ Core Logic ============
 
 /**
- * 构建分析树 (Sentence Analysis Tree)
+ * Syntax Analysis Engine (语法分析引擎)
  * 
- * 核心职责:
- * 1. 结构化: 将平铺的文本转换为段落 -> 句子 -> 分析节点/单词/文本 的树状结构。
- * 2. 混合: 将 "Sentence Split" (分句) 和 "Grammar Analysis" (语法分析) 数据合并。
- * 3. 容错: 处理换行符作为段落分隔。
+ * 核心算法：Mergesort-like Tree Construction (类归并排序树构建)
  * 
- * @param content - 文章全文
- * @param sentences - 分句数据 (由 Intl.Segmenter 或 LLM 生成)
- * @param analyses - 语法分析标注 (LLM 生成, 可能包含重叠结构)
- * @param wordConfigs - 单词高亮配置 (Side Quest 词汇)
+ * 背景：
+ * 我们有三类独立的元数据层 (Metadata Layers)：
+ * 1. Base Text (纯文本)
+ * 2. Sentences (句子边界，无重叠)
+ * 3. Syntax Analysis (语法成分，可能嵌套/重叠)
+ * 4. Word Matches (词汇高亮，离散点)
+ * 
+ * 目标：
+ * 将这些线性重叠的数据层，合并为一个嵌套互斥的 Render Tree (RenderNode[][])，以供 React/Astro 递归渲染。
+ * 
+ * 难点：
+ * 语法成分 (如从句) 可能跨越单词，也可能嵌套在其他从句中。
+ * LLM 生成的索引 (Start/End) 可能有偏差，需要容错。
  */
 export function buildAnalysisTree(
     content: string,
@@ -127,17 +133,19 @@ export function buildAnalysisTree(
 }
 
 /**
- * 构建句子内部的分析标注节点
+ * 构建句子内部的 AST (Abstract Syntax Tree)
  * 
- * 策略 (FLATTENING STRATEGY):
- * LLM 可能会返回嵌套的结构 (例如: 定语从句可以包含主语)。
- * 但为了简化渲染和避免 DOM 嵌套混乱，我们采用 "Flat Visualization" (扁平化可视化) 策略:
+ * 策略模式：Flat Visualization (扁平化优先策略)
  * 
- * 1. 过滤掉所有重叠的结构 (Overlapping Structures)。
- * 2. 优先保留 *最长* 的结构 (通常是外层结构)。
- *    例如: 如果 [A [B] C], 我们只渲染 A，忽略嵌套在内的 B。
- *    注意: GrammarRules 中的 'priority' 属性在这里尚未生效，
- *    目前的逻辑是纯粹基于长度和位置的几何过滤。
+ * 问题：
+ * 自然语言不仅有嵌套 (Nested)，还有交叉 (Crossing)。
+ * 例如："[The man (who saw] the car) smiled." —— 这种情况在 DOM 树中无法直接表示。
+ * 
+ * 解决方案：
+ * 1. 贪心算法 (Greedy Longest-Match)：优先显示跨度最长的语法结构（通常是主句或大从句）。
+ * 2. 互斥性过滤 (Exclusion)：如果两个结构有重叠 (Overlap)，保留长的，丢弃短的。
+ *    注意：这里我们选择丢弃“内部嵌套”，而不是递归渲染，是为了保持 UI 清爽 (Cognitive Load Reduction)。
+ *    过多的嵌套高亮会让阅读者眼花缭乱。
  */
 function buildAnalysisNodes(
     sentenceText: string,

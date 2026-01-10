@@ -6,6 +6,21 @@ import { TaskQueue } from '../src/services/tasks/queue';
 interface IdRow { id: string; }
 interface AdminBody { task_date?: string; }
 
+/**
+ * Admin Routes (后台管理路由)
+ * 
+ * 核心功能：
+ * 提供针对 "Failed Datasets" (失败数据集) 的自动化运维能力。
+ * 
+ * 关键逻辑：Cascading Cleanup (级联清理)
+ * 当我们在数据库层面没有设置完整的 `ON DELETE CASCADE` 外键时 (Drizzle/SQLite 的某些限制)，
+ * 必须在应用层手动维护引用完整性。
+ * `delete-failed` 路由演示了如何安全地移除一个 Task 及其关联的：
+ * - Articles
+ * - Highlights
+ * - Word Indexes
+ * 确保不会留下孤儿数据 (Orphaned Records)。
+ */
 export const adminRoutes = (_queue: TaskQueue) => new Elysia({ prefix: '/api/admin' })
     .post('/tasks/retry-failed', async ({ body }) => {
         const b = body as AdminBody;

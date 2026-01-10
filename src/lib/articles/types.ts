@@ -1,4 +1,4 @@
-// ============ Core Domain Models ============
+// ============ 核心领域模型 ============
 
 export interface WordDefinition {
     word: string;
@@ -13,10 +13,10 @@ export interface SidebarWord {
     definitions: { pos: string; definition: string }[];
 }
 
-// ============ API Response Models ============
+// ============ API 响应模型 ============
 
 /**
- * Represents the structure of the JSON content stored in the DB
+ * 表示存储在数据库中的 JSON 内容结构
  */
 export interface ArticleParsedContent {
     result?: {
@@ -47,7 +47,7 @@ export interface ArticleLevelContent {
 }
 
 /**
- * Represents the raw row returned from /api/articles/{id}
+ * 表示从 /api/articles/{id} 返回的原始行数据
  */
 export interface ArticleRow {
     articles: {
@@ -69,7 +69,7 @@ export interface Task {
     profileName?: string;
 }
 
-// ============ Component/Feature Models ============
+// ============ 组件/功能模型 ============
 
 export interface AudioSegment {
     text: string;

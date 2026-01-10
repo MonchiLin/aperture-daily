@@ -33,7 +33,10 @@ export default function OnboardingDiegetic({
 }: OnboardingDiegeticProps) {
     const hasIssues = !status.isSetup;
 
-    // Derived states for narrative
+    // [叙事化 UI 状态机]
+    // 根据系统健康状态 (Status Check) 切换整个界面的叙事基调。
+    // "Broken" 状态模拟新闻编辑室停摆的紧急场景。
+    // "Ready" 状态模拟新闻编辑室准备就绪的正常场景。
     const headline = hasIssues ? "THE PRESSES HAVE STOPPED" : "BREAKING NEWS: SYSTEM ONLINE";
     const subhead = hasIssues
         ? "Editors report a critical failure in the newsroom's infrastructure. Production halted indefinitely."
@@ -52,7 +55,10 @@ export default function OnboardingDiegetic({
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="max-w-6xl w-full min-h-screen md:min-h-[80vh] bg-[#FAFAF8] shadow-2xl relative border-t-4 border-stone-900 md:my-8 flex flex-col"
             >
-                {/* 1. Header mimics the real app header */}
+                {/* [视觉层级 1] 报纸刊头 (Header)
+                    模拟真实应用的 Header，但带有特定情境的状态指示器。
+                    这种设计让 Onboarding 看起来不仅仅是一个弹窗，而是一份“特刊”。
+                */}
                 <header className="border-b-2 border-stone-900 p-6 flex items-end justify-between bg-[#F3F2EE]">
                     <div>
                         <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none font-serif">
@@ -71,10 +77,13 @@ export default function OnboardingDiegetic({
                     </div>
                 </header>
 
-                {/* 2. Main Content Grid */}
+                {/* [视觉层级 2] 双栏布局 (Split View) */}
                 <div className="flex-grow grid grid-cols-1 md:grid-cols-12">
 
-                    {/* Left Column: The "Broken" Story */}
+                    {/* 左栏：Diegetic Story (叙事层)
+                        这里展示的是“虚构”的新闻内容。
+                        如果系统未就绪，内容被“涂黑” (Redacted)，隐喻数据流中断。
+                    */}
                     <div className="col-span-1 md:col-span-8 p-6 md:p-12 border-b md:border-b-0 md:border-r border-stone-200 bg-white">
                         <div className="mb-12">
                             <span className={clsx(
@@ -94,7 +103,9 @@ export default function OnboardingDiegetic({
                             </p>
                         </div>
 
-                        {/* The "Redacted" Body Text */}
+                        {/* 动态组件切换：Redacted vs Real
+                            利用 Framer Motion 进行平滑的透明度过渡
+                        */}
                         <div className="space-y-6 font-serif text-stone-400 select-none relative max-w-2xl">
                             {hasIssues ? (
                                 <RedactedArticle />
@@ -104,7 +115,10 @@ export default function OnboardingDiegetic({
                         </div>
                     </div>
 
-                    {/* Right Column: The "Editor's Desk" (Controls) */}
+                    {/* 右栏：Non-Diegetic Controls (控制层)
+                        这里打破“第四面墙”，提供实际的系统配置反馈和操作按钮。
+                        设计上模仿“编辑台”的侧边栏，保持视觉一致性。
+                    */}
                     <div className="col-span-1 md:col-span-4 bg-[#F8F7F4] p-6 md:p-8 flex flex-col">
                         <div className="sticky top-8 space-y-8 flex-grow">
                             <div>
@@ -181,7 +195,13 @@ export default function OnboardingDiegetic({
     );
 }
 
-// Visual component for "Redacted" text blocks
+/**
+ * [视觉组件] RedactedArticle
+ * 
+ * 模拟机密文件或数据丢失时的“涂黑”效果。
+ * 使用 mix-blend-multiply 和 grayscale 营造做旧文档的质感。
+ * 这种视觉语言直观地告诉用户：“这里缺了东西，因为你还没配置好。”
+ */
 function RedactedArticle() {
     return (
         <div className="space-y-3 opacity-50 grayscale mix-blend-multiply">

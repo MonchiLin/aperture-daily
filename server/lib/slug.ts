@@ -1,7 +1,13 @@
 /**
- * Isomorphic Slug Utility
+ * Isomorphic Slug Utility (同构 Slug 生成器)
  * 
- * 同构模块：前端和后端共享相同的 slug 生成逻辑
+ * 设计意图：
+ * 保证文章 URL 在前端路由和后端生成中保持严格一致。
+ * 
+ * 为什么不使用标准库 (如 slugify)?
+ * 1. 我们的新闻源是国际化的 (包括德语、法语人名地名)。标准 slugify 经常直接丢弃非 ASCII 字符。
+ * 2. 我们需要自定义的 Transliteration (音译/转写) 规则，例如将德语 'ü' 转写为 'u' 而不是删除。
+ * 3. 我们需要保留中文字符 (CJK Compatibility)，因为可能有中文文章或中英混排标题。
  * 
  * Usage:
  *   Frontend: import { toArticleSlug } from '@/lib/shared/slug';

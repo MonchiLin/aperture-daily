@@ -1,5 +1,12 @@
 /**
- * useSettings - 设置面板业务逻辑 Hook
+ * useSettings Hook (前端配置状态机)
+ * 
+ * 核心功能：
+ * 1. 状态聚合：统一管理 Admin Key, Voice Preference, LLM Selection 等分散的配置。
+ * 2. 双向同步：
+ *    - 初始化时：API -> LocalStorage -> State
+ *    - 保存时：State -> LocalStorage & API (Cookie) -> Reload
+ * 3. SSR 兼容：Admin Key 通过 HttpOnly Cookie 传输，确保服务器端也能验证身份 (Layout.astro 需要)。
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '@nanostores/react';
@@ -16,7 +23,7 @@ export function useSettings() {
     const [voice, setVoiceSettings] = useState('en-US-GuyNeural');
     const [tab, setTab] = useState<SettingsTab>('general');
 
-    // LLM Settings
+    // LLM 设置
     const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
     const [llmProvider, setLlmProvider] = useState<string>('');
 
@@ -29,7 +36,7 @@ export function useSettings() {
             const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
             if (storedVoice) setVoiceSettings(storedVoice);
 
-            // Fetch LLM Config and sync with local storage
+            // 获取 LLM 配置并与本地存储同步
             apiFetch<{ current_llm: string; available_llms: string[] }>('/api/config/llm')
                 .then(data => {
                     if (data) {
@@ -50,11 +57,12 @@ export function useSettings() {
         if (!isAdmin && tab === 'profiles') setTab('general');
     }, [isAdmin, tab]);
 
-    // 保存设置并登录
+    // 保存设置并登录 (Login Action)
     async function save() {
         const nextKey = adminKey.trim();
 
-        // 保存音频设置
+        // 1. Client-Side Persistence: 立即保存非敏感偏好到 localStorage，
+        // 这样刷新页面后 UI 能迅速恢复状态 (Optimistic UI)。
         try {
             localStorage.setItem('aperture-daily_voice_preference', voice);
             setVoice(voice);
@@ -63,10 +71,15 @@ export function useSettings() {
             }
         } catch { /* ignore */ }
 
-        // 调用登录 API 设置 HttpOnly Cookie
+        // 2. Server-Side Session: 通过 POST /login 交换 HttpOnly Cookie。
+        // 这是最关键的一步，只有 Cookie 设置成功，所有 SSR 页面和受保护 API 才能访问。
         if (nextKey) {
             const success = await login(nextKey);
-            // 登录成功后刷新页面，让 SSR 重新渲染管理员组件
+
+            // 3. Hard Reload: 登录成功后强制刷新。
+            // 为什么？因为 Astro 是 MPA (Multi-Page App)。
+            // 仅仅客户端状态改变不足以让服务器重新渲染受保护的 Layout 组件。
+            // 必须刷新页面，让新的 Cookie 随请求发送，从而在服务器端通过校验。
             if (success) {
                 window.location.reload();
                 return;

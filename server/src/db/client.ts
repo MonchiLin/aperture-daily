@@ -6,15 +6,16 @@ import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
 import * as schema from '../../db/schema';
 import * as path from 'path';
 
-// Re-export the database type for use across the app
+// 统一数据库类型：无论底层是本地 SQLite 文件还是 Cloudflare D1 HTTP API，
+// 应用层都通过这个类型进行无感操作。
 export type AppDatabase = SqliteRemoteDatabase<typeof schema> | BunSQLiteDatabase<typeof schema>;
 
-// Configuration from env
+// 配置来源：环境变量
 const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const DATABASE_ID = process.env.CLOUDFLARE_DATABASE_ID;
 const API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
-// Check if we have D1 credentials
+// 检查是否具备连接 D1 的凭证
 const useD1 = !!(ACCOUNT_ID && DATABASE_ID && API_TOKEN);
 
 interface D1Response {
@@ -25,15 +26,19 @@ interface D1Response {
 
 function createDatabase(): AppDatabase {
     if (!useD1) {
-        // Local SQLite for development
-        // Resolve absolute path to avoid CWD issues
+        // [Local Mode] 本地开发环境
+        // 使用 bun:sqlite 原生驱动直接读写本地磁盘上的 .db 文件。
+        // 优点：零网络延迟，更快的开发迭代速度。
         const dbPath = path.resolve(import.meta.dir, '../../local.db');
-        console.log(`[DB] Using local SQLite (${dbPath})`);
+        console.log(`[DB] Using Local SQLite (Dev Mode): ${dbPath}`);
         const sqlite = new Database(dbPath);
         return drizzleBun(sqlite, { schema });
     }
 
-    // Cloudflare D1 HTTP Proxy for production
+    // [Production Mode] Cloudflare D1
+    // 由于 Node.js/Bun 环境无法直接运行 D1 Binding (仅 Worker 环境可用)，
+    // 我们使用 Cloudflare 提供的 REST API 作为连接隧道 (Tunnel)。
+    // 这允许原本设计用于 Edge 的 D1 数据库也能被常驻服务器访问。
     console.log(`[DB] Using Cloudflare D1 (HTTP Proxy) - Account: ${ACCOUNT_ID}, DB: ${DATABASE_ID}`);
 
     return drizzle(async (sql, params) => {
@@ -58,20 +63,20 @@ function createDatabase(): AppDatabase {
             try {
                 data = JSON.parse(text);
             } catch (e) {
-                throw new Error(`Failed to parse D1 response: ${text.slice(0, 100)}...`);
+                throw new Error(`无法解析 D1 响应: ${text.slice(0, 100)}...`);
             }
 
             if (!data.success) {
-                console.error('D1 API Error (Detailed):', JSON.stringify(data.errors, null, 2));
-                throw new Error(`D1 API Error: ${data.errors?.[0]?.message || 'Unknown error'}`);
+                console.error('D1 API Error (详细):', JSON.stringify(data.errors, null, 2));
+                throw new Error(`D1 API 错误: ${data.errors?.[0]?.message || '未知错误'}`);
             }
 
             const firstResult = data.result?.[0];
             const rows = (firstResult?.results || []) as Record<string, unknown>[];
 
-            // Note: Drizzle handles column name mapping (snake_case -> camelCase) 
-            // internally when using db.select().from(table)
-            // We should return raw snake_case column names from D1
+            // 注意: 当使用 db.select().from(table) 时，Drizzle 会在内部处理
+            // 列名映射 (snake_case -> camelCase)。
+            // 这里我们应该从 D1 返回原始的 snake_case 列名。
 
             return { rows };
         } catch (e) {
@@ -83,5 +88,5 @@ function createDatabase(): AppDatabase {
 
 export const db = createDatabase();
 
-// Helper to check connection type
+// 辅助变量：检查连接类型
 export const isD1 = useD1;

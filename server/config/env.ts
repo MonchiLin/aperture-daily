@@ -20,11 +20,11 @@ export const env = {
 
 // 验证关键环境变量
 if (!env.GEMINI_API_KEY) {
-    console.warn("WARNING: GEMINI_API_KEY is missing. Worker will fail.");
+    console.warn("警告: 缺少 GEMINI_API_KEY，Worker 将无法工作。");
 }
 if (!env.ADMIN_KEY) {
-    console.warn("WARNING: ADMIN_KEY is missing. Authentication will fail.");
+    console.warn("警告: 缺少 ADMIN_KEY，无法进行身份验证。");
 }
 if (!env.SHANBAY_COOKIE) {
-    console.warn("WARNING: SHANBAY_COOKIE is missing. Word fetching will fail.");
+    console.warn("警告: 缺少 SHANBAY_COOKIE，将无法获取单词数据。");
 }

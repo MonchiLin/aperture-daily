@@ -3,10 +3,15 @@ import { words, dailyWordReferences } from '../../db/schema';
 import { fetchShanbayTodayWords } from './shanbay';
 import { sql } from 'drizzle-orm';
 
+/**
+ * Utility: Filter unique non-empty strings
+ * 用于清洗单词列表，去除空值和重复项。
+ */
 function uniqueStrings(input: string[]) {
     return Array.from(new Set(input.filter((x) => typeof x === 'string' && x.length > 0)));
 }
 
+// 简单的延时函数，用于通过 Rate Limiting (速率限制)
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function fetchAndStoreDailyWords(
@@ -31,9 +36,16 @@ export async function fetchAndStoreDailyWords(
 
 
 
-    // 写入 words 表（幂等）
+    // 写入 words 表 (Global Dictionary)
+    // 策略：Idempotent Write (幂等写入)
+    // 我们使用 `onConflictDoNothing()`，意味着如果单词已存在，则忽略。
+    // 这保证了单词表是全局唯一的单词集合，不会重复。
     const allWords = [...new Set([...newWords, ...reviewWords])];
-    // Cloudflare D1 / Proxy limitations: reduce chunk size significantly to avoid "too many SQL variables"
+
+    // [D1 / SqliteProxy 限制]
+    // Cloudflare D1 HTTP API 对 SQL 语句长度和变量数量有严格限制。
+    // 如果一次插入几百个单词，会触发 "Topic too large" 或 "Too many SQL variables" 错误。
+    // 解决方案：将大任务切分为小 Chunk (Size=10)，并增加微小的 sleep 避免触发 Rate Limit。
     const WORD_INSERT_CHUNK_SIZE = 10;
 
     for (let i = 0; i < allWords.length; i += WORD_INSERT_CHUNK_SIZE) {
@@ -48,7 +60,10 @@ export async function fetchAndStoreDailyWords(
         await sleep(200);
     }
 
-    // 写入 daily_word_references (Normalized)
+    // 写入 daily_word_references (每日引用表)
+    // 策略：Reset & Rewrite (重置并重写)
+    // 对于“今天”的任务，如果多次运行此函数，我们需要先清除旧的引用记录，确保数据与最新的扇贝记录 1:1 一致。
+    // 这也是为了支持“重新生成”或“修复”场景。
     // Delete existing references for this date to support idempotency/updates
     await db.delete(dailyWordReferences).where(sql`${dailyWordReferences.date} = ${args.taskDate}`);
 

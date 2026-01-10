@@ -4,13 +4,13 @@
 
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
 
-// ============ Constants ============
+// ============ 常量定义 ============
 
 export const WORD_SELECTION_MIN_WORDS = 1;
 export const WORD_SELECTION_MAX_WORDS = 8;
 export const SOURCE_URL_LIMIT = 1;
 
-// ============ Types ============
+// ============ 类型定义 ============
 
 /** 候选词类型 */
 export type CandidateWord = {
@@ -113,8 +113,8 @@ export function normalizeWordSelectionPayload(value: unknown): unknown {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
     const obj = value as Record<string, unknown>;
 
-    // Strict mode: Only look for 'selected_words'
-    // If strictness is paramount, we should not look for aliases.
+    // 严格模式: 仅查找 'selected_words'
+    // 如果强调严格性，我们不再查找别名
     const selectedWords = pickWordList(obj.selected_words);
 
     if (!selectedWords?.length) return value;
@@ -229,13 +229,13 @@ export function extractJson(text: string): string {
     return text.trim();
 }
 
-// Message type for conversation history
+// 对话历史消息类型
 export interface AgnosticMessage {
     role: 'user' | 'assistant' | 'system';
     content: string;
 }
 
-// LLM Client interface (simple adapter)
+// LLM 客户端接口 (简单适配器)
 export interface ILLMClient {
     generateContent(
         messages: AgnosticMessage[],

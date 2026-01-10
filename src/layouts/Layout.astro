@@ -59,6 +59,13 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 			<slot />
 		</main>
 		
+		<!-- 
+			Global Global Styles & NProgress
+			为什么要在这里定义？
+			因为 View Transitions 会替换 body 内容。
+			放在这里的 <style is:global> 确保样式在页面切换时 persistent。
+			NProgress 作为页面加载指示器，提升 SPA 般的流畅体验。
+		-->
 		<style is:global>
 			/* NProgress 样式自定义 */
 			#nprogress {
@@ -88,20 +95,26 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 		<script>
 			import NProgress from 'nprogress';
 			
-			// 标记客户端已 hydration，用于 CSS 切换 SSR/客户端组件
+			// Hydration Marker (注水标记)
+			// 用于 CSS 选择器，避免 SSR 内容与 Client 内容切换时的闪烁 (FOUC)。
 			document.documentElement.classList.add('hydrated');
 			
 			NProgress.configure({ showSpinner: false, speed: 200 });
 			
-			// 导航开始
+			// 导航生命周期 (View Transitions API)
+			// Astro 作为一个 MPA，通过 View Transitions 模拟了 SPA 的路由体验。
+			// 我们不需要重载整个页面，只需替换 body 内容。
+			// 这里监听生命周期事件来显示进度条。
+			
+			// 1. 导航开始：用户点击链接，或 history.pushState
 			document.addEventListener('astro:before-preparation', () => {
 				NProgress.start();
 			});
 			
-			// 导航完成
+			// 2. 页面交换完成：DOM 已更新，但脚本可能还在运行
 			document.addEventListener('astro:after-swap', () => {
 				NProgress.done();
-				// 确保导航后仍保持 hydrated 状态
+				// 重新添加类名，因为新页面的 html 标签可能没有这个类
 				document.documentElement.classList.add('hydrated');
 			});
 		</script>

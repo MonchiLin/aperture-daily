@@ -13,10 +13,18 @@ const MinimizeIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill
 /**
  * H200 AUDIO PLAYER (Explicit Geometry Engine)
  * 
- * STRATEGY: NO LAYOUT PROJECTION.
- * To prevent "Circle Deformation" (Oval effect), we must avoid CSS Transforms on the parent.
- * We use Explicit Layout Animation (animate width/height directly).
- * This forces the browser to re-layout every frame, preserving geometric aspect ratios.
+ * 核心技术点：Explicit Layout Animation (显式布局动画)
+ * 
+ * 问题背景：
+ * Framer Motion 的 `layout` 属性通常使用 CSS Transform (scale) 来模拟尺寸变化。
+ * 这对于矩形很有效，但包含圆形元素 (Vinyl Record) 时会导致严重的“压扁/拉伸”变形 (Distortion)。
+ * 也就是著名的 "Scale Distortion" 问题。
+ * 
+ * 解决方案：
+ * 我们必须**禁用**父容器的 `layout` 属性。
+ * 转而使用显式的 width/height/borderRadius 动画。
+ *这会触发浏览器的 Layout 重排 (Reflow)，虽然性能开销略大，但对于这种复杂的几何嵌套组件，
+ * 是唯一能保持子元素（尤其是正圆形的黑胶唱片）宽高比不变的方法。
  */
 const FloatingAudioPlayer: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -73,7 +81,12 @@ const FloatingAudioPlayer: React.FC = () => {
                     transition={SPRING_CONFIG}
                 >
                     {/* VINYL WRAPPER */}
-                    {/* Enforce aspect-square to act as a geometrical stronghold */}
+                    {/* 
+                      几何锚点 (Geometrical Stronghold)
+                      我们强制锁定 aspect-square，并配合显式的 width/height 动画。
+                      transition 使用弹簧物理 (Spring Physics)，
+                      模拟真实的机械展开质感，避免由于 JS 动画帧率波动导致的“生硬感”。
+                    */}
                     <motion.div
                         // NO layout prop
                         className="relative flex items-center justify-center z-20 cursor-pointer transition-transform aspect-square shrink-0 group"

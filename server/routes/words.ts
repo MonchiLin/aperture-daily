@@ -11,14 +11,14 @@ interface FetchBody { task_date?: string; date?: string; }
 export const wordsRoutes = new Elysia({ prefix: '/api/words' })
     .post('/fetch', async ({ body }) => {
         const b = body as FetchBody;
-        console.log("Receive fetch words request:", b);
+        console.log("收到获取单词请求:", b);
         const date = b.task_date || b.date || getBusinessDate();
         const cookie = env.SHANBAY_COOKIE;
 
-        console.log(`[Fetch Words] Using Env Cookie. Length: ${cookie.length}`);
+        console.log(`[Fetch Words] 使用环境变量 Cookie。长度: ${cookie.length}`);
 
         if (!cookie) {
-            throw AppError.internal("Missing SHANBAY_COOKIE in .env");
+            throw AppError.internal("环境变量中缺少 SHANBAY_COOKIE");
         }
 
         const result = await fetchAndStoreDailyWords(db, {

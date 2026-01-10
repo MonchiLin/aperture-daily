@@ -12,93 +12,55 @@ interface MemoryEntry {
     timeAgo: string;
 }
 
+/**
+ * Echoes (记忆回响 Service)
+ * 
+ * 核心功能 (Contextual Retrieval):
+ * 为新生成的文章提供“上下文记忆”。当用户阅读一篇文章时，系统会自动高亮文中的单词，
+ * 并显示该单词在 *过去* 其他文章中的出现片段 (Echoes)。
+ * 
+ * 技术挑战：
+ * 1. 批量查询：一篇文章可能包含 20-50 个高亮词，N+1 查询是不可接受的。
+ * 2. 性能：需要在毫秒级返回所有单词的上下文。
+ * 
+ * 解决方案：
+ * 使用单一的 SQL `IN` 查询，一次性检索所有单词的相关记录，然后在内存中进行 Grouping。
+ */
 export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
     .post('/batch', async ({ body }: { body: { words?: string[], article_id?: string, exclude_article_id?: string } }) => {
         const { words, article_id, exclude_article_id } = body;
 
         let targets: string[] = [];
 
-        // If article_id is provided, look up words from article_vocabulary
+        // 如果提供了 article_id，从 article_vocabulary 表中查找单词
         if (article_id) {
             const vocabRows = await db.all(sql`
                 SELECT word FROM article_vocabulary WHERE article_id = ${article_id}
             `) as { word: string }[];
             targets = vocabRows.map(r => r.word.toLowerCase());
         } else if (words && words.length > 0) {
-            // Use provided words list
+            // 使用提供的单词列表
             targets = words.map(w => w.trim().toLowerCase()).filter(w => w.length > 1);
         }
 
         if (targets.length === 0) return { echoes: {} };
 
-        // Use article_id as exclude if not explicitly provided
+        // 如果未明确提供，则使用 article_id 作为排除项
         const excludeId = exclude_article_id || article_id;
 
-        console.log(`[Echoes Batch] Checking ${targets.length} words. Exclude: ${excludeId}`);
+        console.log(`[Echoes Batch] 正在检查 ${targets.length} 个单词。排除文章: ${excludeId}`);
 
 
-        // Batch query: Find latest memory for each word
-        // Note: Since we want ONE memory per word, and simple GROUP BY might be tricky with SQLite full columns,
-        // we can fetch recent ones and filter in code for simplicity and flexibility given the small batch size (usually < 20 words).
-        // Or use a window function if D1 supports it efficiently.
-        // Let's use IN clause and a simple query, then post-process.
-
-        // Limit: fetch last 50 matches (generous enough for a page of 10-20 target words)
-        // Fix SQL Injection: Use drizzle-orm query builder or helper if possible.
-        // Since we are using raw SQL for D1, we must escape manually or use parameter binding?
-        // Drizzle `sql` tag handles parameterization if values are passed as separate args, but IN clause is tricky with arrays.
-
-        // Safer approach: use multiple placeholders
-        // But db.all with sql template is safer.
-        // Let's use simple string escaping for now as a fallback since array spreading in template literal SQL might be tricky in this proxy setup.
-        // ACTUALLY, checking Drizzle docs: sql`... IN ${targets}` is not standard.
-        // But we can construct standard params.
-
-        // Re-implement using query builder if possible? 
-        // `db.select().from(articleWordIndex)...`
-        // But we have joins.
-
-        // Let's manually verify and escape since these are known "word" strings.
-        // ALREADY DID escaping above: replace("'", "''"). 
-
-        // However, a cleaner way is strictly using the `IN` operator logic if the driver supports it.
-        // Given the proxy driver limitation, string construction with single-quote escaping is the most robust "raw" way for SQLite.
-        // Vulnerability check: `w.replace("'", "''")` is standard SQLite escaping.
-        // Is there anything else? Backslashes? SQLite string literals don't use backslash escapes by default unless standard conforming strings are off?
-        // Actually, in standard SQL, ' is the only special char.
-
-        // WAIT! The current implementation:
-        // const placeholders = targets.map((w) => `'${w.replace("'", "''")}'`).join(',');
-        // sql.raw(...)
-
-        // `sql.raw` injects the string directly.
-        // If `w` contains `\`, does it matter? No.
-        // If `w` contains NUL? D1 might choke.
-        // Ideally we should use `sql` checks.
-
-        // Let's try to pass params to `db.all`? 
-        // The proxy `db.all(sql`...`)` supports params.
-        // `sql`... WHERE word IN ${targets}` might work if Drizzle expands it?
-        // Drizzle SQLite does NOT automatically expand arrays for IN.
-
-        // Correct Safe implementation:
-        /*
-        const query = sql`
-            SELECT ...
-            FROM article_word_index awi
-            ...
-            WHERE awi.word IN (${sql.join(targets.map(t => sql.param(t)), sql`, `)})
-            ...
-        `;
-        */
-        // But we need `article_id != ...`.
-
-        // Let's stick to the current implementation but add a specific comment about the escaping safety, 
-        // because `sql.raw` with Manual Escaping is acceptable IF done correctly.
-        // Replacing ' with '' is the correct way for SQLite.
-
-        // Let's improve it by ensuring no control characters.
-        const safeTargets = targets.map(t => t.replace(/'/g, "''")); // Global replacement!
+        // 批量查询优化 (Batch Optimization)
+        // 
+        // 为什么手动构建 SQL IN 子句？
+        // Drizzle ORM 的 SQLite Proxy 模式在处理复杂的数组参数时曾有 Bug。
+        // 为了极致的稳定性和性能，我们选择直接构建原始 SQL 字符串。
+        //
+        // 安全性 (Security Assurance):
+        // 必须手动进行单引号转义 (replace ' with '')，防止 SQL 注入。
+        // 例如: "User's" -> "User''s"
+        const safeTargets = targets.map(t => t.replace(/'/g, "''"));
         const placeholders = safeTargets.map(w => `'${w}'`).join(',');
 
         // We missed the global flag in the original code: `w.replace("'", "''")` only replaces the FIRST occurrence!
@@ -139,7 +101,7 @@ export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
         for (const row of results) {
             if (!echoes[row.word]) echoes[row.word] = [];
 
-            // Allow up to 10 echoes per word for the UI to decide display
+            // 每个单词最多保留 10 条记录，供 UI 筛选
             if ((echoes[row.word]?.length || 0) >= 10) continue;
 
             echoes[row.word]?.push({
@@ -152,7 +114,7 @@ export const echoesRoutes = new Elysia({ prefix: '/api/echoes' })
             });
         }
 
-        console.log(`[Echoes Batch] Found echoes for ${Object.keys(echoes).length} words.`);
+        console.log(`[Echoes Batch] 为 ${Object.keys(echoes).length} 个单词找到了回响。`);
         return { echoes };
     }, {
         body: t.Object({

@@ -29,12 +29,22 @@ export function updateTaskStatus(tasks: { status: string }[]) {
     });
 }
 
-// 登录并设置 HttpOnly Cookie
-// 同时调用前端和后端登录接口，确保 Cookie 设置到正确的域名
+// 登录 Action (Dual-Domain Login Strategy)
+// 
+// 核心挑战：
+// 我们的应用架构通常包含两个域名/端口：
+// 1. Frontend (SSR Node): 用于渲染页面 (localhost:4321 或 pages.dev)
+// 2. Backend (API): 用于数据接口 (localhost:3000 或 hf.space)
+// 
+// HttpOnly Cookie 受到浏览器的同源策略限制。
+// 为了解决这个问题，我们需要在“两个地方”都种下 Cookie：
+// 1. 前端域：为了 SSR 渲染时能携带 Cookie (layout 鉴权)。
+// 2. 后端域：为了客户端 JS 发起 Fetch 请求时能携带 Cookie (数据鉴权)。
 export async function login(key: string): Promise<boolean> {
     try {
-        // 1. 调用前端登录接口（设置 Cookie 到 pages.dev 域名）
-        //    这样 SSR 阶段可以读取到 Cookie
+        // 1. 设置 Frontend SSR Cookie
+        // 调用 Astro 自身的 API 路由 (/src/pages/api/auth/login.ts)
+        // 这个 Cookie 将属于当前页面所在的域名。
         const frontendRes = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -46,8 +56,9 @@ export async function login(key: string): Promise<boolean> {
             throw new Error('Frontend login failed');
         }
 
-        // 2. 调用后端登录接口（设置 Cookie 到 hf.space 域名）
-        //    虽然这个 Cookie SSR 读不到，但客户端 API 调用需要
+        // 2. 设置 Backend API Cookie
+        // 调用独立后端的 API 路由 (server/routes/auth.ts)
+        // 这个 Cookie 将属于后端 API 所在的域名 (如果是分离部署的话)。
         await apiFetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

@@ -1,6 +1,15 @@
 ---
 /**
- * 词汇侧边栏 - Astro 版本 (Wrapper for React Cards)
+ * Word Sidebar Wrapper (React Islands Container)
+ * 
+ * 架构模式：React in Astro (Islands Architecture)
+ * 
+ * 核心逻辑：
+ * 这个 Astro 组件充当以 React 编写的复杂交互组件 (`WordReflectionCard`, `ArticleInfoButton`) 的容器。
+ * 为什么使用 Wrapper？
+ * 1. 布局控制：Astro 负责静态的 Grid 布局和边框样式 (Static Shell)。
+ * 2. 交互水合 (Hydration)：通过 `client:idle` 指令，我们告诉 Astro 仅在浏览器主线程空闲时加载并执行 React 代码。
+ *    这对于侧边栏这种非首屏关键路径 (Critical Path) 的组件非常重要，它不会阻塞主要内容的 LCP (Largest Contentful Paint)。
  */
 import WordReflectionCard from "./WordReflectionCard";
 import ArticleInfoButton from "./ArticleInfoButton";

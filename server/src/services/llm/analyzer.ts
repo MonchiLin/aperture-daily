@@ -1,11 +1,20 @@
 /**
- * Sentence Analyzer - Stage 4 (Paragraph Batch Processing)
+ * Syntax Analysis Engine (句法分析引擎) - Stage 4
+ * 
+ * 核心挑战：Context Window vs. Precision (上下文与精度的权衡)
+ * 1. "Lost in the Middle": 如果一次性分析整篇文章 (2-3k token)，LLM 往往会忽略中间的句子，只分析开头和结尾。
+ * 2. 结构化输出坍塌: 要求的 JSON 越长，LLM 越容易生成无效格式 (Syntax Error)。
+ * 
+ * 解决方案：Divide-and-Conquer (分治策略)
+ * 1. Segmentation (分句): 使用 `Intl.Segmenter` (浏览器原生) 进行高精度的语言学分句，优于简单的 Regex。
+ * 2. Grouping (分组): 将句子按段落 (Paragraph) 编组。每组 5-10 句，既保留了局部上下文 (Local Context)，又将 Token 保持在 LLM 的"舒适区" (Sweet Spot)。
+ * 3. Mapping (映射): LLM 只需返回局部索引，我们再将其映射回全局文章偏移量 (Global Offsets)。
  */
 
 import { extractJson } from './utils';
 import type { LLMProvider } from './types';
 
-// ============ Types ============
+// ============ 类型定义 ============
 
 export type AnalysisRole =
     | 's' | 'v' | 'o' | 'io' | 'cmp'  // Core
@@ -72,13 +81,13 @@ interface AnalyzerInput {
     onLevelComplete?: (completedArticles: ArticleWithAnalysis[]) => Promise<void>;
 }
 
-/** Stage 4 输出 */
+/** 阶段 4 输出 */
 interface AnalyzerOutput {
     articles: ArticleWithAnalysis[];
     usage: Record<string, TokenUsage>;
 }
 
-// ============ Constants ============
+// ============ 常量定义 ============
 
 const VALID_ROLES: readonly AnalysisRole[] = [
     's', 'v', 'o', 'io', 'cmp',
@@ -86,7 +95,7 @@ const VALID_ROLES: readonly AnalysisRole[] = [
     'pas', 'con', 'inf', 'ger', 'ptc'
 ];
 
-// ============ Helper Functions ============
+// ============ 辅助函数 ============
 
 /**
  * 使用 Intl.Segmenter 将文章分割为句子
@@ -136,7 +145,12 @@ function groupSentencesByParagraph(content: string, sentences: SentenceData[]): 
 }
 
 /**
- * 构建段落批量分析的 Prompt
+ * 构建段落批量分析的 System Prompt
+ * 
+ * Prompt 设计要点：
+ * 1. 索引映射：要求 LLM 针对 [Sn] 编号的句子输出，避免原文/译文混淆。
+ * 2. 角色限定：明确定义需要的语法角色 (S/V/O 等)。
+ * 3. 严格 JSON：强制输出严格的 JSON 结构，便于程序解析。
  */
 function buildParagraphPrompt(sentences: SentenceData[]): string {
     const numberedSentences = sentences
@@ -217,7 +231,18 @@ function parseParagraphResponse(text: string, sentenceCount: number): Map<number
 }
 
 /**
- * 将 LLM 标注转换为全局偏移量
+ * Offset Mapping Algorithm (偏移量映射算法)
+ * 
+ * 问题：
+ * LLM 返回的是局部文本 (Local Text Snippet)，例如 "apple"。
+ * 我们需要知道这到底是文章中第几个 "apple" 的 Start/End Index。
+ * 
+ * 逻辑：
+ * 1. Scope Restriction (范围限定): 我们只在当前句子 (sentence.start ~ sentence.end) 范围内搜索。
+ * 2. Coordinate Transformation (坐标变换): 
+ *    GlobalOffset = SentenceStartOffset + LocalMatchIndex
+ * 
+ * 这确保了即使文章中有多个 "apple"，语法标记也能准确对应到 LLM 正在分析的那一个句子的那一个词。
  */
 function convertToGlobalOffsets(
     annotations: LLMAnnotation[],
@@ -251,7 +276,14 @@ function convertToGlobalOffsets(
 }
 
 /**
- * 分析单个 Article Level (按段落批处理)
+ * 分析单个 Article Level 的核心流程
+ * 
+ * 流程细节：
+ * 1. 预处理：分句 -> 按段落分组。
+ * 2. 过滤：跳过过短的段落 (如标题或极短描述)，节省 Token。
+ * 3. 迭代调用：对每个有效段落构建 Prompt 并调用 LLM。
+ * 4. 结果聚合：解析 LLM 响应，转换为全局 Offset，并收集 Token 用量。
+ * 5. 错误隔离：单个段落分析失败会记录日志并抛错，由上层决定是否重试（目前策略是抛出异常中断）。
  */
 async function analyzeArticle(args: {
     client: LLMProvider;
@@ -330,10 +362,19 @@ async function analyzeArticle(args: {
     };
 }
 
-// ============ Main Export ============
+// ============ 核心导出 ============
 
 /**
- * 运行语法分析（支持 Checkpoint 恢复）
+ * 运行全量语法分析（支持增量 Checkpoint 恢复）
+ * 
+ * 设计思路：
+ * 接收 3 个难度等级的文章，顺序进行分析。
+ * 每完成一个 Level，都会触发 onLevelComplete 回调。
+ * 这允许 TaskExecutor 在数据库中保存已完成的 Levels。
+ * 
+ * 如果任务在分析 Level 2 时崩溃，下次重启时：
+ * 1. completedLevels 参数将包含 Level 1 的结果。
+ * 2. 本函数会识别并跳过 Level 1，直接从 Level 2 开始。
  */
 export async function runSentenceAnalysis(args: AnalyzerInput): Promise<AnalyzerOutput> {
     const usageAccumulator: Record<string, TokenUsage> = {};

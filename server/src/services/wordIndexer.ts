@@ -42,11 +42,18 @@ function splitIntoSentences(text: string): string[] {
 }
 
 /**
- * Indexes specific words from an article with their context.
- * STRICT MODE: Only indexes target words (input_words).
+ * Article Word Indexer (文章单词索引器)
  * 
- * @param articleId The UUID of the article
- * @param contentJson The parsed content JSON of the article
+ * 核心功能：
+ * 为文章中出现的“目标单词”建立倒排索引 (Inverted Index) 和上下文片段 (Context Snippet)。
+ * 这使得前端可以实现：
+ * 1. 单词高亮 (Highlighting)。
+ * 2. 点击单词显示“原文例句” (Usage in Context)。
+ * 3. 跨文章搜索单词历史。
+ * 
+ * 严格模式 (STRICT MODE):
+ * 我们仅索引那些明确列在 `input_words` (Selected/New/Review) 中的单词。
+ * 不会自动索引文章中出现的其他随机单词，以保持知识图谱的整洁和相关性。
  */
 export async function indexArticleWords(articleId: string, contentJson: ContentJson) {
     if (!contentJson || !contentJson.result || !contentJson.result.articles) {
@@ -54,8 +61,9 @@ export async function indexArticleWords(articleId: string, contentJson: ContentJ
         return;
     }
 
-    // 1. Collect target words (Keywords & Entities)
-    // STRICT MODE: We ONLY use words that are explicitly in the input_words lists.
+    // 1. 收集目标单词 (Keywords & Entities)
+    // 为什么需要去重？ input_words 中的 new/review 列表可能有重叠，或者与 selected 重叠。
+    // 使用 Set 确保每个单词只处理一次。
     const inputWords = contentJson.input_words || {};
     const targets = new Set<string>();
 
@@ -70,9 +78,11 @@ export async function indexArticleWords(articleId: string, contentJson: ContentJ
 
     console.log(`[WordIndexer] Indexing ${targets.size} words for article ${articleId}`);
 
-    // 2. Prepare content for searching
+    // 2. 准备搜索语料 (Prepare Corpus)
+    // 一篇文章有多个 Level (L1/L2/L3)。
+    // 策略：选择字数最多 (通常是 L3) 的变体作为搜索源。
+    // 这样能找到最完整、最丰富的例句上下文。
     const articles = contentJson.result.articles as ArticleContent[];
-    // Use the longest article part (highest word count / level) to find context
     const mainArticle = articles.sort((a, b) => (b.word_count || 0) - (a.word_count || 0))[0];
 
     if (!mainArticle || !mainArticle.content) {
@@ -93,10 +103,14 @@ export async function indexArticleWords(articleId: string, contentJson: ContentJ
         const matchedSentence = sentences.find(s => regex.test(s));
 
         if (matchedSentence) {
-            // Trim to fit context limit (~150 chars)
+            // 上下文截断 (Snippet Truncation)
+            // 数据库列通常有长度限制 (即使是 TEXT 也不建议存太长)。
+            // 且前端显示卡片时空间有限。
+            // 算法：以单词为中心，前后各取 ~80 字符，并添加省略号。
             let snippet = matchedSentence.trim();
             if (snippet.length > 200) {
                 const matchIndex = snippet.toLowerCase().indexOf(word);
+                // 确保 start 索引不越界
                 const start = Math.max(0, matchIndex - 80);
                 const end = Math.min(snippet.length, matchIndex + 80);
                 snippet = (start > 0 ? '...' : '') + snippet.substring(start, end) + (end < snippet.length ? '...' : '');

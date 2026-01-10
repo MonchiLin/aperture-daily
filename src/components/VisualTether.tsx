@@ -33,7 +33,10 @@ export default function VisualTether() {
 
             const newPaths: TetherPath[] = [];
 
-            // Dictionary Tether (Orange Only)
+            // 1. Dictionary Tether (Orange Line)
+            // 连接文章中的单词 -> 右侧栏的字典卡片
+            // 这是一个 "One-to-Many" 的连线：
+            // 多个文章中的单词实例 (wordInstances) 都会连向同一个字典卡片 (card)。
             const card = document.querySelector(`[data-word-card="${activeWord}"]`);
             if (card) {
                 const cardRect = card.getBoundingClientRect();

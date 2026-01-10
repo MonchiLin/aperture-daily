@@ -105,7 +105,11 @@ export async function fetchShanbayTodayWords(cookie: string): Promise<ShanbayTod
         };
     } catch (err: unknown) {
         const msg = String(err);
-        // 自动修复：检测 412 错误（今日学习数据尚未初始化完成）
+        // [自动修复策略] "Lazy Initialization"
+        // 扇贝 API 有一个怪癖：新的一天开始时，如果用户没有在 App/Web 端访问过，
+        // 后端数据可能未生成，直接调用 获取单词接口 会返回 412 Precondition Failed。
+        // 
+        // 解决方案：捕获 412，显式调用 checkin 接口触发后端生成数据，然后重试。
         if (msg.includes('412') && (msg.includes('初始化') || msg.includes('initializ'))) {
             console.log(`[Shanbay] 412 Error detected (Data Not Initialized). Triggering initDailyCheckin for ${materialbookId}...`);
             await initDailyCheckin(cookie, materialbookId);

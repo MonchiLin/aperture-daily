@@ -1,8 +1,10 @@
 /**
- * Gemini Provider - 原生 REST API 实现
+ * Gemini Provider (Google Vertex AI/Studio REST API 实现)
  * 
- * 直接使用 fetch 调用 Gemini API，支持自定义代理
- * 兼容格式：https://domain/v1beta/models/MODEL:generateContent
+ * 核心设计：
+ * 不使用 Google 官方 Node.js SDK，而是直接封装 fetch 请求。
+ * 原因：为了更精细地控制底层网络行为（如 Fetch 的 signal、timeouts、HTTP 代理支持），
+ * 以及处理官方 SDK 可能未及时跟进的 Beta 特性（如 Thinking Config, Search Tool 自定义参数）。
  */
 
 import type { DailyNewsProvider, GenerateOptions, GenerateResponse, Stage1Input, Stage1Output, Stage2Input, Stage2Output, Stage3Input, Stage3Output, Stage4Input, Stage4Output } from '../types';
@@ -75,6 +77,8 @@ export class GeminiProvider implements DailyNewsProvider {
         console.log(`[Gemini] Calling: ${url}`);
 
         const controller = new AbortController();
+        // 设置超长超时 (35m)，因为 Stage 3/4 的整批处理可能极其耗时，
+        // 且 Google 的 Thinking Model 有时会“思考”很久。
         const timeoutId = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
         // 构建请求体
@@ -86,11 +90,12 @@ export class GeminiProvider implements DailyNewsProvider {
             request.systemInstruction = { parts: [{ text: options.system }] };
         }
 
-        // Default Tool: Google Search (can be overridden or disabled via config)
-        // User Policy: Search Always On unless explicitly disabled (which we don't do for stages)
+        // 工具配置: Google Search
+        // Gemini 2.0 具有内置的 Grounding 能力。我们在这里显式启用，
+        // 确保即使 Prompt 没有显式要求，模型也能访问实时信息。
         const tools = options.config?.tools || [{ googleSearch: {} }];
 
-        // Config: Thinking defaults to high
+        // 配置: Thinking 默认为 high
         const generationConfig = {
             temperature: 1,
             thinkingConfig: {
@@ -129,11 +134,13 @@ export class GeminiProvider implements DailyNewsProvider {
                 throw new Error(`Gemini API Error: ${data.error.code} - ${data.error.message}`);
             }
 
-            // 提取文本
-            // [VERIFIED] Based on debug-gemini-search.ts output:
-            // - Parts with `thought: true` contain the chain-of-thought.
-            // - Parts with `text` (and no thought) contain the final JSON.
-            // - Grounding metadata appears at candidate level, not interfering with text parts.
+            // 提取核心文本
+            // Gemini API 返回的数据结构中，"parts" 数组可能混合包含：
+            // 1. { thought: true, text: "..." } -> 思维链内容 (CoT)
+            // 2. { text: "..." } -> 最终回答内容
+            // 
+            // 我们需要过滤掉 thought 部分，只返回最终的 JSON 文本给 Pipeline 解析。
+            // 否则 JSON.parse 会因为包含自然语言的思考过程而失败。
             const text = this.extractText(data);
 
             return {
@@ -154,7 +161,7 @@ export class GeminiProvider implements DailyNewsProvider {
         }
     }
 
-    // ============ Implementation of 4 Stages ============
+    // ============ 4 个阶段的实现 ============
 
     async runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output> {
         console.log('[Gemini] Running Stage 1: Search & Selection');
@@ -270,8 +277,8 @@ export class GeminiProvider implements DailyNewsProvider {
     async runStage4_SentenceAnalysis(input: Stage4Input): Promise<Stage4Output> {
         console.log('[Gemini] Running Stage 4: Sentence Analysis');
 
-        // Delegates to shared analyzer logic, passing 'this' as the LLMProvider
-        // We use the new ANALYSIS_SYSTEM_INSTRUCTION which forces JSON
+        // 委托给共享的分析器逻辑，传入 'this' 作为 LLMProvider
+        // 我们使用新的 ANALYSIS_SYSTEM_INSTRUCTION 强制 JSON 输出
         const result = await runSentenceAnalysis({
             client: this, // 'this' implements LLMProvider
             model: this.model,
@@ -287,7 +294,7 @@ export class GeminiProvider implements DailyNewsProvider {
 
     /**
      * 从 Gemini 响应中提取文本
-     * Robust extraction: joins all non-thought text parts.
+     * 健壮提取: 拼接所有非 thought 的 text 部分。
      */
     private extractText(response: GeminiApiResponse): string {
         let text = '';

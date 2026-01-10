@@ -1,13 +1,22 @@
 #!/usr/bin/env bun
 /**
- * D1 Database Sync Script
+ * D1 Database Sync Engine (D1 数据库同步引擎)
  * 
- * Syncs data between remote Cloudflare D1 and local SQLite database.
+ * 核心功能：
+ * 用于在 "Local Dev DB" (本地 Bun SQLite) 和 "Remote Production DB" (Cloudflare D1) 之间同步全量数据。
  * 
- * Usage:
- *   bun run scripts/db-sync.ts pull    # Pull remote D1 data to local.db
- *   bun run scripts/db-sync.ts push    # Push local.db data to remote D1
- *   bun run scripts/db-sync.ts export  # Export remote D1 to backup.sql
+ * 为什么需要这个脚本？
+ * Cloudflare D1 是分布式的，且在线上。本地开发时，我们需要一个真实的、包含数据的数据库环境。
+ * 手动导入导出 SQL 非常繁琐且容易出错（例如 D1 的 SQL 语法与本地 SQLite 的微小差异）。
+ * 
+ * 工作流 (Workflow):
+ * 1. Pull: Remote -> Local (常用于：同步线上数据开发新功能)
+ * 2. Push: Local -> Remote (常用于：本地修复 Bug 或数据订正后发布，**高风险操作**)
+ * 3. Export: Remote -> SQL File (用于备份)
+ * 
+ * 技术细节：
+ * - 自动过滤 `sqlite_sequence` 表，防止自增 ID 序列冲突。
+ * - 使用 PRAGMA foreign_keys=OFF 暂时禁用外键约束，以避免因插入顺序导致的约束错误。
  */
 
 import { $ } from "bun";

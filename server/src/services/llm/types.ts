@@ -23,7 +23,7 @@ export interface LLMProvider {
     generate(options: GenerateOptions): Promise<GenerateResponse>;
 }
 
-// ============ Stage I/O Types ============
+// ============ 阶段 I/O 类型定义 ============
 
 export interface TokenUsage {
     inputTokens: number;
@@ -31,7 +31,7 @@ export interface TokenUsage {
     totalTokens: number;
 }
 
-// Stage 1
+// 阶段 1 (搜索)
 export interface Stage1Input {
     candidateWords: string[];
     topicPreference: string;
@@ -47,7 +47,7 @@ export interface Stage1Output {
     usage?: TokenUsage;
 }
 
-// Stage 2
+// 阶段 2 (草稿)
 export interface Stage2Input {
     selectedWords: string[];
     newsSummary: string;
@@ -62,7 +62,7 @@ export interface Stage2Output {
     usage?: TokenUsage;
 }
 
-// Stage 3
+// 阶段 3 (转换)
 export interface Stage3Input {
     draftText: string;
     sourceUrls: string[];
@@ -75,9 +75,9 @@ export interface Stage3Output {
     usage?: TokenUsage;
 }
 
-// Stage 4
+// 阶段 4 (分析)
 export interface Stage4Input {
-    articles: any[]; // ArticleInput from analyzer.ts
+    articles: any[]; // 来自 analyzer.ts 的 ArticleInput
     model?: string;
     completedLevels?: any[];
     onLevelComplete?: (completedArticles: any[]) => Promise<void>;
@@ -89,8 +89,14 @@ export interface Stage4Output {
     usage?: Record<string, TokenUsage>;
 }
 
-// ============ Unified Provider Interface ============
+// ============ 统一 Provider 接口 ============
 
+/**
+ * DailyNews 核心 Provider 接口
+ * 
+ * 任何 LLM Provider (Gemini, OpenAI, Claude) 都必须实现此接口，
+ * 以便在 Pipeline 中无缝切换。
+ */
 export interface DailyNewsProvider extends LLMProvider {
     runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output>;
     runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output>;
