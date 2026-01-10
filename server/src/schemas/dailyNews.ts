@@ -10,6 +10,8 @@ export const dailyNewsArticleSchema = z.object({
     structure: z.any().optional()
 });
 
+export type DailyNewsArticle = z.infer<typeof dailyNewsArticleSchema>;
+
 export const wordDefinitionSchema = z.object({
     word: z.string(),
     // used_form: 单词在文章中实际出现的形式 (如 "running" vs lemma "run")。
@@ -21,6 +23,8 @@ export const wordDefinitionSchema = z.object({
         definition: z.string()
     }))
 });
+
+export type WordDefinition = z.infer<typeof wordDefinitionSchema>;
 
 export const dailyNewsOutputSchema = z
     .object({

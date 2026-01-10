@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
-import { sql } from 'drizzle-orm';
-import { db } from '../src/db/client';
+import { db } from '../src/db/factory';
+import { toCamelCase } from '../src/utils/casing';
 
 interface HighlightBody {
     id?: string;
@@ -17,27 +17,49 @@ interface HighlightUpdateBody {
     note?: string;
 }
 
-// ... interfaces ...
-
 export const highlightsRoutes = new Elysia({ prefix: '/api' })
     .get('/articles/:id/highlights', async ({ params: { id } }) => {
-        return await db.all(sql`SELECT * FROM highlights WHERE article_id = ${id}`);
+        const res = await db.selectFrom('highlights')
+            .selectAll()
+            .where('article_id', '=', id)
+            .execute();
+        return toCamelCase(res);
     })
     .post('/highlights', async ({ body }) => {
         const b = body as HighlightBody;
         const id = b.id || crypto.randomUUID();
-        await db.run(sql`
-            INSERT INTO highlights (id, article_id, actor, start_meta_json, end_meta_json, text, note, style_json, created_at, updated_at)
-            VALUES (${id}, ${b.articleId}, ${b.actor || 'user'}, ${JSON.stringify(b.startMeta)}, ${JSON.stringify(b.endMeta)}, ${b.text}, ${b.note}, ${b.style ? JSON.stringify(b.style) : null}, ${new Date().toISOString()}, ${new Date().toISOString()})
-        `);
+        const now = new Date().toISOString();
+
+        await db.insertInto('highlights')
+            .values({
+                id,
+                article_id: b.articleId,
+                actor: b.actor || 'user',
+                start_meta_json: JSON.stringify(b.startMeta),
+                end_meta_json: JSON.stringify(b.endMeta),
+                text: b.text,
+                note: b.note,
+                style_json: b.style ? JSON.stringify(b.style) : null,
+                created_at: now,
+                updated_at: now
+            })
+            .execute();
+
         return { status: "ok", id };
     })
     .put('/highlights/:id', async ({ params: { id }, body }) => {
         const b = body as HighlightUpdateBody;
-        await db.run(sql`UPDATE highlights SET note = ${b.note}, updated_at = ${new Date().toISOString()} WHERE id = ${id}`);
+        await db.updateTable('highlights')
+            .set({
+                note: b.note,
+                updated_at: new Date().toISOString()
+            })
+            .where('id', '=', id)
+            .execute();
+
         return { status: "ok" };
     })
     .delete('/highlights/:id', async ({ params: { id } }) => {
-        await db.run(sql`DELETE FROM highlights WHERE id = ${id}`);
+        await db.deleteFrom('highlights').where('id', '=', id).execute();
         return { status: "ok" };
     });

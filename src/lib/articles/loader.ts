@@ -76,7 +76,7 @@ export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMa
         lemma: w.word.toLowerCase(),
         forms: [
             w.word.toLowerCase(),
-            w.used_form ? w.used_form.toLowerCase() : w.word.toLowerCase()
+            w.usedForm ? w.usedForm.toLowerCase() : w.word.toLowerCase()
         ].filter((v, i, a) => a.indexOf(v) === i) // Unique
     }));
 }
@@ -139,6 +139,9 @@ export async function loadArticleBySlug(date: string, slug: string): Promise<Art
         let echoes = {};
         if (articleId) {
             try {
+                // Log the raw response to debug
+                console.log("[Loader] Raw Article Response:", JSON.stringify(articleRes, null, 2));
+
                 const echoesData = await apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -166,24 +169,27 @@ export async function loadArticleBySlug(date: string, slug: string): Promise<Art
  * 4. 格式化日期和阅读时间。
  */
 function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): ArticleData {
-    let parsed: ArticleParsedContent = {};
+    let parsed = {} as ArticleParsedContent;
     let sources: string[] = [];
     let wordDefinitions: WordDefinition[] = [];
     let sidebarWords: SidebarWord[] = [];
     let dateLabel = "";
 
-    if (row?.articles?.content_json) {
-        parsed = parseArticleContent(row.articles.content_json);
+    if (row?.articles?.contentJson) {
+        console.log("[Loader] Content JSON found, length:", row.articles.contentJson.length);
+        parsed = parseArticleContent(row.articles.contentJson);
+        console.log("[Loader] Parsed Content:", JSON.stringify(parsed, null, 2));
+
         sources = extractSources(parsed);
         wordDefinitions = extractWordDefinitions(parsed);
         sidebarWords = mapToSidebarWords(wordDefinitions);
-        dateLabel = formatDateLabel(row.tasks?.task_date);
+        dateLabel = formatDateLabel(row.tasks?.taskDate);
     }
 
     const articles = parsed?.result?.articles || [];
     const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
     const title = row?.articles?.title || "Article";
-    const readLevels = row?.articles?.read_levels || 0;
+    const readLevels = row?.articles?.readLevels || 0;
 
     return {
         row,

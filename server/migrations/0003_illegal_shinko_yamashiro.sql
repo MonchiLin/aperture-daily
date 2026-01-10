@@ -1,1 +1,0 @@
-ALTER TABLE `words` ADD `mastery_status` text DEFAULT 'unknown' NOT NULL;

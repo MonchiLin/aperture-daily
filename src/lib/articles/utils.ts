@@ -3,7 +3,7 @@ import { dayjs } from "@server/lib/time";
 
 export function parseArticleContent(jsonString: string): ArticleParsedContent {
     try {
-        return JSON.parse(jsonString);
+        return JSON.parse(jsonString) as ArticleParsedContent;
     } catch (e) {
         throw new Error("Invalid content_json: JSON parse failed");
     }
@@ -23,9 +23,9 @@ export function extractSources(parsed: ArticleParsedContent): string[] {
 export function extractWordDefinitions(
     parsed: ArticleParsedContent,
 ): WordDefinition[] {
-    const defs = parsed?.result?.word_definitions;
+    const defs = parsed?.result?.wordDefinitions;
     if (!Array.isArray(defs)) {
-        throw new Error("Invalid content_json: word_definitions must be array");
+        throw new Error("Invalid content_json: wordDefinitions must be array");
     }
     return defs;
 }

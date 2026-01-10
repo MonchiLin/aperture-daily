@@ -119,7 +119,7 @@ const isAdmin = !!adminKey;
                     <header class="mb-10 md:mb-12 border-b-4 border-double border-slate-900/80 pb-6">
                         <div class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-6">
                             <div class="flex items-center gap-3">
-                                <BackButton client:load href={`/day/${row?.tasks?.task_date || ''}`} label="Day" />
+                                <BackButton client:load href={`/day/${row?.tasks?.taskDate || ''}`} label="Day" />
                                 <div class="h-4 w-px bg-stone-300"></div>
                                 <span class="text-slate-900">{dateLabel}</span>
                                 <span class="text-stone-300">|</span>

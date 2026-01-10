@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { db } from '../src/db/client';
+import { db } from '../src/db/factory';
 import { fetchAndStoreDailyWords } from '../src/services/dailyWords';
 import { getBusinessDate } from '../src/lib/time';
 import { env } from '../config/env';

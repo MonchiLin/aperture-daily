@@ -1,11 +1,34 @@
-// ============ 核心领域模型 ============
+// ============ 核心领域模型 (Isomorphic) ============
+import type {
+    DailyNewsOutput,
+    DailyNewsArticle,
+    WordDefinition as ServerWordDef
+} from "@server/schemas/dailyNews";
 
-export interface WordDefinition {
-    word: string;
-    used_form?: string;
-    phonetic?: string;
-    definitions: { pos: string; definition: string }[];
-}
+/**
+ * 递归将 SnakeCase 类型转换为 CamelCase
+ * 模拟后端 toCamelCase 工具函数的运行时行为
+ */
+export type DeepCamelCase<T> = T extends Array<infer U>
+    ? Array<DeepCamelCase<U>>
+    : T extends object
+    ? {
+        [K in keyof T as K extends string
+        ? CamelCase<K>
+        : K]: DeepCamelCase<T[K]>;
+    }
+    : T;
+
+type CamelCase<S extends string> = S extends `${infer P1}_${infer P2}${infer P3}`
+    ? `${Lowercase<P1>}${Uppercase<P2>}${CamelCase<P3>}`
+    : Lowercase<S>;
+
+// 前端使用的 CamelCase 类型
+export type ArticleParsedContent = DeepCamelCase<{ result: DailyNewsOutput }>;
+export type ArticleLevelContent = DeepCamelCase<DailyNewsArticle> & {
+    sentences?: any[]; // TODO: Define sentence type from server/models if available, using any for now to unblock
+};
+export type WordDefinition = DeepCamelCase<ServerWordDef>;
 
 export interface SidebarWord {
     word: string;
@@ -16,46 +39,17 @@ export interface SidebarWord {
 // ============ API 响应模型 ============
 
 /**
- * 表示存储在数据库中的 JSON 内容结构
- */
-export interface ArticleParsedContent {
-    result?: {
-        sources?: string[];
-        word_definitions?: WordDefinition[];
-        articles?: Array<ArticleLevelContent>;
-    };
-}
-
-export interface ArticleLevelContent {
-    level: 1 | 2 | 3;
-    level_name: string;
-    content: string;
-    title?: string;
-    difficulty_desc: string;
-    syntax?: Array<{
-        start: number;
-        end: number;
-        role: string;
-        text?: string;
-    }>;
-    sentences?: Array<{
-        id: number;
-        start: number;
-        end: number;
-        text: string;
-    }>;
-}
-
-/**
  * 表示从 /api/articles/{id} 返回的原始行数据
+ * 注意：Articles 表的字段在经过 backend processing 后已经是 camelCase，
+ * 但是 contentJson 字符串 parse 出来的结构由上面的 ArticleParsedContent 定义。
  */
 export interface ArticleRow {
     articles: {
         id: string;
         title: string;
-        content_json: string; // JSON string needing parsing
-        read_levels: number;
-        created_at?: string;
+        contentJson: string; // JSON string needing parsing
+        readLevels: number;
+        createdAt?: string;
     };
     tasks?: Task;
 }
@@ -63,9 +57,9 @@ export interface ArticleRow {
 export interface Task {
     id: string;
     status: string;
-    task_date: string; // ISO date string
-    created_at?: string;
-    updated_at?: string;
+    taskDate: string; // ISO date string
+    createdAt?: string;
+    updatedAt?: string;
     profileName?: string;
 }
 

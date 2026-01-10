@@ -1,11 +1,8 @@
 /**
- * Test Utility - Save Pipeline Results to Database
- * 
- * Uses shared saveArticleResult function
+ * Test Utility - Save Pipeline Results to Database (Kysely Edition)
  */
 
-import { db } from '../../src/db/client';
-import { tasks, generationProfiles } from '../../db/schema';
+import { db } from '../../src/db/factory';
 import { saveArticleResult } from '../../src/services/tasks/saveArticle';
 import type { PipelineResult } from '../../src/services/llm/pipeline';
 import type { LLMClientConfig } from '../../src/services/llm/client';
@@ -23,25 +20,28 @@ export async function saveTestPipelineResult(
     const taskDate = forcedDate || now.split('T')[0]!;
 
     // 1. Ensure Dummy Profile exists
-    await db.insert(generationProfiles).values({
+    await db.insertInto('generation_profiles').values({
         id: profileId,
         name: 'Test Profile',
-        topicPreference: 'General',
+        topic_preference: 'General',
         concurrency: 1,
-        timeoutMs: 300000
-    }).onConflictDoNothing();
+        timeout_ms: 300000
+    })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
 
     // 2. Insert Test Task
-    await db.insert(tasks).values({
+    await db.insertInto('tasks').values({
         id: taskId,
-        taskDate: taskDate,
+        task_date: taskDate,
         type: 'article_generation',
         status: 'succeeded',
-        profileId: profileId,
-        resultJson: JSON.stringify(result.output),
-        finishedAt: now,
-        publishedAt: now
-    });
+        profile_id: profileId,
+        llm: 'openai', // Default or from clientConfig.provider if mapped
+        result_json: JSON.stringify(result.output),
+        finished_at: now,
+        published_at: now
+    }).execute();
 
     // 3. Use shared save function for article data
     const articleId = await saveArticleResult({

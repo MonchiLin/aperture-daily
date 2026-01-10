@@ -95,7 +95,9 @@ export function buildAnalysisTree(
         }
 
         // 获取该句子内的分析标注
-        const sentenceAnalyses = analyses.filter(
+        // 获取该句子内的分析标注
+        const validAnalyses = Array.isArray(analyses) ? analyses : [];
+        const sentenceAnalyses = validAnalyses.filter(
             s => s.start >= sentence.start && s.end <= sentence.end
         );
 

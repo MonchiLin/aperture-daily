@@ -1,46 +1,48 @@
 import { Elysia } from 'elysia';
-import { sql } from 'drizzle-orm';
-import { db } from '../src/db/client';
-
-interface TaskRow { id: string; task_date: string; }
-interface TaskRow { id: string; task_date: string; }
-
-// ... imports ...
+import { db } from '../src/db/factory';
+import { sql } from 'kysely';
+import { toCamelCase } from '../src/utils/casing';
 
 export const contentRoutes = new Elysia({ prefix: '/api' })
     .get('/days', async () => {
-        const result = await db.all(sql`SELECT DISTINCT task_date FROM tasks WHERE status = 'succeeded' ORDER BY task_date DESC`);
-        return { days: (result as TaskRow[]).map((r) => r.task_date) };
+        const result = await db.selectFrom('tasks')
+            .select('task_date')
+            .distinct()
+            .where('status', '=', 'succeeded')
+            .orderBy('task_date', 'desc')
+            .execute();
+
+        return { days: result.map((r) => r.task_date) };
     })
     .get('/day/:date', async ({ params: { date } }) => {
-        const taskRows = await db.all(sql`
-            SELECT * FROM tasks 
-            WHERE task_date = ${date} AND type = 'article_generation' 
-            ORDER BY finished_at
-        `);
+        const taskRows = await db.selectFrom('tasks')
+            .selectAll()
+            .where('task_date', '=', date)
+            .where('type', '=', 'article_generation')
+            .orderBy('finished_at', 'asc')
+            .execute();
 
-        const taskIds = (taskRows as TaskRow[]).map((t) => t.id);
+        const taskIds = taskRows.map((t) => t.id);
         let articles: unknown[] = [];
 
         if (taskIds.length > 0) {
-            const sqlQuery = `SELECT * FROM articles WHERE generation_task_id IN (${taskIds.map(id => `'${id}'`).join(',')}) ORDER BY created_at ASC`;
-            articles = await db.all(sql.raw(sqlQuery));
+            articles = await db.selectFrom('articles')
+                .selectAll()
+                .where('generation_task_id', 'in', taskIds)
+                .orderBy('created_at', 'asc')
+                .execute();
         }
 
-        return { articles };
+        return { articles: toCamelCase(articles) };
     })
 
     .get('/day/:date/words', async ({ params: { date }, set }) => {
-        // 从规范化表读取
-        const refs = await db.all(sql`
-            SELECT word, type 
-            FROM daily_word_references 
-            WHERE date = ${date}
-        `) as { word: string; type: 'new' | 'review' }[];
+        const refs = await db.selectFrom('daily_word_references')
+            .select(['word', 'type'])
+            .where('date', '=', date)
+            .execute();
 
         if (refs.length === 0) {
-            // 如果缺失，暂不需要回退到旧表 (假设已迁移)。
-            // 返回空列表。
             return { date, words: [], word_count: 0 };
         }
 

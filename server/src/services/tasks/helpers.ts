@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm';
-import type { AppDatabase } from '../../db/client';
+import { sql } from 'kysely';
+import type { AppKysely } from '../../db/factory';
 import type { CandidateWord } from '../llm/utils';
 
 export function uniqueStrings(input: string[]) {
@@ -9,14 +9,14 @@ export function uniqueStrings(input: string[]) {
 /**
  * Get words that have already been used in articles today
  */
-export async function getUsedWordsToday(db: AppDatabase, taskDate: string): Promise<Set<string>> {
-    const rows = await db.all(sql`
-        SELECT DISTINCT v.word 
-        FROM tasks t
-        JOIN articles a ON a.generation_task_id = t.id
-        JOIN article_vocabulary v ON v.article_id = a.id
-        WHERE t.task_date = ${taskDate}
-    `) as { word: string }[];
+export async function getUsedWordsToday(db: AppKysely, taskDate: string): Promise<Set<string>> {
+    const rows = await db.selectFrom('tasks')
+        .innerJoin('articles', 'articles.generation_task_id', 'tasks.id')
+        .innerJoin('article_vocabulary', 'article_vocabulary.article_id', 'articles.id')
+        .select('article_vocabulary.word')
+        .distinct()
+        .where('tasks.task_date', '=', taskDate)
+        .execute();
 
     return new Set(rows.map(r => r.word));
 }
@@ -24,15 +24,16 @@ export async function getUsedWordsToday(db: AppDatabase, taskDate: string): Prom
 /**
  * Get recent article titles to avoid topic repetition
  */
-export async function getRecentTitles(db: AppDatabase, taskDate: string, days: number = 3): Promise<string[]> {
-    const rows = await db.all(sql`
-        SELECT DISTINCT a.title
-        FROM tasks t
-        JOIN articles a ON a.generation_task_id = t.id
-        WHERE t.status = 'succeeded'
-        AND t.task_date >= date(${taskDate}, '-' || ${days} || ' days')
-        AND t.task_date < ${taskDate}
-    `) as { title: string }[];
+export async function getRecentTitles(db: AppKysely, taskDate: string, days: number = 3): Promise<string[]> {
+    const rows = await db.selectFrom('tasks')
+        .innerJoin('articles', 'articles.generation_task_id', 'tasks.id')
+        .select('articles.title')
+        .distinct()
+        .where('tasks.status', '=', 'succeeded')
+        .where('tasks.task_date', '<', taskDate)
+        // SQLite date arithmetic
+        .where(sql<boolean>`task_date >= date(${taskDate}, '-' || ${days} || ' days')`)
+        .execute();
 
     return rows.map(r => r.title).filter(Boolean);
 }

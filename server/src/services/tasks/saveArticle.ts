@@ -1,18 +1,14 @@
 /**
- * Save Article - Shared logic for persisting pipeline results
- * 
- * Used by both TaskExecutor (production) and test utilities
+ * Save Article - Shared logic for persisting pipeline results (Kysely Edition)
  */
 
-import { sql } from 'drizzle-orm';
-import { articleVariants, articleVocabulary, articleVocabDefinitions, articles } from '../../../db/schema';
-import { indexArticleWords } from '../wordIndexer';
 import { toArticleSlug } from '../../../lib/slug';
-import type { AppDatabase } from '../../db/client';
+import type { AppKysely } from '../../db/factory';
 import type { PipelineResult } from '../llm/pipeline';
+import { indexArticleWords } from '../wordIndexer';
 
 export interface SaveArticleOptions {
-    db: AppDatabase;
+    db: AppKysely;
     result: PipelineResult;
     taskId: string;
     taskDate: string;
@@ -31,34 +27,38 @@ export async function saveArticleResult(options: SaveArticleOptions): Promise<st
     const slug = toArticleSlug(result.output.title);
 
     // 1. Insert Article (main record)
-    await db.insert(articles).values({
+    await db.insertInto('articles').values({
         id: articleId,
-        generationTaskId: taskId,
+        generation_task_id: taskId,
         model: model,
         variant: 1,
         title: result.output.title,
         slug: slug,
-        sourceUrl: sourceUrl,
+        source_url: sourceUrl,
         status: 'published',
-        publishedAt: finishedAt
-    });
+        published_at: finishedAt
+    }).execute();
 
     console.log(`[SaveArticle] Created article: ${result.output.title} (ID: ${articleId})`);
 
-    // 2. Insert Article Variants (Level 1, 2, 3)
+    // 2. Insert Article Variants
     if (result.output.articles) {
         for (const variant of result.output.articles) {
-            const v = variant as typeof variant & { sentences?: any[] };
-            await db.insert(articleVariants).values({
+            // Type cast if necessary as pipeline result structure might have extra props (like sentences) 
+            // not strictly typed in the main interface or optional.
+            const v = variant as any;
+
+            await db.insertInto('article_variants').values({
                 id: crypto.randomUUID(),
-                articleId: articleId,
+                article_id: articleId,
                 level: v.level,
-                levelLabel: v.level_name || `Level ${v.level}`,
+                level_label: v.level_name || `Level ${v.level}`,
                 title: result.output.title,
                 content: v.content,
-                syntaxJson: JSON.stringify(v.structure || []),
-                sentencesJson: JSON.stringify(v.sentences || [])
-            });
+                // Kysely Manual Serialize for Insert
+                syntax_json: JSON.stringify(v.structure || []),
+                sentences_json: JSON.stringify(v.sentences || [])
+            }).execute();
         }
     }
 
@@ -66,30 +66,33 @@ export async function saveArticleResult(options: SaveArticleOptions): Promise<st
     if (result.output.word_definitions) {
         for (const wordDef of result.output.word_definitions) {
             const vocabId = crypto.randomUUID();
-            await db.insert(articleVocabulary).values({
+            await db.insertInto('article_vocabulary').values({
                 id: vocabId,
-                articleId: articleId,
+                article_id: articleId,
                 word: wordDef.word,
-                usedForm: wordDef.used_form,
+                used_form: wordDef.used_form,
                 phonetic: wordDef.phonetic
-            }).onConflictDoNothing();
+            })
+                .onConflict((oc) => oc.doNothing())
+                .execute();
 
             // Fetch existing or use new ID
-            const vocabRow = await db.select()
-                .from(articleVocabulary)
-                .where(sql`${articleVocabulary.articleId} = ${articleId} AND ${articleVocabulary.word} = ${wordDef.word}`)
-                .limit(1);
+            const vocabRow = await db.selectFrom('article_vocabulary')
+                .select('id')
+                .where('article_id', '=', articleId)
+                .where('word', '=', wordDef.word)
+                .executeTakeFirst();
 
-            const targetVocabId = vocabRow[0]?.id || vocabId;
+            const targetVocabId = vocabRow?.id || vocabId;
 
             if (wordDef.definitions) {
                 for (const def of wordDef.definitions) {
-                    await db.insert(articleVocabDefinitions).values({
+                    await db.insertInto('article_vocab_definitions').values({
                         id: crypto.randomUUID(),
-                        vocabId: targetVocabId,
-                        partOfSpeech: def.pos,
+                        vocab_id: targetVocabId,
+                        part_of_speech: def.pos,
                         definition: def.definition
-                    });
+                    }).execute();
                 }
             }
         }
@@ -110,7 +113,8 @@ export async function saveArticleResult(options: SaveArticleOptions): Promise<st
             word_usage_check: result.output.word_usage_check,
             result: result.output
         };
-        await indexArticleWords(articleId, contentDataForIndex);
+        // Pass db instance
+        await indexArticleWords(db, articleId, contentDataForIndex);
     } catch (e) {
         console.error(`[SaveArticle] Failed to index words:`, e);
     }
