@@ -18,10 +18,10 @@ interface Settings {
 /**
  * 持久化用户设置
  *
- * 存储于 localStorage，键名：aperture-daily-preferences
+ * 存储于 localStorage，键名：upword-preferences
  */
 export const settingsStore = persistentAtom<Settings>(
-    'aperture-daily-preferences',
+    'upword-preferences',
     {
         autoCopy: false,
         defaultLevel: 1,

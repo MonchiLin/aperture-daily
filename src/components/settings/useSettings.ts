@@ -33,7 +33,7 @@ export function useSettings() {
 
     useEffect(() => {
         try {
-            const storedVoice = localStorage.getItem('aperture-daily_voice_preference');
+            const storedVoice = localStorage.getItem('upword_voice_preference');
             if (storedVoice) setVoiceSettings(storedVoice);
 
             // 获取 LLM 配置并与本地存储同步
@@ -64,7 +64,7 @@ export function useSettings() {
         // 1. Client-Side Persistence: 立即保存非敏感偏好到 localStorage，
         // 这样刷新页面后 UI 能迅速恢复状态 (Optimistic UI)。
         try {
-            localStorage.setItem('aperture-daily_voice_preference', voice);
+            localStorage.setItem('upword_voice_preference', voice);
             setVoice(voice);
             if (llmProvider) {
                 localStorage.setItem('admin_selected_llm', llmProvider);

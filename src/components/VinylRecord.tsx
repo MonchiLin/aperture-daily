@@ -168,7 +168,7 @@ export const VinylRecord: React.FC<VinylRecordProps> = ({
                         <div className="absolute left-0 right-0 h-[1px] bg-black/10" />
                         <div className="absolute inset-0 rounded-full border-[6px] border-black/10" />
                         <div className="z-10 text-[5px] text-orange-900/60 font-black tracking-widest uppercase text-center leading-tight">
-                            Aperture<br /><span className="text-[4px] font-normal">Stereo</span>
+                            UpWord<br /><span className="text-[4px] font-normal">Stereo</span>
                         </div>
                     </div>
                     {/* Spindle Hole */}

@@ -1,5 +1,5 @@
 /**
- * Aperture Daily 服务器入口
+ * UpWord 服务器入口
  *
  * 技术栈：Elysia (Bun) + SQLite (D1/Local)
  *
@@ -119,9 +119,9 @@ const app = new Elysia()
     .use(swagger({
         documentation: {
             info: {
-                title: 'Aperture Daily API',
+                title: 'UpWord API',
                 version: '1.0.0',
-                description: 'Aperture Daily 每日单词学习平台 API'
+                description: 'UpWord 每日单词学习平台 API'
             }
         }
     }))

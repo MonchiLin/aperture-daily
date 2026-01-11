@@ -7,7 +7,7 @@ export const healthRoutes = new Elysia()
         const buildTime = env.BUILD_TIME === 'Dev'
             ? 'Dev'
             : new Date(env.BUILD_TIME).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
-        return `Hello Elysia from Aperture Daily backend! (Build: ${buildTime})`;
+        return `Hello Elysia from UpWord backend! (Build: ${buildTime})`;
     })
     .get('/health', () => ({ status: "ok", timestamp: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) }))
     .get('/db-check', async () => {

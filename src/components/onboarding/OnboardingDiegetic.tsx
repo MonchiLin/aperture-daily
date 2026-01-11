@@ -62,7 +62,7 @@ export default function OnboardingDiegetic({
                 <header className="border-b-2 border-stone-900 p-6 flex items-end justify-between bg-[#F3F2EE]">
                     <div>
                         <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none font-serif">
-                            Aperture<br />Daily<span className="text-red-600">.</span>
+                            UpWord<span className="text-red-600">.</span>
                         </h1>
                     </div>
                     <div className="text-right font-mono text-xs md:text-sm tracking-widest uppercase text-stone-500 mb-1">
@@ -246,7 +246,7 @@ function RealArticle() {
         >
             <p>
                 The automated curation engine has successfully initialized.
-                Aperture Daily is now ready to process the latest global events,
+                UpWord is now ready to process the latest global events,
                 synthesizing them into a cohesive narrative structure for your review.
             </p>
             <p>

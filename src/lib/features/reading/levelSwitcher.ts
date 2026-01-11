@@ -15,7 +15,7 @@ import { setLevel as storeSetLevel } from '../../store/interactionStore';
 import { settingsStore } from '../../store/settingsStore';
 
 /** Storage key prefix for per-article level */
-const ARTICLE_LEVEL_PREFIX = 'aperture-daily_article_';
+const ARTICLE_LEVEL_PREFIX = 'upword_article_';
 
 /** 设置单个元素的 active 状态 */
 const setActive = (el: Element, active: boolean, activeClasses?: string[], inactiveClasses?: string[]) => {

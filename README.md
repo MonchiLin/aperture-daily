@@ -1,4 +1,4 @@
-# Aperture Daily
+# UpWord
 
 简要索引：AGENT.md 只保留大纲，细节在代码与注释中。
 
@@ -53,7 +53,7 @@ npm run db:studio
 **零成本、全球CDN加速、Git 自动集成**
 
 1.  进入 [Cloudflare Dashboard](https://dash.cloudflare.com/) > **Workers & Pages** > **Create application** > **Pages** > **Connect to Git**.
-2.  选择你的仓库 (`aperture-daily`).
+2.  选择你的仓库 (`upword` 或原用名 `aperture-daily`).
 3.  **构建配置 (Build settings)**:
     *   **Framework preset**: `Astro`
     *   **Build command**: `npm run build`
@@ -70,7 +70,7 @@ npm run db:studio
 项目已包含 `.github/workflows/docker-publish.yml`，它会：
 1.  监听 `main` 分支的推送。
 2.  进入 `server/` 目录构建 Docker 镜像。
-3.  发布到 `ghcr.io/<your-username>/aperture-daily:latest`。
+3.  发布到 `ghcr.io/<your-username>/upword:latest`。
 
 **前置要求**：
 *   在 GitHub 仓库 > Settings > Actions > General > **Workflow permissions** 中开启 `Read and write permissions`。
@@ -82,18 +82,22 @@ npm run db:studio
 version: '3.8'
 services:
   backend:
-    image: ghcr.io/<your-username>/aperture-daily:latest  # 替换为您的 GitHub 用户名
-    container_name: aperture-daily-backend
+    image: ghcr.io/<your-username>/upword:latest  # 替换为您的 GitHub 用户名
+    container_name: upword-backend
     restart: always
     ports:
       - "3000:3000"
     environment:
-      - SHANBAY_COOKIE=your_cookie_here
-      - ADMIN_KEY=your_admin_secret_key
-      - LLM_API_KEY=your_key
-      - LLM_BASE_URL=https://api.openai.com/v1
+      - D1_DATABASE_NAME=UpWordData
+      # ... 其他环境变量 ...
+      # 必须包含 DATABASE_URL 如果你使用本地SQLite
     volumes:
-      - ./data:/app/local.db  # 持久化数据库
+      - ./data:/app/data
+
+  # 可选：如果需要一个单独的 DB sync 任务
+  # db-sync:
+  #   image: ghcr.io/<your-username>/upword:latest
+  #   command: bun run db:push # 或者其他数据库同步命令
     
   # 可选：自动更新容器 (Watchtower)
   watchtower:

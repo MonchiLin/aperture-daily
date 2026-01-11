@@ -1,4 +1,4 @@
-# Aperture Daily Server
+# UpWord Server
 
 Elysia + Bun 后端服务，连接 Cloudflare D1 数据库。
 

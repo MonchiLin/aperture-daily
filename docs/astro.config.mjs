@@ -5,10 +5,10 @@ import starlight from '@astrojs/starlight';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://monchilin.github.io',
-	base: '/aperture-daily',
+	base: '/upword',
 	integrations: [
 		starlight({
-			title: 'Aperture Daily Docs',
+			title: 'UpWord Docs',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
 			defaultLocale: 'root',
 			locales: {

@@ -146,7 +146,7 @@ Usage:
   bun run scripts/db-sync.ts export  # Export remote D1 → backup.sql
 
 Environment Variables:
-  D1_DATABASE_NAME  Database name (default: ApertureDailyData)
+  D1_DATABASE_NAME  Database name (default: UpWordData)
 `);
             process.exit(1);
     }

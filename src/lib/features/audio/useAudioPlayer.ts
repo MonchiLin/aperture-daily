@@ -4,7 +4,7 @@ import { audioState, setPlaybackRate, setVoice, togglePlay as storeTogglePlay } 
 import { getCachedAudio, getSentenceAudioOffset, getSentenceIndexAtTime, setPreloaderVoice } from './audioPreloader';
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
-const VOICE_STORAGE_KEY = 'aperture-daily_voice_preference';
+const VOICE_STORAGE_KEY = 'upword_voice_preference';
 
 /**
  * Audio Player Engine Hook (音频播放引擎钩子)
