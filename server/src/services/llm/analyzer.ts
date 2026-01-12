@@ -99,12 +99,48 @@ const VALID_ROLES: readonly AnalysisRole[] = [
 
 /**
  * 使用 Intl.Segmenter 将文章分割为句子
+ * 
+ * 后处理：修复 Intl.Segmenter 对中间名缩写的错误切分（如 "Jason W. Ricketts"）。
+ * 策略：如果前一段以"单个大写字母 + 点"结尾，且后一段不以常见句首词开头，则合并。
  */
+
+// 常见句首词黑名单：如果下一段以这些词开头，则认为是新句子，不合并。
+const SENTENCE_STARTERS = new Set([
+    'It', 'The', 'This', 'That', 'He', 'She', 'They', 'We', 'I',
+    'But', 'And', 'Or', 'So', 'Then', 'If', 'When', 'As', 'However',
+    'Meanwhile', 'Moreover', 'Furthermore', 'Therefore', 'Thus',
+    'In', 'On', 'At', 'For', 'With', 'By', 'From', 'To', 'A', 'An'
+]);
+
 function splitIntoSentences(content: string): SentenceData[] {
     const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' });
     const segments = Array.from(segmenter.segment(content));
 
-    return segments
+    // Post-processing: Merge segments split by middle initials
+    const mergedSegments: { index: number; segment: string }[] = [];
+
+    for (const seg of segments) {
+        const last = mergedSegments[mergedSegments.length - 1];
+
+        // Condition: Previous segment ends with " [A-Z]. " (Middle Initial pattern)
+        if (last && /[ ][A-Z]\.\s*$/.test(last.segment)) {
+            // Check Exclusion: Does the next segment start with a common sentence starter?
+            const nextFirstWord = seg.segment.trim().split(/\s+/)[0] || '';
+            const isSentenceStarter = SENTENCE_STARTERS.has(nextFirstWord);
+
+            if (!isSentenceStarter) {
+                // Merge: This is likely a continuation of a name (e.g., "W. Ricketts")
+                last.segment += seg.segment;
+                continue;
+            }
+        }
+        mergedSegments.push({ index: seg.index, segment: seg.segment });
+    }
+
+    // Rebuild SentenceData with correct offsets
+    // Note: After merging, the 'index' of the first segment in a merged group remains correct.
+    // The 'end' needs to be recalculated based on the merged segment length.
+    return mergedSegments
         .map((seg, idx) => ({
             id: idx,
             start: seg.index,
