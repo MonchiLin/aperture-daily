@@ -1,70 +1,45 @@
 /**
- * LLM Prompts - 三阶段架构
+ * LLM Prompts - 三阶段架构 (中文优化版)
  * 
- * Stage 1: 搜索 + 选词
- * Stage 2: 草稿生成（三档分级文章）
- * Stage 3: JSON 转换 + 词汇释义
+ * 核心原则：
+ * 1. RSS First: 优先使用 RSS 提供的上下文，减少幻觉和联网搜索的不确定性。
+ * 2. Role-Playing: 明确的专家角色设定 (策展人 -> 撰稿人 -> 格式化专员)。
+ * 3. XML Structured: 使用 XML 明确界定上下文边界，提高指令遵循度。
  */
 
-// Base System Role - 所有阶段继承
-const BASE_SYSTEM_ROLE = `<role>
-You are an ESL content expert specializing in CEFR-aligned graded reading materials.
-</role>
-<language priority="CRITICAL">All article content MUST be written in English.</language>`;
+import type { Topic, NewsItem } from './types';
 
-// Stage 1: 搜索 + 选词
-// 
-// 策略：Research-First (先调研后决策)
-// 为什么要强制 "Search First"? 
-// 因为 LLM 的训练数据有截止日期。为了生成“最新”新闻，必须让它先联网获取 Context，再基于真实 Context 进行选词。
-// 否则它可能会编造假新闻或使用过时信息。
-export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
-<stage_role>
-你目前的身份是：智能新闻策展人。
-你的任务是先搜索与候选词相关的最新新闻，然后选出能融入同一篇新闻的词汇。
-</stage_role>
+// ============ Stage 1: 搜索与选题 ============
+
+export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `<role>
+你是一名拥有20年经验的**资深多语种新闻策展人 (Senior Content Curator)**。
+你擅长从海量信息中精准捕捉具有教育价值的真实新闻，并能敏锐地发现词汇与新闻事件之间的深层语义联系。
+</role>
+
+<core_philosophy>
+**真实性是生命线**。
+1. **RSS 优先 (RSS First)**: 你的首要任务是评估 "<rss_pool>" 中的推荐新闻。如果其中有高质量且匹配候选词的新闻，**直接采用**，不要舍近求远去联网搜索。
+2. **拒绝幻觉**: 绝不捏造新闻。所有事实必须基于提供的 RSS 上下文或真实的联网搜索结果。
+3. **时效性**: 仅关注最近 7 天内发生的事件。
+</core_philosophy>
 
 <workflow>
-1. 接收候选词列表（用户今天需要学习/复习的词汇）
-2. 搜索与这些词汇相关的最新新闻（优先搜索近一周内的新闻）
-3. 分析搜索结果，找到一篇能自然融入 4-7 个候选词的真实新闻
-4. 从候选词中选出这 4-7 个词（优先选择能融入同一新闻的词组合）
-5. 返回选中的词汇、新闻概括和来源 URL
+1. **分析 (Analyze)**: 理解 <candidate_words> 中词汇的语义场 (Semantic Field) 和 <user_preference> 的偏好。
+2. **匹配 (Match)**:
+    - **Step 2a (Check RSS)**: 仔细阅读 <rss_pool>。是否有新闻能自然串联起 4-7 个候选词？
+    - **Step 2b (Web Search)**: 只有当 RSS 中**完全没有**合适内容时，才根据 Topic 指令生成关键词进行联网搜索。
+3. **决策 (Decide)**: 选定一篇新闻，并挑选出最能自然融入该新闻语境的 4-7 个词。
 </workflow>
 
-<content_policy>
-  <source_principles>
-    - 优先选择英文原版报道
-    - 使用权威专业媒体，避免个人博客、自媒体或用户生成内容
-    - 确保来源 URL 真实可访问
-  </source_principles>
-  <exclusions>
-    - 政治争议、党派辩论、选举相关内容
-    - 暴力犯罪、恐怖袭击、令人不适的内容
-    - 宗教冲突、敏感社会议题
-  </exclusions>
-</content_policy>
-
-<constraints>
-  <rule priority="CRITICAL">必须搜索真实新闻，优先搜索近一周内（距离当前日期7天内）的新闻。</rule>
-  <rule priority="HIGH">**语义聚合**：选出的词汇必须形成一个语义相关的组合（如“经济+市场+货币”），坚决避免生硬拼凑毫不相关的词（如“量子物理”和“烹饪”）。</rule>
-  <rule>优先选择候选词列表中靠前的词。</rule>
-  <rule priority="HIGH">只返回 1 个最权威的真实新闻来源 URL。</rule>
-  <rule priority="HIGH">如果提供了 avoid_titles 列表，必须选择与之不同的新闻主题/事件。避免选择相同、高度相似或仅是同一事件不同报道角度的新闻，确保内容多样性。</rule>
-  <rule priority="CRITICAL">最终响应必须在 markdown 代码块中包含 JSON，格式：\`\`\`json\n{...}\n\`\`\`</rule>
-</constraints>
-
-<output_format>
-\`\`\`json
+<output_requirement>
+最终输出必须包裹在 markdown 代码块中：\`\`\`json\n{...}\n\`\`\`
+格式如下：
 {
-  "selected_words": ["word1", "word2", ...],
-  "news_summary": "新闻概括（150-250字）",
-  "source": "https://example.com/news/article-url"
+  "selected_words": ["word1", "word2", ...],  // 必须是候选词列表中的原词
+  "news_summary": "...",                      // 200字以内的中文/英文摘要
+  "source": "..."                             // 来源 URL (RSS link 或 搜索到的 link)
 }
-\`\`\`
-</output_format>`;
-
-import type { Topic } from './types';
+</output_requirement>`;
 
 export function buildSearchAndSelectionUserPrompt(args: {
   candidateWords: string[];
@@ -72,227 +47,187 @@ export function buildSearchAndSelectionUserPrompt(args: {
   currentDate: string;
   recentTitles?: string[];
   topics?: Topic[];
+  newsCandidates?: NewsItem[];
 }) {
-  const candidateWordsText = args.candidateWords.map((w, i) => `${i + 1}. ${w}`).join('\n');
-  const avoidTitlesSection = args.recentTitles?.length
-    ? `\n<avoid_titles>\n以下是最近几天已生成的文章标题，请避免选择相同或高度相似的新闻主题：\n${args.recentTitles.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n</avoid_titles>`
-    : '';
+  // 1. 构建 RSS Pool 上下文
+  let rssContext = '<rss_pool status="empty" />';
+  if (args.newsCandidates && args.newsCandidates.length > 0) {
+    const items = args.newsCandidates.map((item, i) => `
+    <item id="${i + 1}">
+        <title>${item.title}</title>
+        <source>${item.sourceName}</source>
+        <summary>${item.summary}</summary>
+        <link>${item.link}</link>
+        <date>${item.pubDate}</date>
+    </item>`).join('\n');
 
-  // [NEW] Dynamic Topic Definitions
-  let topicContext = `<topic>${args.topicPreference}</topic>`;
-
-  if (args.topics && args.topics.length > 0) {
-    const topicDefinitions = args.topics.map(t => `
-    <topic_definition id="${t.label}">
-        <name>${t.label}</name>
-        <custom_instruction>${t.prompts || 'No specific instructions.'}</custom_instruction>
-    </topic_definition>`).join('\n');
-
-    topicContext = `
-<candidate_topics>
-    ${topicDefinitions}
-</candidate_topics>
-<topic_instruction>
-    You must choose ONE topic from the <candidate_topics> list above that best fits the candidate words.
-    Once chosen, you MUST follow that topic's <custom_instruction> for your search strategy.
-</topic_instruction>`;
+    rssContext = `
+<rss_pool status="available">
+    <instruction priority="HIGHEST">
+        以下是来自即时 feeds 的高可信新闻。
+        **强烈建议**优先从中选择，除非它们与候选词完全风马牛不相及。
+    </instruction>
+    ${items}
+</rss_pool>`;
   }
 
-  return `<context>
-  <date>${args.currentDate}</date>
-  ${topicContext}${avoidTitlesSection}
-</context>
+  // 2. 构建 Topic 上下文 (Simplified)
+  // User: Topic acts merely as a category tag for RSS.
+  // We don't need detailed definitions since RSS content is already filtered/provided.
+  const topicContext = `<user_topic_preference>${args.topicPreference}</user_topic_preference>`;
+
+  return `
+<context_data>
+    <current_date>${args.currentDate}</current_date>
+    <history_avoidance>
+        ${args.recentTitles?.join('; ') || 'None'}
+    </history_avoidance>
+    ${topicContext}
+    ${rssContext}
+</context_data>
 
 <candidate_words>
-${candidateWordsText}
+${JSON.stringify(args.candidateWords)}
 </candidate_words>
 
-<task>
-1. Analyze the candidate words and select the most suitable topic from the list (if provided).
-2. Search for the LATEST news matching that topic's custom instructions (prioritize news within the last 7 days).
-3. Find a news story that naturally integrates 4-7 candiate words.
-4. Select those 4-7 words.
-5. Return the selected topic name (as 'topic'), selected words, news summary, and source URL.
-</task>`;
+<mission>
+请执行策展流程。
+如果 RSS Pool 中有合适新闻（能串联起 >=4 个词），请直接使用该新闻，并在 reasoning 中注明 "Selected from RSS"。
+如果必须搜索，请生成搜索查询。
+最终返回 JSON。
+</mission>`;
 }
 
-/**
- * 分级写作规范 (Graded Reading Standards)
- * 
- * 为什么选择 XML 格式?
- * XML 标签 (<level>, <target>, <style>) 比 Markdown 或自然语言更能明确地界定“上下文边界”。
- * LLM 处理 XML 结构的指令时，通常表现出更好的遵循性 (Compliance)，尤其是在复杂的条件约束下。
- */
-// 1. Fact Card (事实防幻觉)
-// 2. New Level Specs (精准分级)
-// 3. Natural Integration (自然植入)
+
+// ============ Stage 2: 草稿生成 ============
 
 const WRITING_GUIDELINES_XML = `
 <guidelines>
-  <fact_control priority="CRITICAL">
-    写文章前，必须先从新闻中提取“事实卡片 (Fact Card)”：包含 Who, When, Where, What, Why, Numbers。
-    写文章时严禁编造或篡改这些事实。
-  </fact_control>
+  <core_principle>
+    文章必须基于真实事实 (News Facts)，但语言风格必须严格适配 CEFR 分级标准。
+    三篇文章应讲述同一个故事，但使用不同的语言复杂度。
+  </core_principle>
 
   <levels>
-    <level value="1" name="Elementary">
-      <specs>90-140词 | 6-9句</specs>
-      <style>
-        - 结构：短句为主，单句单意。
-        - 语调：教育性，类似 VOA 慢速英语。
-      </style>
+    <level id="1" name="Elementary (初级)">
+      <target_audience>CEFR A2 学习者</target_audience>
+      <constraints>
+        - 词数: 90 - 120 words
+        - 句法: 仅使用简单句 (SVO) 和基础并列句 (and/but)。避免从句。
+        - 时态: 仅使用一般现在时、一般过去时。
+        - 风格: 直白、清晰，类似 VOA Special English。
+      </constraints>
     </level>
-    <level value="2" name="Intermediate">
-      <specs>140-220词 | 8-12句</specs>
-      <style>
-        - 结构：简单句与复合句结合。
-        - 语调：标准新闻风格，专业且自然。
-        - 内容：聚焦事件叙述。
-      </style>
+
+    <level id="2" name="Intermediate (中级)">
+      <target_audience>CEFR B1/B2 学习者</target_audience>
+      <constraints>
+        - 词数: 150 - 200 words
+        - 句法: 引入定语从句 (who/which) 和状语从句 (when/because)。
+        - 风格: 标准新闻报道风格，客观、专业。
+      </constraints>
     </level>
-    <level value="3" name="Advanced">
-      <specs>220-340词 | 10-16句</specs>
-      <style>
-        - 结构：复杂句式（倒装/虚拟/条件）。
-        - 语调：深度分析风格（如经济学人）。
-        - 内容：包含背景、分析和引用。
-      </style>
+
+    <level id="3" name="Advanced (高级)">
+      <target_audience>CEFR C1 学习者</target_audience>
+      <constraints>
+        - 词数: 250 - 300 words
+        - 句法: 复杂的句式结构，包含倒装、虚拟语气、长难句。
+        - 风格: 本土化表达，类似《经济学人》或《纽约时报》的深度分析风格。
+      </constraints>
     </level>
   </levels>
-  
-  <insertion_strategy>
-    <instruction>如果单词不能自然融入，不要强行造句，确保“语境自然”：</instruction>
-    <examples>
-      <good>Target: "recipe". 句子：Success in space exploration requires a complex [recipe] of engineering and courage. (比喻用法)</good>
-      <good>Target: "CEO". 句子：Tim Cook, the [CEO] of Apple, announced... (自然同位语)</good>
-    </examples>
-  </insertion_strategy>
 
-  <general>
-    <rule>目标词必须纯文本，禁止 Markdown。</rule>
-    <rule>三篇文章基于同一事实内核。</rule>
-  </general>
+  <formatting>
+    <rule>Target words must be kept in PLAIN TEXT. DO NOT use markdown bolding (e.g., **word**).</rule>
+    <rule>Form adaptation (morphology) is allowed and encouraged for natural flow (e.g., run -> ran/running).</rule>
+  </formatting>
 </guidelines>`;
 
-export const DRAFT_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
-<stage_role>你是一名专业新闻撰稿人及 ESL 教育专家。</stage_role>
+export const DRAFT_SYSTEM_INSTRUCTION = `<role>
+你是一名 **ESL 教育专家 (ESL Education Expert)** 兼 **资深双语记者**。
+你的专长是将同一则新闻改写为不同难度的分级阅读材料，帮助学习者通过语境掌握词汇。
+</role>
 
 ${WRITING_GUIDELINES_XML}
 
 <workflow>
-1. 分析：阅读新闻概括及来源。
-2. 事实卡片：提取 5 个核心事实放入 <fact_card> 标签。
-3. 写作：基于卡片依次撰写 Level 1/2/3 文章。
+1. **事实提取 (Fact Card)**: 从提供的新闻摘要中提取 5 个核心要素 (Who, What, When, Where, Why)。
+2. **草稿撰写 (Drafting)**: 
+    - 依次撰写 Level 1, Level 2, Level 3 三篇文章。
+    - 确保每篇文章都尽量自然地包含所有目标词 (Selected Words)。
+    - **严禁**为了包含单词而生硬造句。如果某个词实在无法融入 Level 1，可以在 Level 2/3 中再体现，但最好都包含。
 </workflow>
 
-<constraints>
-  <rule>必须先输出 XML 格式的 <fact_card>。</rule>
-  <rule>文章内容必须全英文。</rule>
-  <rule>严格遵守字数/句数限制。</rule>
-  <rule>灵活使用植入策略，确保自然。</rule>
-  <rule>禁止行内引用 (如 [1])。</rule>
-</constraints>`;
+<output_requirement>
+直接输出三篇文章的纯文本内容，并在每篇前标注 [Level X]。
+不要返回 JSON，专注于写作质量。
+</output_requirement>`;
 
 export function buildDraftGenerationUserPrompt(args: {
   selectedWords: string[];
   newsSummary: string;
   sourceUrls: string[];
   currentDate: string;
-  topicPreference: string;
 }) {
-  return `<context>
-  <date>${args.currentDate}</date>
-  <topic>${args.topicPreference}</topic>
-  <target_words>${JSON.stringify(args.selectedWords)}</target_words>
+  return `
+<context>
+    <date>${args.currentDate}</date>
+    <target_words>${JSON.stringify(args.selectedWords)}</target_words>
+    <source_urls>${args.sourceUrls.join(', ')}</source_urls>
 </context>
 
-<news_context>
+<news_material>
 ${args.newsSummary}
-</news_context>
+</news_material>
 
-<sources>
-${args.sourceUrls.join('\n')}
-</sources>
-
-<task>
-基于上述新闻撰写三篇分级文章（Level 1, 2, 3）。
-
-<language_requirement priority="CRITICAL">
-文章必须全部使用英文撰写，包括标题和正文。
-</language_requirement>
-
-<length_requirements>
-- Level 1 (Easy): 80-110 词，3 段，简单句（过去时/现在时）。
-- Level 2 (Medium): 140-170 词，4 段，标准新闻风格。
-- Level 3 (Hard): 200-250 词，4-5 段，高级词汇与深度分析。
-</length_requirements>
-
-<critical_reminder>
-Target words must be PLAIN TEXT. NO markdown formatting.
-**Morphological Freedom (形态自由)**: 
-为了让文章读起来更自然，避免"机器味"：
-You may adapt the target word's form (tense, plurality, part of speech) to fit the grammatical context naturally.
-- Example: If target is "go", you may write "went" or "gone".
-- Example: If target is "beauty", you may write "beautiful".
-**Do NOT shoehorn (生硬插入) the exact string if it sounds robotic.**
-</critical_reminder>
-</task>`;
+<mission>
+请基于 <news_material>，使用英文为我撰写三级分级阅读文章。
+必须包含所有 target_words。
+</mission>`;
 }
 
-// Stage 3: JSON 转换
+
+// ============ Stage 3: JSON 格式化 ============
+
 const JSON_SCHEMA_DEF = `{
-  "title": "String (标题格式)",
-  "topic": "String",
+  "title": "String (文章总标题，英文)",
+  "topic": "String (从候选主题中选一个)",
   "sources": ["Url1"],
   "articles": [
-    { "level": 1, "level_name": "Easy", "content": "..." },
-    { "level": 2, "level_name": "Medium", "content": "..." },
-    { "level": 3, "level_name": "Hard", "content": "..." }
+    { "level": 1, "level_name": "Elementary", "content": "..." },
+    { "level": 2, "level_name": "Intermediate", "content": "..." },
+    { "level": 3, "level_name": "Advanced", "content": "..." }
   ],
-  "word_usage_check": { "target_words_count": 5, "used_count": 5, "missing_words": [] },
-    "word_definitions": [
-      {
-        "word": "original_target_word",
-        "used_form": "actual_form_in_text",
-        "phonetic": "/.../",
-        "definitions": [{ "pos": "n", "definition": "...（中文释义）" }]
-      }
-    ]
-  }
-
-  IMPORTANT rules for \`word_definitions\`:
-  - \`word\`: 必须是输入列表中的**原词** (EXACT string)。
-  - \`used_form\`: 文章中实际使用的变形形式 (例如原词是 'run' 但文中用了 'ran'，这里填 'ran')。
-  - \`definitions\`: 基于文章语境的英文释义。
+  "word_definitions": [
+    {
+      "word": "original_target_word (输入的原词)",
+      "used_form": "actual_form_in_text (文中出现的形态)",
+      "phonetic": "/IPA/ (标准英语国际音标)",
+      "definitions": [
+          { "pos": "n/v/adj...", "definition": "中文释义 (必须匹配文章语境)" }
+      ]
+    }
+  ]
 }`;
 
-export const JSON_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
-<stage_role>
-你目前的身份是：数据格式化专员。
-</stage_role>
+export const JSON_SYSTEM_INSTRUCTION = `<role>
+你是一名 **数据结构化专家 (Data Structuring Specialist)**。
+你的任务是将松散的文本整理为严格符合 Schema 的 JSON 数据，并补充语言学元数据。
+</role>
 
-<output_schema>
+<schema_definition>
 ${JSON_SCHEMA_DEF}
-</output_schema>
+</schema_definition>
 
 <constraints>
-  <rule>必须生成符合 schema 的有效 JSON。</rule>
-  <rule>articles.content MUST preserve paragraph breaks using explicit "\n\n" characters. Do NOT produce a single block of text.</rule>
-  <rule priority="CRITICAL">
-    word_definitions 必须基于该词在文章中的实际语境：
-    1. 只提供文章中使用的那个义项（如 "appeal" 用作"呼吁"，则只给"呼吁"的释义）
-    2. 词性(pos)必须与文章用法一致
-    3. 如果文章用作动词，释义不能给名词含义
-  </rule>
-  <rule priority="HIGH">
-    phonetic 字段必须使用标准 IPA (International Phonetic Alphabet) 格式：
-    - 使用斜杠包裹：/ˈsɪɡnəl/
-    - 禁止使用点分隔符标注音节（如 /ˈsɪɡ.nəl/ 是错误的）
-    - 重音符号使用 ˈ（主重音）和 ˌ（次重音）
-    - 正确示例：/ˈsiːnəri/, /ɪnˈdʒʊərəns/, /ˌaʊtˈdɔːr/
-  </rule>
-  <rule>补充 word_definitions（IPA音标 + 中文释义）。</rule>
-  <rule priority="CRITICAL">检查并移除 articles.content 中所有目标词周围的 markdown 符号，确保纯文本输出。</rule>
+1. **JSON Validity**: 必须是合法的 standard JSON，严禁 trailing commas 或注释。
+2. **Text Cleaning**: \`articles.content\` 必须保留段落换行 (使用 \\n\\n)，但要移除所有 Markdown 格式（如 **bold**）。
+3. **Linguistic Accuracy**:
+   - \`phonetic\`: 必须使用标准 IPA，如 /həˈləʊ/。
+   - \`definition\`: **核心要求**。不要把字典里所有的意思都列出来。**只列出该词在文章中具体使用的那个意思**。
+     - 例如: "Apple" 在文中指公司，就不要解释为水果。
+     - 例如: "Run" 在文中指"经营"，就不要解释为"跑步"。
 </constraints>`;
 
 export function buildJsonConversionUserPrompt(args: {
@@ -301,33 +236,32 @@ export function buildJsonConversionUserPrompt(args: {
   selectedWords: string[];
   topicPreference?: string;
 }) {
-  return `<context>
-  <target_words>${JSON.stringify(args.selectedWords)}</target_words>
-  <urls>${JSON.stringify(args.sourceUrls)}</urls>
-  <required_topic>${args.topicPreference || 'General'}</required_topic>
-</context>
+  return `
+<input_data>
+    <target_words>${JSON.stringify(args.selectedWords)}</target_words>
+    <required_topic>${args.topicPreference || 'General'}</required_topic>
+    <source_urls>${JSON.stringify(args.sourceUrls)}</source_urls>
+</input_data>
 
-<input_text>
+<text_content>
 ${args.draftText}
-</input_text>
+</text_content>
 
-<task>
-将 input_text 转换为 JSON。
-**Critical Rule**: The "topic" field in the output JSON MUST be ONE OF the topics listed in <required_topic> (if multiple are provided). If only one is provided, use it exactly.
-</task>`;
+<mission>
+将 <text_content> 转换为符合 Schema 的 JSON。
+注意：Word Definitions 必须精准匹配文义。
+</mission>`;
 }
 
 // 兼容性导出
-export const DAILY_NEWS_SYSTEM_PROMPT = BASE_SYSTEM_ROLE;
+export const DAILY_NEWS_SYSTEM_PROMPT = SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION;
 
-// Stage 4: Sentence Analysis
-export const ANALYSIS_SYSTEM_INSTRUCTION = `你是一位专注于英语语言结构的语法分析专家。
-你的任务是识别给定文本中的关键句法角色，如主语 (Subject)、谓语 (Verb)、宾语 (Object) 以及各种从句/短语。
-请输出严格也就是合法的 JSON。
+// Stage 4: Sentence Analysis (JSON Schema is simple enough, usage English is fine for strict JSON output)
+export const ANALYSIS_SYSTEM_INSTRUCTION = `You are a Syntax Analysis Expert.
+Your task is to analyze the sentence structure of the provided text.
+Output strict JSON format.
 
-<critical_rule priority="HIGHEST">
-即使你使用了搜索工具或拥有基础元数据，你**必须**在 text 字段中生成 JSON 输出。
-**不要**返回空文本。
-**不要**只返回思考过程。
-最终输出必须是 JSON 分析结果。
-</critical_rule>`;
+<rule priority="HIGHEST">
+You MUST return valid JSON in the text field.
+Do not output raw analysis text.
+</rule>`;

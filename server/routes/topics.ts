@@ -101,4 +101,56 @@ export const topicsRoutes = new Elysia({ prefix: '/api/topics' })
         }
 
         return { success: true };
+    })
+
+    /**
+     * POST /api/topics/:id/sources
+     * 将 RSS 源绑定到指定 Topic
+     * 允许一个 Topic 拥有多个专用的 RSS 来源
+     */
+    .post('/:id/sources', async ({ params: { id }, body }) => {
+        const { sourceId } = body as { sourceId: string };
+        await db.insertInto('topic_sources')
+            .values({
+                topic_id: id,
+                source_id: sourceId
+            })
+            // Ignore if already bound
+            .onConflict((oc) => oc.doNothing())
+            .execute();
+
+        return { success: true };
+    }, {
+        body: t.Object({
+            sourceId: t.String()
+        })
+    })
+
+    /**
+     * DELETE /api/topics/:id/sources/:sourceId
+     * 解除 RSS 源与 Topic 的绑定
+     * 注意：这不会删除 RSS 源本身，只会切断关联
+     */
+    .delete('/:id/sources/:sourceId', async ({ params: { id, sourceId } }) => {
+        await db.deleteFrom('topic_sources')
+            .where('topic_id', '=', id)
+            .where('source_id', '=', sourceId)
+            .execute();
+
+        return { success: true };
+    })
+
+    // GET /api/topics/:id/sources - List bound sources
+    .get('/:id/sources', async ({ params: { id } }) => {
+        const sources = await db.selectFrom('news_sources as ns')
+            .innerJoin('topic_sources as ts', 'ts.source_id', 'ns.id')
+            .select(['ns.id', 'ns.name', 'ns.url', 'ns.is_active'])
+            .where('ts.topic_id', '=', id)
+            .execute();
+
+        return sources.map(s => ({
+            ...s,
+            is_active: Boolean(s.is_active)
+        }));
     });
+

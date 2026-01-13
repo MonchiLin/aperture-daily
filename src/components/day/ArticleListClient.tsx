@@ -8,7 +8,7 @@
  */
 import { useStore } from '@nanostores/react';
 import { articlesStore } from '../../lib/store/articlesStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 import { toArticleSlug } from "../../../server/lib/slug";
 
@@ -19,7 +19,7 @@ interface ArticleItemProps {
     date: string;
 }
 
-const itemVariants = {
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
     visible: {
         opacity: 1,
@@ -32,7 +32,7 @@ const itemVariants = {
     exit: { opacity: 0, height: 0 }
 };
 
-const containerVariants = {
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,

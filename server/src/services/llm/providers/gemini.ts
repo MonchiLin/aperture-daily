@@ -169,7 +169,9 @@ export class GeminiProvider implements DailyNewsProvider {
             candidateWords: input.candidateWords,
             topicPreference: input.topicPreference,
             currentDate: input.currentDate,
-            recentTitles: input.recentTitles
+            recentTitles: input.recentTitles,
+            topics: input.topics,
+            newsCandidates: input.newsCandidates // [NEW] Pass fetched news
         });
 
         // Stage 1 Explicitly enables Google Search (redundant if default, but safe)
@@ -221,7 +223,6 @@ export class GeminiProvider implements DailyNewsProvider {
             newsSummary: input.newsSummary,
             sourceUrls: input.sourceUrls,
             currentDate: input.currentDate,
-            topicPreference: input.topicPreference
         });
 
         const response = await this.generate({

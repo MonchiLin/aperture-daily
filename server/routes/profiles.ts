@@ -1,9 +1,8 @@
 
-import { Elysia } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { db } from '../src/db/factory';
 import { AppError } from '../src/errors/AppError';
 import { toCamelCase } from '../src/utils/casing';
-import { sql } from 'kysely';
 
 interface ProfileBody {
     name: string;
@@ -28,6 +27,7 @@ export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
             return {
                 ...(toCamelCase(p) as object),
                 topics: topics.map(t => ({ id: t.id, label: t.label })),
+                topicIds: topics.map(t => t.id),
                 // Legacy compatibility: Construct string from labels
                 topicPreference: topics.map(t => t.label).join(', ')
             };
@@ -144,7 +144,62 @@ export const profilesRoutes = new Elysia({ prefix: '/api/profiles' })
 
         // Delete profile associations
         await db.deleteFrom('profile_topics').where('profile_id', '=', id).execute();
+        await db.deleteFrom('profile_sources').where('profile_id', '=', id).execute(); // Delete sources
         await db.deleteFrom('generation_profiles').where('id', '=', id).execute();
 
         return { status: "ok" };
+    })
+
+    // --- Profile Source Management Endpoints ---
+
+    /**
+     * POST /api/profiles/:id/sources
+     * Bind RSS source to Profile
+     */
+    .post('/:id/sources', async ({ params: { id }, body }) => {
+        const { sourceId } = body as { sourceId: string };
+        await db.insertInto('profile_sources')
+            .values({
+                profile_id: id,
+                source_id: sourceId
+            })
+            // Ignore if already bound
+            .onConflict((oc) => oc.doNothing())
+            .execute();
+
+        return { success: true };
+    }, {
+        body: t.Object({
+            sourceId: t.String()
+        })
+    })
+
+    /**
+     * DELETE /api/profiles/:id/sources/:sourceId
+     * Unbind RSS source from Profile
+     */
+    .delete('/:id/sources/:sourceId', async ({ params: { id, sourceId } }) => {
+        await db.deleteFrom('profile_sources')
+            .where('profile_id', '=', id)
+            .where('source_id', '=', sourceId)
+            .execute();
+
+        return { success: true };
+    })
+
+    /**
+     * GET /api/profiles/:id/sources
+     * List bound sources
+     */
+    .get('/:id/sources', async ({ params: { id } }) => {
+        const sources = await db.selectFrom('news_sources as ns')
+            .innerJoin('profile_sources as ps', 'ps.source_id', 'ns.id')
+            .select(['ns.id', 'ns.name', 'ns.url', 'ns.is_active'])
+            .where('ps.profile_id', '=', id)
+            .execute();
+
+        return sources.map(s => ({
+            ...s,
+            is_active: Boolean(s.is_active)
+        }));
     });

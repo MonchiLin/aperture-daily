@@ -8,10 +8,8 @@ import { useState } from 'react';
 import { GearIcon } from '@radix-ui/react-icons';
 import { clsx } from 'clsx';
 import Modal from './ui/Modal';
-import ProfilesPanel from './ProfilesPanel';
 import GeneralTab from './settings/GeneralTab';
 import AudioTab from './settings/AudioTab';
-import TopicsPanel from './settings/TopicsPanel';
 import { useSettings } from './settings/useSettings';
 
 const VOICES = [
@@ -85,22 +83,6 @@ export default function SettingsPanel() {
 					>
 						Audio
 					</TabButton>
-					{isAdmin && (
-						<TabButton
-							active={tab === 'profiles'}
-							onClick={() => setTab('profiles')}
-						>
-							Profiles
-						</TabButton>
-					)}
-					{isAdmin && (
-						<TabButton
-							active={tab === 'topics'}
-							onClick={() => setTab('topics')}
-						>
-							Topics
-						</TabButton>
-					)}
 				</div>
 
 				{/* Tab Content */}
@@ -117,7 +99,7 @@ export default function SettingsPanel() {
 						availableLLMs={availableLLMs}
 						isAdmin={isAdmin}
 					/>
-				) : tab === 'audio' ? (
+				) : (
 					<AudioTab
 						voices={VOICES}
 						voice={voice}
@@ -125,10 +107,6 @@ export default function SettingsPanel() {
 						savedAt={savedAt}
 						save={save}
 					/>
-				) : tab === 'profiles' ? (
-					isAdmin && <ProfilesPanel />
-				) : (
-					isAdmin && <TopicsPanel />
 				)}
 			</Modal>
 		</>

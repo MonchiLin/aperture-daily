@@ -1,7 +1,7 @@
 import { Pencil1Icon, PlusIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../lib/api';
-import ProfileEditor, { type GenerationProfile, type ProfileDraft } from './admin/ProfileEditor';
+import ProfileDrawer, { type GenerationProfile, type ProfileDraft } from './settings/ProfileDrawer';
 
 
 
@@ -177,8 +177,8 @@ export default function ProfilesPanel() {
                 </table>
             </div>
 
-            {/* Profile Editor (Extracted Component) */}
-            <ProfileEditor
+            {/* Profile Drawer */}
+            <ProfileDrawer
                 open={editorOpen}
                 mode={editorMode}
                 initialDraft={currentDraft}

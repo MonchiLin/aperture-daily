@@ -246,7 +246,6 @@ export class ClaudeProvider implements DailyNewsProvider {
             newsSummary: input.newsSummary,
             sourceUrls: input.sourceUrls,
             currentDate: input.currentDate,
-            topicPreference: input.topicPreference
         });
 
         const response = await this.generate({

@@ -22,10 +22,7 @@ export async function saveTestPipelineResult(
     // 1. Ensure Dummy Profile exists
     await db.insertInto('generation_profiles').values({
         id: profileId,
-        name: 'Test Profile',
-        topic_preference: 'General',
-        concurrency: 1,
-        timeout_ms: 300000
+        name: 'Test Profile'
     })
         .onConflict((oc) => oc.doNothing())
         .execute();

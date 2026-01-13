@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { Drawer, ConfigProvider, Popconfirm } from 'antd';
+import { Popconfirm, Drawer } from 'antd';
 import { PlusIcon, TrashIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { clsx } from 'clsx';
-import Modal from '../ui/Modal';
+// import Modal from '../ui/Modal'; // Removed
 import { apiFetch } from '../../lib/api';
+import RssSourceManager from './RssSourceManager'; // [NEW]
 
 interface Topic {
     id: string;
@@ -109,7 +110,7 @@ export default function TopicsPanel() {
                 </button>
             </div>
 
-            <div className="border border-stone-200 rounded-sm overflow-hidden">
+            <div className="border border-stone-200 rounded-sm overflow-hidden bg-white">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 font-medium uppercase tracking-wider text-[10px]">
                         <tr>
@@ -169,66 +170,88 @@ export default function TopicsPanel() {
                 </table>
             </div>
 
-            {/* Edit/Create Modal */}
-            <Modal
-                title={isCreating ? 'Create Topic' : 'Edit Topic'}
-                open={isCreating || !!editingTopic}
+            {/* Edit/Create Drawer */}
+            <Drawer
+                title={<span className="font-serif font-bold text-lg text-stone-800">{isCreating ? 'Create New Topic' : `Edit Topic: ${editingTopic?.label}`}</span>}
+                placement="right"
                 onClose={() => { setIsCreating(false); setEditingTopic(null); }}
-                width={500}
+                open={isCreating || !!editingTopic}
+                width={800}
+                styles={{
+                    header: { borderBottom: '1px solid #e7e5e4', padding: '20px 24px' },
+                    body: { padding: '24px', backgroundColor: '#fafaf9' }
+                }}
             >
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Label (Display Name)</label>
-                        <input
-                            type="text"
-                            value={formData.label}
-                            onChange={e => setFormData({ ...formData, label: e.target.value })}
-                            className="w-full px-3 py-2 border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 font-sans"
-                            placeholder="e.g., Tech News"
-                        />
+                <div className="space-y-8">
+                    {/* Basic Info Section */}
+                    <div className="bg-white p-6 rounded-sm border border-stone-200 shadow-sm space-y-5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400">Basic Configuration</h4>
+
+                        <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1.5">Label (Display Name)</label>
+                            <input
+                                type="text"
+                                value={formData.label}
+                                onChange={e => setFormData({ ...formData, label: e.target.value })}
+                                className="w-full px-4 py-2.5 border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-200 font-sans transition-all"
+                                placeholder="e.g., Tech News"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                                Prompt Custom Instruction
+                                <span className="ml-2 text-xs font-normal text-stone-400">Passed to AI to customize search & writing</span>
+                            </label>
+                            <textarea
+                                value={formData.prompts}
+                                onChange={e => setFormData({ ...formData, prompts: e.target.value })}
+                                className="w-full px-4 py-3 border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-200 font-mono text-xs h-32 leading-relaxed transition-all"
+                                placeholder="e.g., Focus on AI and Chip market. Avoid consumer gadgets."
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                            <input
+                                type="checkbox"
+                                id="is_active"
+                                checked={formData.is_active}
+                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                                className="w-4 h-4 rounded border-stone-300 text-stone-900 focus:ring-stone-800 cursor-pointer"
+                            />
+                            <label htmlFor="is_active" className="text-sm font-medium text-stone-700 cursor-pointer select-none">Active (Available for selection)</label>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold uppercase text-stone-500 mb-1">
-                            Prompt Custom Instruction
-                            <span className="ml-2 text-[10px] normal-case text-stone-400 font-normal">Passed to AI to customize search & writing</span>
-                        </label>
-                        <textarea
-                            value={formData.prompts}
-                            onChange={e => setFormData({ ...formData, prompts: e.target.value })}
-                            className="w-full px-3 py-2 border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 font-mono text-xs h-32"
-                            placeholder="e.g., Focus on AI and Chip market. Avoid consumer gadgets."
-                        />
-                    </div>
+                    {/* RSS Management Section (Only in Edit Mode) */}
+                    {editingTopic && !isCreating ? (
+                        <div className="bg-white p-6 rounded-sm border border-stone-200 shadow-sm">
+                            <RssSourceManager targetId={editingTopic.id} targetType="topics" />
+                        </div>
+                    ) : (
+                        isCreating && <div className="p-4 bg-stone-100 border border-stone-200 border-dashed rounded text-center text-xs text-stone-500">
+                            Save this topic first to manage RSS feeds.
+                        </div>
+                    )}
 
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="is_active"
-                            checked={formData.is_active}
-                            onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                            className="w-4 h-4 rounded border-stone-300 text-stone-900 focus:ring-stone-500"
-                        />
-                        <label htmlFor="is_active" className="text-sm text-stone-700">Active (Available for selection)</label>
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-2 border-t border-stone-100">
+                    {/* Footer Actions */}
+                    <div className="pt-6 border-t border-stone-200 flex justify-between items-center">
                         <button
                             onClick={() => { setIsCreating(false); setEditingTopic(null); }}
-                            className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                            className="px-5 py-2.5 text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={!formData.label}
-                            className="px-4 py-2 bg-stone-900 text-white text-sm font-bold uppercase tracking-wider rounded-sm hover:bg-stone-700 disabled:opacity-50"
+                            className="px-6 py-2.5 bg-stone-900 text-white text-sm font-bold uppercase tracking-wider rounded-sm hover:bg-stone-800 disabled:opacity-50 transition-all shadow-sm"
                         >
-                            Save Topic
+                            Save Changes
                         </button>
                     </div>
                 </div>
-            </Modal>
+            </Drawer>
         </div>
     );
 }

@@ -28,7 +28,8 @@ import { echoesRoutes } from './routes/echoes';
 import { ttsRoutes } from './routes/tts';
 import { configRoutes } from './routes/config';
 import { setupRoutes } from './routes/setup';
-import { topicsRoutes } from './routes/topics'; // [New]
+import { topicsRoutes } from './routes/topics';
+import { rssRoutes } from './routes/rss';
 import { env } from './config/env';
 
 // ─────────────────────────────────────────────────────────────
@@ -152,7 +153,8 @@ const app = new Elysia()
     .use(ttsRoutes)
     .use(configRoutes)
     .use(setupRoutes)
-    .use(topicsRoutes) // [Register New Route]
+    .use(topicsRoutes)
+    .use(rssRoutes) // [Register RSS]
     .listen(Number(process.env.PORT) || 3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

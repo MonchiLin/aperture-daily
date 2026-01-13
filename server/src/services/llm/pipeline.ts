@@ -16,7 +16,8 @@
 import type { LLMClient } from './client';
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
 import { type ArticleWithAnalysis } from './analyzer';
-import type { PipelineConfig, Topic } from './types';
+import type { PipelineConfig, Topic, NewsItem } from './types'; // [Fixed Import]
+import { NewsFetcher } from '../news/fetcher';
 
 // ============ 类型定义 ============
 
@@ -77,11 +78,26 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     // 目标：从 LLM 的知识库或实时网络搜索中获取新闻素材，并选定本文的教学词汇。
     // 该阶段对应“编辑”的角色，决定写什么，用什么词。
     if (currentStage === 'start') {
+        // [NEW] 尝试获取 RSS 新闻推荐
+        let newsCandidates: NewsItem[] = [];
+        try {
+            const fetcher = new NewsFetcher();
+            // 提取 Topic IDs 用于过滤 (假设 Topic 对象有 id 字段)
+            const topicIds = args.topics?.map(t => t.id) || [];
+            newsCandidates = await fetcher.fetchAggregate(topicIds);
+            // console.log(`[Pipeline] Fetched ${newsCandidates.length} news candidates via RSS.`);
+        } catch (error) {
+            console.warn(`[Pipeline] Failed to fetch RSS news (falling back to pure search):`, error);
+            // 不阻断流程，仅记录警告
+        }
+
         const res = await args.client.runStage1_SearchAndSelection({
             candidateWords: args.candidateWords,
             topicPreference: args.topicPreference,
             currentDate: args.currentDate,
             recentTitles: args.recentTitles,
+            topics: args.topics,
+            newsCandidates, // [NEW] 注入推荐新闻
             config // Pass pipeline config if needed for tools override
         });
 

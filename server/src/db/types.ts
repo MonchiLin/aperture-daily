@@ -1,4 +1,4 @@
-import type { ColumnType, Generated, JSONColumnType } from 'kysely';
+import type { Generated, JSONColumnType } from 'kysely';
 
 export interface Database {
     generation_profiles: GenerationProfilesTable;
@@ -13,6 +13,9 @@ export interface Database {
     article_word_index: ArticleWordIndexTable;
     topics: TopicsTable;
     profile_topics: ProfileTopicsTable;
+    news_sources: NewsSourcesTable;
+    topic_sources: TopicSourcesTable;
+    profile_sources: ProfileSourcesTable;
 }
 
 // =========================================
@@ -167,4 +170,26 @@ export interface TopicsTable {
 export interface ProfileTopicsTable {
     profile_id: string;
     topic_id: string;
+}
+
+// =========================================
+// News Sources (RSS)
+// =========================================
+export interface NewsSourcesTable {
+    id: string; // UUID
+    name: string;
+    url: string;
+    is_active: Generated<number>; // 0 or 1
+    created_at: Generated<string>;
+    updated_at: Generated<string>;
+}
+
+export interface TopicSourcesTable {
+    topic_id: string;
+    source_id: string;
+}
+
+export interface ProfileSourcesTable {
+    profile_id: string;
+    source_id: string;
 }

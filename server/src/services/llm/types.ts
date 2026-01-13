@@ -77,6 +77,14 @@ export interface TokenUsage {
 // 3. 不同 Provider 实现可复用相同的类型校验
 // ════════════════════════════════════════════════════════════════
 
+export interface NewsItem {
+    sourceName: string;
+    title: string;
+    link: string;
+    summary: string;
+    pubDate: string;
+}
+
 /**
  * Stage 1: 搜索与选词
  *
@@ -90,6 +98,7 @@ export interface Stage1Input {
     currentDate: string;
     recentTitles?: string[];  // 避免与近期文章主题重复
     topics?: Topic[];
+    newsCandidates?: NewsItem[]; // [NEW] RSS News Candidates
     config?: any;
 }
 

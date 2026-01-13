@@ -3,7 +3,6 @@ import { promises as fs } from 'fs';
 import {
     Migrator,
     FileMigrationProvider,
-    Kysely,
 } from 'kysely';
 import { db } from '../src/db/factory'; // Re-use the factory
 
