@@ -49,6 +49,7 @@ export interface ArticleRow {
         title: string;
         contentJson: string; // JSON string needing parsing
         readLevels: number;
+        category?: string;
         createdAt?: string;
     };
     tasks?: Task;

@@ -16,7 +16,7 @@
 import type { LLMClient } from './client';
 import type { DailyNewsOutput } from '../../schemas/dailyNews';
 import { type ArticleWithAnalysis } from './analyzer';
-import type { PipelineConfig } from './types';
+import type { PipelineConfig, Topic } from './types';
 
 // ============ 类型定义 ============
 
@@ -30,16 +30,20 @@ export interface PipelineCheckpoint {
     usage?: Record<string, any>;
 }
 
+// PipelineArgs interface update
 export interface PipelineArgs {
     client: LLMClient;
     config?: PipelineConfig;
     currentDate: string;
     topicPreference: string;
+    topics?: Topic[]; // [NEW]
     candidateWords: string[];
     recentTitles?: string[];
     checkpoint?: PipelineCheckpoint | null;
     onCheckpoint?: (checkpoint: PipelineCheckpoint) => Promise<void>;
 }
+
+// ... inside runPipeline ...
 
 export interface PipelineResult {
     output: DailyNewsOutput;
@@ -142,6 +146,7 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
         draftText,
         sourceUrls,
         selectedWords,
+        topicPreference: args.topicPreference,
         config
     });
 

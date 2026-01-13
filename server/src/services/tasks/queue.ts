@@ -39,9 +39,6 @@ export class TaskQueue {
                 .values({
                     id: defId,
                     name: 'Default',
-                    topic_preference: 'General News',
-                    concurrency: 1,
-                    timeout_ms: 3600000,
                 })
                 .onConflict((oc) => oc.doNothing())
                 .execute();

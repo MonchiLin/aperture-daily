@@ -28,6 +28,12 @@ export interface PipelineConfig {
     thinkingLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
+export interface Topic {
+    id: string;
+    label: string;
+    prompts?: string;
+}
+
 export interface GenerateOptions {
     prompt: string;
     system?: string;
@@ -83,6 +89,7 @@ export interface Stage1Input {
     topicPreference: string;
     currentDate: string;
     recentTitles?: string[];  // 避免与近期文章主题重复
+    topics?: Topic[];
     config?: any;
 }
 
@@ -125,6 +132,7 @@ export interface Stage3Input {
     draftText: string;
     sourceUrls: string[];
     selectedWords: string[];
+    topicPreference: string;
     config?: any;
 }
 

@@ -64,20 +64,43 @@ export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `${BASE_SYSTEM_ROLE}
 \`\`\`
 </output_format>`;
 
+import type { Topic } from './types';
+
 export function buildSearchAndSelectionUserPrompt(args: {
   candidateWords: string[];
   topicPreference: string;
   currentDate: string;
   recentTitles?: string[];
+  topics?: Topic[];
 }) {
   const candidateWordsText = args.candidateWords.map((w, i) => `${i + 1}. ${w}`).join('\n');
   const avoidTitlesSection = args.recentTitles?.length
     ? `\n<avoid_titles>\n以下是最近几天已生成的文章标题，请避免选择相同或高度相似的新闻主题：\n${args.recentTitles.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n</avoid_titles>`
     : '';
 
+  // [NEW] Dynamic Topic Definitions
+  let topicContext = `<topic>${args.topicPreference}</topic>`;
+
+  if (args.topics && args.topics.length > 0) {
+    const topicDefinitions = args.topics.map(t => `
+    <topic_definition id="${t.label}">
+        <name>${t.label}</name>
+        <custom_instruction>${t.prompts || 'No specific instructions.'}</custom_instruction>
+    </topic_definition>`).join('\n');
+
+    topicContext = `
+<candidate_topics>
+    ${topicDefinitions}
+</candidate_topics>
+<topic_instruction>
+    You must choose ONE topic from the <candidate_topics> list above that best fits the candidate words.
+    Once chosen, you MUST follow that topic's <custom_instruction> for your search strategy.
+</topic_instruction>`;
+  }
+
   return `<context>
   <date>${args.currentDate}</date>
-  <topic>${args.topicPreference}</topic>${avoidTitlesSection}
+  ${topicContext}${avoidTitlesSection}
 </context>
 
 <candidate_words>
@@ -85,11 +108,11 @@ ${candidateWordsText}
 </candidate_words>
 
 <task>
-1. 搜索与上述候选词相关的新闻（优先搜索近一周内的新闻）
-2. 分析搜索结果，找到一篇能够自然融入 4-7 个候选词的新闻
-3. 从候选词中选出这 4-7 个词（优先选择靠前的词）
-4. 撰写 150-250 字的新闻概括，确保选中的词汇都自然出现
-5. 返回选中的词汇、新闻概括和 1 个最权威来源的真实 URL
+1. Analyze the candidate words and select the most suitable topic from the list (if provided).
+2. Search for the LATEST news matching that topic's custom instructions (prioritize news within the last 7 days).
+3. Find a news story that naturally integrates 4-7 candiate words.
+4. Select those 4-7 words.
+5. Return the selected topic name (as 'topic'), selected words, news summary, and source URL.
 </task>`;
 }
 
@@ -276,10 +299,12 @@ export function buildJsonConversionUserPrompt(args: {
   draftText: string;
   sourceUrls: string[];
   selectedWords: string[];
+  topicPreference?: string;
 }) {
   return `<context>
   <target_words>${JSON.stringify(args.selectedWords)}</target_words>
   <urls>${JSON.stringify(args.sourceUrls)}</urls>
+  <required_topic>${args.topicPreference || 'General'}</required_topic>
 </context>
 
 <input_text>
@@ -288,6 +313,7 @@ ${args.draftText}
 
 <task>
 将 input_text 转换为 JSON。
+**Critical Rule**: The "topic" field in the output JSON MUST be ONE OF the topics listed in <required_topic> (if multiple are provided). If only one is provided, use it exactly.
 </task>`;
 }
 

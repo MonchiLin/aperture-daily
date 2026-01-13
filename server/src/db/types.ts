@@ -11,6 +11,8 @@ export interface Database {
     article_vocab_definitions: ArticleVocabDefinitionsTable;
     highlights: HighlightsTable;
     article_word_index: ArticleWordIndexTable;
+    topics: TopicsTable;
+    profile_topics: ProfileTopicsTable;
 }
 
 // =========================================
@@ -19,9 +21,6 @@ export interface Database {
 export interface GenerationProfilesTable {
     id: string; // UUID
     name: string;
-    topic_preference: string;
-    concurrency: number;
-    timeout_ms: number;
     created_at: Generated<string>;
     updated_at: Generated<string>;
 }
@@ -80,6 +79,7 @@ export interface ArticlesTable {
     model: string;
     variant: number;
     title: string;
+    category: string | null;
 
     source_url: string | null;
     slug: string | null;
@@ -150,4 +150,21 @@ export interface ArticleWordIndexTable {
     context_snippet: string;
     role: 'keyword' | 'entity';
     created_at: Generated<string>;
+}
+
+// =========================================
+// Topics System
+// =========================================
+export interface TopicsTable {
+    id: string;
+    label: string;
+    prompts: string | null;
+    is_active: Generated<number>; // 0 or 1
+    created_at: Generated<string>;
+    updated_at: Generated<string>;
+}
+
+export interface ProfileTopicsTable {
+    profile_id: string;
+    topic_id: string;
 }

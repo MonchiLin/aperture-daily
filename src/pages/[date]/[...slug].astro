@@ -69,6 +69,7 @@ const {
     dateLabel,
     sortedArticles,
     title,
+    category,
     readLevels,
     echoes,
 } = articleData;
@@ -124,6 +125,14 @@ const isAdmin = !!adminKey;
                                 <span class="text-slate-900">{dateLabel}</span>
                                 <span class="text-stone-300">|</span>
                                 <span id="reading-time">Loading...</span>
+                                {category && (
+                                    <>
+                                        <span class="text-stone-300">|</span>
+                                        <span class="text-slate-900 font-bold bg-stone-100 px-2 py-0.5 rounded text-[10px] tracking-wider uppercase border border-stone-200">
+                                            {category}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                             
                             <!-- 难度切换器 -->

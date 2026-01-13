@@ -40,6 +40,14 @@ export async function saveArticleResult(options: SaveArticleOptions): Promise<st
     // 生成 URL 友好的 slug，用于前端路由
     const slug = toArticleSlug(result.output.title);
 
+    // [Validation] Strict Topic Enforcement
+    if (options.topicPreference) {
+        const allowedTopics = options.topicPreference.split(/[,，]/).map(t => t.trim());
+        if (!allowedTopics.includes(result.output.topic)) {
+            throw new Error(`[StrictValidation] generated topic '${result.output.topic}' is not in allowed list [${allowedTopics.join(', ')}]`);
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────
     // [1] 创建主文章记录
     // ─────────────────────────────────────────────────────────────
@@ -51,6 +59,7 @@ export async function saveArticleResult(options: SaveArticleOptions): Promise<st
         title: result.output.title,
         slug: slug,
         source_url: sourceUrl,
+        category: result.output.topic, // Persist category
         status: 'published',
         published_at: finishedAt
     }).execute();

@@ -1,24 +1,29 @@
+
 import { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { apiFetch } from '../../lib/api';
+import { clsx } from 'clsx';
 
 export type GenerationProfile = {
     id: string;
     name: string;
-    topic_preference: string;
-    concurrency: number;
-    timeout_ms: number;
-    created_at: string;
-    updated_at: string;
+    topicIds?: string[];
+    topics?: { id: string; label: string }[]; // [New] For display
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type ProfileDraft = {
     id: string | null;
     name: string;
-    topic_preference: string;
-    concurrency: string;
-    timeout_minutes: string;
+    topicIds: string[]; // [New] Selected IDs
 };
+
+interface Topic {
+    id: string;
+    label: string;
+    is_active: boolean;
+}
 
 interface ProfileEditorProps {
     open: boolean;
@@ -32,32 +37,56 @@ export default function ProfileEditor({ open, mode, initialDraft, onClose, onSuc
     const [draft, setDraft] = useState<ProfileDraft>(initialDraft);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
 
     // Initial draft sync when modal opens or mode changes
     useEffect(() => {
         if (open) {
             setDraft(initialDraft);
             setError(null);
+            fetchTopics();
         }
     }, [open, initialDraft]);
+
+    const fetchTopics = async () => {
+        try {
+            const res = await apiFetch<Topic[]>('/api/topics');
+            if (res) {
+                setAvailableTopics(res.filter(t => t.is_active)); // Only show active topics
+            }
+        } catch (e) {
+            console.error('Failed to fetch topics', e);
+        }
+    };
+
+    const toggleTopic = (topicId: string) => {
+        const current = new Set(draft.topicIds || []);
+        if (current.has(topicId)) {
+            current.delete(topicId);
+        } else {
+            current.add(topicId);
+        }
+        setDraft(d => ({ ...d, topicIds: Array.from(current) }));
+    };
 
     async function handleSubmit() {
         setError(null);
         const name = draft.name.trim();
-        const topicPreference = draft.topic_preference.trim();
-        if (!name) return setError('name is required');
-        if (!topicPreference) return setError('topic_preference is required');
+        // Allow empty topics? No, require at least one.
+        if (!name) return setError('Name is required');
 
-        const concurrency = Number(draft.concurrency);
-        const timeoutMinutes = Number(draft.timeout_minutes);
-        if (!Number.isFinite(concurrency) || concurrency <= 0 || !Number.isInteger(concurrency)) return setError('concurrency must be a positive integer');
-        if (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0 || !Number.isInteger(timeoutMinutes)) return setError('timeout must be a positive integer (minutes)');
+        // Validation: Must select at least one topic (either via IDs or legacy string if we allowed it, but here we enforce IDs)
+        if (draft.topicIds.length === 0) {
+            return setError('Please select at least one topic');
+        }
+
+        if (draft.topicIds.length === 0) {
+            return setError('Please select at least one topic');
+        }
 
         const payload = {
             name,
-            topicPreference,
-            concurrency,
-            timeoutMs: timeoutMinutes * 60000
+            topicIds: draft.topicIds, // Send IDs
         };
 
         setLoading(true);
@@ -93,7 +122,7 @@ export default function ProfileEditor({ open, mode, initialDraft, onClose, onSuc
         >
             <div className="space-y-6">
                 <p className="text-sm text-stone-500 font-serif italic mb-4">
-                    Configure topic preferences and execution parameters. Model is set globally via environment variable.
+                    Configure topic preferences and execution parameters.
                 </p>
 
                 {error && (
@@ -116,38 +145,32 @@ export default function ProfileEditor({ open, mode, initialDraft, onClose, onSuc
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-xs font-bold uppercase tracking-widest text-stone-700">Topics</label>
-                        <textarea
-                            value={draft.topic_preference}
-                            onChange={(e) => setDraft((d) => ({ ...d, topic_preference: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-stone-300 focus:border-stone-500 text-stone-900 text-sm min-h-[80px] focus:outline-none"
-                            placeholder="Keywords separated by commas"
-                            disabled={loading}
-                        />
+                        <label className="block text-xs font-bold uppercase tracking-widest text-stone-700 mb-2">Topics</label>
+                        <div className="border border-stone-200 rounded p-3 max-h-60 overflow-y-auto bg-stone-50">
+                            {availableTopics.length === 0 ? (
+                                <div className="text-stone-400 text-sm italic p-2">No active topics found. Add topics in the Topics tab first.</div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-2">
+                                    {availableTopics.map(topic => (
+                                        <label key={topic.id} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-white rounded transition-colors group">
+                                            <input
+                                                type="checkbox"
+                                                checked={draft.topicIds.includes(topic.id)}
+                                                onChange={() => toggleTopic(topic.id)}
+                                                className="w-4 h-4 text-stone-900 border-stone-300 rounded focus:ring-stone-500"
+                                            />
+                                            <span className={clsx("text-sm", draft.topicIds.includes(topic.id) ? "text-stone-900 font-bold" : "text-stone-600")}>
+                                                {topic.label}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-stone-400 pt-1">Select at least one topic.</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="block text-xs font-bold uppercase tracking-widest text-stone-700">Concurrency</label>
-                            <input
-                                type="number"
-                                value={draft.concurrency}
-                                onChange={(e) => setDraft((d) => ({ ...d, concurrency: e.target.value }))}
-                                className="w-full px-3 py-2 bg-white border border-stone-300 focus:border-stone-500 text-stone-900 text-sm focus:outline-none"
-                                disabled={loading}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="block text-xs font-bold uppercase tracking-widest text-stone-700">Timeout (min)</label>
-                            <input
-                                type="number"
-                                value={draft.timeout_minutes}
-                                onChange={(e) => setDraft((d) => ({ ...d, timeout_minutes: e.target.value }))}
-                                className="w-full px-3 py-2 bg-white border border-stone-300 focus:border-stone-500 text-stone-900 text-sm focus:outline-none"
-                                disabled={loading}
-                            />
-                        </div>
-                    </div>
+                    {/* Concurrency/Timeout removed */}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-stone-200">

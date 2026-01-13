@@ -57,6 +57,14 @@ export class TaskExecutor {
             throw new Error('Daily words record is empty');
         }
 
+        // [Refactor] Fetch associated topics
+        const topics = await this.db.selectFrom('profile_topics')
+            .innerJoin('topics', 'profile_topics.topic_id', 'topics.id')
+            .select(['topics.id', 'topics.label', 'topics.prompts'])
+            .where('profile_topics.profile_id', '=', profile.id)
+            .where('topics.is_active', '=', 1)
+            .execute();
+
         const usedWords = await getUsedWordsToday(this.db, task.task_date);
         const recentTitles = await getRecentTitles(this.db, task.task_date);
         const candidates = buildCandidateWords(newWords, reviewWords, usedWords);
@@ -124,11 +132,15 @@ export class TaskExecutor {
         // ─────────────────────────────────────────────────────────────
         // [5] 执行生成流水线
         // ─────────────────────────────────────────────────────────────
+        // Derive legacy string for pipeline compatibility
+        const topicPreference = topics.map(t => t.label).join(', ');
+
         const client = createClient(clientConfig);
         const output = await runPipeline({
             client,
             currentDate: task.task_date,
-            topicPreference: profile.topic_preference || '',
+            topicPreference, // Derived string
+            topics: topics.map(t => ({ ...t, prompts: t.prompts || undefined })), // [NEW] Pass fetched topics
             candidateWords: candidateWordStrings,
             recentTitles,
             checkpoint,
@@ -181,7 +193,7 @@ export class TaskExecutor {
             taskDate: task.task_date,
             model: clientConfig.model,
             profileId: profile.id,
-            topicPreference: profile.topic_preference || undefined,
+            topicPreference,
             newWords,
             reviewWords
         });

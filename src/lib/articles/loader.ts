@@ -26,6 +26,7 @@ export interface ArticleData {
     sortedArticles: ArticleLevelContent[];
     title: string;
     readLevels: number;
+    category?: string;
     echoes: Record<string, unknown>;
 }
 
@@ -189,6 +190,7 @@ function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): A
     const articles = parsed?.result?.articles || [];
     const sortedArticles = [...articles].sort((a, b) => a.level - b.level);
     const title = row?.articles?.title || "Article";
+    const category = row?.articles?.category;
     const readLevels = row?.articles?.readLevels || 0;
 
     return {
@@ -200,6 +202,7 @@ function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): A
         dateLabel,
         sortedArticles,
         title,
+        category,
         readLevels,
         echoes,
     };

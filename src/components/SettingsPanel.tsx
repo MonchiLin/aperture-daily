@@ -11,6 +11,7 @@ import Modal from './ui/Modal';
 import ProfilesPanel from './ProfilesPanel';
 import GeneralTab from './settings/GeneralTab';
 import AudioTab from './settings/AudioTab';
+import TopicsPanel from './settings/TopicsPanel';
 import { useSettings } from './settings/useSettings';
 
 const VOICES = [
@@ -71,7 +72,7 @@ export default function SettingsPanel() {
 				minHeight={700}
 			>
 				{/* Tab Navigation */}
-				<div className="flex border-b border-stone-200 mb-6">
+				<div className="flex border-b border-stone-200 mb-6 flex-wrap gap-y-2">
 					<TabButton
 						active={tab === 'general'}
 						onClick={() => setTab('general')}
@@ -90,6 +91,14 @@ export default function SettingsPanel() {
 							onClick={() => setTab('profiles')}
 						>
 							Profiles
+						</TabButton>
+					)}
+					{isAdmin && (
+						<TabButton
+							active={tab === 'topics'}
+							onClick={() => setTab('topics')}
+						>
+							Topics
 						</TabButton>
 					)}
 				</div>
@@ -116,8 +125,10 @@ export default function SettingsPanel() {
 						savedAt={savedAt}
 						save={save}
 					/>
-				) : (
+				) : tab === 'profiles' ? (
 					isAdmin && <ProfilesPanel />
+				) : (
+					isAdmin && <TopicsPanel />
 				)}
 			</Modal>
 		</>

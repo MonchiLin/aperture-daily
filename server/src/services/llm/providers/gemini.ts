@@ -252,7 +252,8 @@ export class GeminiProvider implements DailyNewsProvider {
         const userPrompt = buildJsonConversionUserPrompt({
             draftText: input.draftText,
             sourceUrls: input.sourceUrls,
-            selectedWords: input.selectedWords
+            selectedWords: input.selectedWords,
+            topicPreference: input.topicPreference
         });
 
         const response = await this.generate({

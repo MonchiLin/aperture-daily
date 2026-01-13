@@ -3,21 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../lib/api';
 import ProfileEditor, { type GenerationProfile, type ProfileDraft } from './admin/ProfileEditor';
 
-function splitTopicTags(input: string) {
-    const parts = input
-        .split(/[,，\n;；|]+/g)
-        .map((x) => x.trim())
-        .filter(Boolean);
-    return Array.from(new Set(parts));
-}
+
 
 function buildEmptyDraft(): ProfileDraft {
     return {
         id: null,
         name: '',
-        topic_preference: '',
-        concurrency: '1',
-        timeout_minutes: '30'
+        topicIds: [],
     };
 }
 
@@ -25,9 +17,7 @@ function draftFromProfile(p: GenerationProfile): ProfileDraft {
     return {
         id: p.id,
         name: p.name,
-        topic_preference: p.topic_preference,
-        concurrency: String(p.concurrency),
-        timeout_minutes: String(Math.round(p.timeout_ms / 60000))
+        topicIds: p.topicIds || [],
     };
 }
 
@@ -138,14 +128,13 @@ export default function ProfilesPanel() {
                     <thead>
                         <tr className="bg-stone-50 border-b border-stone-200 text-xs font-bold uppercase tracking-widest text-stone-500">
                             <th className="p-4 font-medium">Name / Topics</th>
-                            <th className="p-4 font-medium">Concurrency</th>
                             <th className="p-4 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-200">
                         {rows.length === 0 ? (
                             <tr>
-                                <td colSpan={3} className="p-8 text-center text-stone-400 font-serif italic">
+                                <td colSpan={2} className="p-8 text-center text-stone-400 font-serif italic">
                                     No profiles found. Create one to get started.
                                 </td>
                             </tr>
@@ -155,16 +144,14 @@ export default function ProfilesPanel() {
                                     <td className="p-4">
                                         <div className="font-serif font-bold text-stone-900 mb-2">{p.name}</div>
                                         <div className="flex flex-wrap gap-1">
-                                            {splitTopicTags(p.topic_preference).map((t) => (
-                                                <span key={t} className="px-2 py-0.5 bg-white border border-stone-200 text-[10px] text-stone-500 uppercase tracking-wide rounded-full">
-                                                    {t}
+                                            {p.topics?.map((t) => (
+                                                <span key={t.id} className="px-2 py-0.5 bg-white border border-stone-200 text-[10px] text-stone-500 uppercase tracking-wide rounded-full">
+                                                    {t.label}
                                                 </span>
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="p-4 text-sm text-stone-500">
-                                        {p.concurrency} / {Math.round(p.timeout_ms / 60000)} min
-                                    </td>
+
                                     <td className="p-4 text-right">
                                         <div className="flex justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
                                             <button
