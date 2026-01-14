@@ -21,7 +21,7 @@ import {
     buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
 } from '../prompts';
-import { extractHttpUrlsFromText, resolveRedirectUrls, stripCitations, extractJson, buildSourceUrls } from '../utils';
+import { stripCitations, extractJson, buildSourceUrls } from '../utils';
 import { runSentenceAnalysis } from '../analyzer';
 
 // 35 分钟超时
@@ -188,7 +188,6 @@ export class GeminiProvider implements DailyNewsProvider {
         const parsed = JSON.parse(cleanJson);
         const validated = Stage1OutputSchema.parse(parsed);
 
-        // 使用共享函数处理 URL
         const selectedWords = validated.selected_words;
         const newsSummary = validated.news_summary;
         const sourceUrls = await buildSourceUrls({
@@ -198,10 +197,26 @@ export class GeminiProvider implements DailyNewsProvider {
             groundingUrls: this.extractGroundingUrls(response.output)
         });
 
+        // Resolve RSS Item if ID is returned
+        let selectedRssItem: any | undefined;
+        let selectedRssId: number | undefined;
+
+        if (validated.selected_rss_id && input.newsCandidates) {
+            // ID is 1-based index from Prompt
+            const index = validated.selected_rss_id - 1;
+            if (index >= 0 && index < input.newsCandidates.length) {
+                selectedRssItem = input.newsCandidates[index];
+                selectedRssId = validated.selected_rss_id;
+                console.log(`[Gemini] Matched RSS Item: [${selectedRssItem.sourceName}] ${selectedRssItem.title}`);
+            }
+        }
+
         return {
             selectedWords,
             newsSummary,
             sourceUrls,
+            selectedRssId,
+            selectedRssItem,
             usage: response.usage
         };
     }

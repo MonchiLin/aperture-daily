@@ -73,6 +73,13 @@ export class TaskExecutor {
             throw new Error('All words have been used today');
         }
 
+        // [NEW] Query used RSS links for deduplication
+        const usedRssRows = await this.db.selectFrom('articles')
+            .select('rss_link')
+            .where('rss_link', 'is not', null)
+            .execute();
+        const excludeRssLinks = usedRssRows.map(r => r.rss_link as string);
+
         // ─────────────────────────────────────────────────────────────
         // [3] 构建 LLM 客户端配置
         //
@@ -143,6 +150,7 @@ export class TaskExecutor {
             topics: topics.map(t => ({ ...t, prompts: t.prompts || undefined })), // [NEW] Pass fetched topics
             candidateWords: candidateWordStrings,
             recentTitles,
+            excludeRssLinks, // [NEW]
             checkpoint,
             onCheckpoint: async (cp) => {
                 // 每个阶段完成后持久化 Checkpoint

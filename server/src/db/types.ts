@@ -87,6 +87,10 @@ export interface ArticlesTable {
     source_url: string | null;
     slug: string | null;
 
+    // RSS 来源追踪
+    rss_source_id: string | null;  // 关联 news_sources.id
+    rss_link: string | null;       // RSS 文章原始链接
+
     status: 'draft' | 'published';
     read_levels: Generated<number>; // Default 0
 

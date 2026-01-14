@@ -26,9 +26,11 @@ export interface PipelineCheckpoint {
     selectedWords?: string[];
     newsSummary?: string;
     sourceUrls?: string[];
+    selectedRssItem?: NewsItem; // [NEW]
     draftText?: string;
     completedLevels?: ArticleWithAnalysis[];
     usage?: Record<string, any>;
+    selectedRssId?: number; // [NEW]
 }
 
 // PipelineArgs interface update
@@ -42,6 +44,7 @@ export interface PipelineArgs {
     recentTitles?: string[];
     checkpoint?: PipelineCheckpoint | null;
     onCheckpoint?: (checkpoint: PipelineCheckpoint) => Promise<void>;
+    excludeRssLinks?: string[]; // [NEW]
 }
 
 // ... inside runPipeline ...
@@ -50,6 +53,8 @@ export interface PipelineResult {
     output: DailyNewsOutput;
     selectedWords: string[];
     usage: Record<string, any>;
+    selectedRssId?: number;
+    selectedRssItem?: NewsItem; // [NEW]
 }
 
 // ============ 流水线核心逻辑 (Pipeline Core) ============
@@ -64,8 +69,10 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     let selectedWords = args.checkpoint?.selectedWords || [];
     let newsSummary = args.checkpoint?.newsSummary || '';
     let sourceUrls = args.checkpoint?.sourceUrls || [];
+    let selectedRssItem = args.checkpoint?.selectedRssItem; // [NEW]
     let draftText = args.checkpoint?.draftText || '';
     let usage: Record<string, any> = args.checkpoint?.usage || {};
+    let selectedRssId = args.checkpoint?.selectedRssId; // [NEW]
 
     // 初始化上下文：优先从 Checkpoint 恢复，否则使用空默认值
     // 这种模式允许函数既能处理“全新开始”的任务，也能处理“中途恢复”的任务
@@ -84,7 +91,7 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
             const fetcher = new NewsFetcher();
             // 提取 Topic IDs 用于过滤 (假设 Topic 对象有 id 字段)
             const topicIds = args.topics?.map(t => t.id) || [];
-            newsCandidates = await fetcher.fetchAggregate(topicIds);
+            newsCandidates = await fetcher.fetchAggregate(topicIds, args.currentDate, args.excludeRssLinks);
             // console.log(`[Pipeline] Fetched ${newsCandidates.length} news candidates via RSS.`);
         } catch (error) {
             console.warn(`[Pipeline] Failed to fetch RSS news (falling back to pure search):`, error);
@@ -103,7 +110,10 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
 
         selectedWords = res.selectedWords;
         newsSummary = res.newsSummary;
+        newsSummary = res.newsSummary;
         sourceUrls = res.sourceUrls;
+        selectedRssId = res.selectedRssId;
+        selectedRssItem = res.selectedRssItem; // [NEW]
         usage.search_selection = res.usage;
 
         console.log(`[Pipeline] Stage 1 Complete. Selected ${selectedWords.length} words.`);
@@ -114,6 +124,7 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
                 selectedWords,
                 newsSummary,
                 sourceUrls,
+                selectedRssId,
                 usage
             });
         }
@@ -230,6 +241,8 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     return {
         output: generation.output,
         selectedWords,
+        selectedRssId,
+        selectedRssItem,
         usage
     };
 }

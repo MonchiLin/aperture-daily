@@ -78,6 +78,7 @@ export interface TokenUsage {
 // ════════════════════════════════════════════════════════════════
 
 export interface NewsItem {
+    sourceId?: string; // [NEW] 关联 news_sources.id
     sourceName: string;
     title: string;
     link: string;
@@ -106,6 +107,9 @@ export interface Stage1Output {
     selectedWords: string[];
     newsSummary: string;
     sourceUrls: string[];
+    // RSS 选择追踪
+    selectedRssId?: number;   // LLM 选中的 RSS 池 item id (1-indexed)
+    selectedRssItem?: NewsItem; // Pipeline 根据 id 填充的完整 RSS 信息
     usage?: TokenUsage;
 }
 

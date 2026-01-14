@@ -20,7 +20,7 @@ export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `<role>
 **真实性是生命线**。
 1. **RSS 优先 (RSS First)**: 你的首要任务是评估 "<rss_pool>" 中的推荐新闻。如果其中有高质量且匹配候选词的新闻，**直接采用**，不要舍近求远去联网搜索。
 2. **拒绝幻觉**: 绝不捏造新闻。所有事实必须基于提供的 RSS 上下文或真实的联网搜索结果。
-3. **时效性**: 仅关注最近 7 天内发生的事件。
+3. **时效性**: 仅关注 <task_date> 前后 7 天内发生的事件（task_date 是目标生成日期，可能是历史日期）。
 </core_philosophy>
 
 <workflow>
@@ -37,7 +37,8 @@ export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `<role>
 {
   "selected_words": ["word1", "word2", ...],  // 必须是候选词列表中的原词
   "news_summary": "...",                      // 200字以内的中文/英文摘要
-  "source": "..."                             // 来源 URL (RSS link 或 搜索到的 link)
+  "source": "...",                            // 来源 URL (RSS link 或 搜索到的 link)
+  "selected_rss_id": 3                        // 如果从 RSS 池选择，返回对应 item 的 id；如果来自搜索则省略此字段
 }
 </output_requirement>`;
 
@@ -78,7 +79,7 @@ export function buildSearchAndSelectionUserPrompt(args: {
 
   return `
 <context_data>
-    <current_date>${args.currentDate}</current_date>
+    <task_date description="目标生成日期，新闻应围绕此日期前后 7 天">${args.currentDate}</task_date>
     <history_avoidance>
         ${args.recentTitles?.join('; ') || 'None'}
     </history_avoidance>

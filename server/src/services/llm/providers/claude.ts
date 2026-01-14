@@ -25,7 +25,7 @@ import {
     buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
 } from '../prompts';
-import { extractHttpUrlsFromText, resolveRedirectUrls, extractJson, stripCitations, buildSourceUrls } from '../utils';
+import { extractJson, stripCitations, buildSourceUrls } from '../utils';
 import { runSentenceAnalysis } from '../analyzer';
 
 // 用户请求的常量定义

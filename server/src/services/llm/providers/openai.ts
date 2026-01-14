@@ -22,7 +22,7 @@ import {
     buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
 } from '../prompts';
-import { extractHttpUrlsFromText, resolveRedirectUrls, stripCitations, extractJson, buildSourceUrls } from '../utils';
+import { stripCitations, extractJson, buildSourceUrls } from '../utils';
 import { runSentenceAnalysis } from '../analyzer';
 
 export class OpenAIProvider implements DailyNewsProvider {

@@ -19,6 +19,7 @@ export const Stage1OutputSchema = z.object({
     news_summary: z.string().min(10, 'News summary too short'),
     source: z.string().optional(),
     sources: z.array(z.string()).optional(),
+    selected_rss_id: z.number().optional()
 });
 
 export type Stage1OutputDTO = z.infer<typeof Stage1OutputSchema>;

@@ -1,6 +1,5 @@
 import Parser from 'rss-parser';
 import { db } from '../../db/factory';
-import { sql } from 'kysely';
 import type { NewsItem } from '../llm/types';
 
 /**
@@ -32,9 +31,15 @@ export class NewsFetcher {
     /**
      * 获取聚合新闻列表
      * @param topicIds - 关联的主题 ID 列表。如果为空，则尝试获取通用源。
+     * @param taskDate - 目标生成日期 (YYYY-MM-DD)，用于时效过滤。如果为空则使用当前时间。
+     * @param excludeLinks - 已使用的 RSS 链接列表，用于去重。
      */
-    async fetchAggregate(topicIds: string[] = []): Promise<NewsItem[]> {
-        console.log(`[NewsFetcher] Starting aggregation for topics: [${topicIds.join(', ')}]`);
+    async fetchAggregate(
+        topicIds: string[] = [],
+        taskDate?: string,
+        excludeLinks?: string[]
+    ): Promise<NewsItem[]> {
+        console.log(`[NewsFetcher] Starting aggregation for topics: [${topicIds.join(', ')}], taskDate: ${taskDate || 'now'}, excludeLinks: ${excludeLinks?.length || 0}`);
 
         // 1. 获取目标 RSS 源列表
         const sources = await this.getSourcesForTopics(topicIds);
@@ -51,7 +56,9 @@ export class NewsFetcher {
 
         // 3. 并发抓取 (Concurrent Fetching)
         // 使用 Promise.allSettled 确保部分失败不影响整体
-        const fetchPromises = selectedSources.map(source => this.fetchSingleSource(source));
+        // 3. 并发抓取 (Concurrent Fetching)
+        // 使用 Promise.allSettled 确保部分失败不影响整体
+        const fetchPromises = selectedSources.map(source => this.fetchSingleSource(source, taskDate));
         const results = await Promise.allSettled(fetchPromises);
 
         // 4. 结果汇总与清洗
@@ -78,7 +85,15 @@ export class NewsFetcher {
             .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
             .slice(0, NewsFetcher.MAX_ITEMS_TO_RETURN);
 
-        return sortedItems;
+        // 6. 排除已使用的链接 (Deduplication)
+        const excludeSet = new Set(excludeLinks || []);
+        const filteredItems = sortedItems.filter(item => !excludeSet.has(item.link));
+
+        if (excludeLinks && excludeLinks.length > 0) {
+            console.log(`[NewsFetcher] Excluded ${sortedItems.length - filteredItems.length} already-used RSS links.`);
+        }
+
+        return filteredItems;
     }
 
     /**
@@ -123,7 +138,10 @@ export class NewsFetcher {
     /**
      * 抓取单个 RSS 源 (Core Logic)
      */
-    private async fetchSingleSource(source: { name: string; url: string }): Promise<NewsItem[]> {
+    /**
+     * 抓取单个 RSS 源 (Core Logic)
+     */
+    private async fetchSingleSource(source: { id: string; name: string; url: string }, taskDate?: string): Promise<NewsItem[]> {
         try {
             const feed = await this.parser.parseURL(source.url);
 
@@ -135,6 +153,7 @@ export class NewsFetcher {
             // 提取并标准化数据
             // 只取每个源最新的 5 条，避免单个大源淹没其他源
             const items: NewsItem[] = feed.items.slice(0, 5).map(item => ({
+                sourceId: source.id, // [NEW]
                 sourceName: source.name,
                 title: item.title?.trim() || 'Untitled',
                 link: item.link || '',
@@ -143,7 +162,10 @@ export class NewsFetcher {
             })).filter(item => item.title && item.link); // 过滤无效数据
 
             // 过滤太久远的新闻 (比如超过 48 小时的)
-            const twoDaysAgo = Date.now() - 48 * 60 * 60 * 1000;
+            // 过滤太久远的新闻 (比如超过 48 小时的)
+            // 如果提供了 taskDate，则以 taskDate 为基准；否则以当前时间为基准
+            const referenceDate = taskDate ? new Date(taskDate).getTime() : Date.now();
+            const twoDaysAgo = referenceDate - 48 * 60 * 60 * 1000;
             const recentItems = items.filter(item => {
                 const pubTime = new Date(item.pubDate).getTime();
                 return pubTime > twoDaysAgo;

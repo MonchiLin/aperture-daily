@@ -61,7 +61,10 @@ export async function saveArticleResult(options: SaveArticleOptions): Promise<st
         source_url: sourceUrl,
         category: result.output.topic, // Persist category
         status: 'published',
-        published_at: finishedAt
+        published_at: finishedAt,
+        // RSS Tracking
+        rss_source_id: result.selectedRssItem?.sourceId || null,
+        rss_link: result.selectedRssItem?.link || null
     }).execute();
 
     console.log(`[SaveArticle] Created article: ${result.output.title} (ID: ${articleId})`);
