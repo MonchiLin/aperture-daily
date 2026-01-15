@@ -76,6 +76,21 @@ export const initEchoes = (echoes: Record<string, any>) => {
     echoesRegistry = echoes || {};
 };
 
+/** 查找词汇历史上下文 (内部 helper) */
+function lookupEchoData(word: string): EchoData {
+    const mems = echoesRegistry[word];
+    if (mems && Array.isArray(mems) && mems.length > 0) {
+        return mems.map(m => ({
+            snippet: m.snippet,
+            articleTitle: m.articleTitle,
+            articleId: m.articleId,
+            date: m.date,
+            timeAgo: m.timeAgo || m.date
+        }));
+    }
+    return null;
+}
+
 // ════════════════════════════════════════════════════════════════
 // 交互处理
 // ════════════════════════════════════════════════════════════════
@@ -100,20 +115,7 @@ export const setInteraction = (word: string, rect: { top: number; left: number; 
     const currentStore = interactionStore.get();
     if (currentStore.activeWord !== normalized) {
         interactionStore.setKey('activeWord', normalized);
-
-        // 查找历史上下文
-        const mems = echoesRegistry[normalized];
-        if (mems && Array.isArray(mems) && mems.length > 0) {
-            interactionStore.setKey('echoData', mems.map(m => ({
-                snippet: m.snippet,
-                articleTitle: m.articleTitle,
-                articleId: m.articleId,
-                date: m.date,
-                timeAgo: m.timeAgo || m.date
-            })));
-        } else {
-            interactionStore.setKey('echoData', null);
-        }
+        interactionStore.setKey('echoData', lookupEchoData(normalized));
     }
 };
 
@@ -151,23 +153,7 @@ export const setHoveredSentence = (index: number | null) => {
 export const setActiveWord = (word: string | null) => {
     const normalized = word ? word.toLowerCase() : null;
     interactionStore.setKey('activeWord', normalized);
-
-    if (normalized) {
-        const mems = echoesRegistry[normalized];
-        if (mems && Array.isArray(mems) && mems.length > 0) {
-            interactionStore.setKey('echoData', mems.map(m => ({
-                snippet: m.snippet,
-                articleTitle: m.articleTitle,
-                articleId: m.articleId,
-                date: m.date,
-                timeAgo: m.timeAgo || m.date
-            })));
-        } else {
-            interactionStore.setKey('echoData', null);
-        }
-    } else {
-        interactionStore.setKey('echoData', null);
-    }
+    interactionStore.setKey('echoData', normalized ? lookupEchoData(normalized) : null);
 };
 
 /** 切换文章难度级别 */

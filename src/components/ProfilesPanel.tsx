@@ -1,5 +1,6 @@
 import { Pencil1Icon, PlusIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { useEffect, useMemo, useState } from 'react';
+import { Popconfirm } from 'antd';
 import { apiFetch } from '../lib/api';
 import ProfileDrawer, { type GenerationProfile, type ProfileDraft } from './settings/ProfileDrawer';
 import { Tag } from './ui/Tag';
@@ -75,12 +76,6 @@ export default function ProfilesPanel() {
             setError((e as Error).message);
         } finally {
             setLoading(false);
-        }
-    }
-
-    function confirmDelete(p: GenerationProfile) {
-        if (window.confirm(`Delete profile "${p.name}"? If it is referenced by tasks, deletion will fail.`)) {
-            removeProfile(p.id);
         }
     }
 
@@ -165,13 +160,21 @@ export default function ProfilesPanel() {
                                             >
                                                 <Pencil1Icon />
                                             </button>
-                                            <button
-                                                onClick={() => confirmDelete(p)}
-                                                className="p-1 text-stone-400 hover:text-red-600 transition-colors"
-                                                title="Delete"
+                                            <Popconfirm
+                                                title="Delete Profile"
+                                                description={`Delete "${p.name}"? If referenced by tasks, deletion will fail.`}
+                                                onConfirm={() => removeProfile(p.id)}
+                                                okText="Delete"
+                                                cancelText="Cancel"
+                                                okButtonProps={{ danger: true }}
                                             >
-                                                <TrashIcon />
-                                            </button>
+                                                <button
+                                                    className="p-1 text-stone-400 hover:text-red-600 transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <TrashIcon />
+                                                </button>
+                                            </Popconfirm>
                                         </div>
                                     </td>
                                 </tr>
