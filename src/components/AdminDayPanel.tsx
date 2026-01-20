@@ -35,7 +35,8 @@ export default function AdminDayPanel(props: Props) {
 		refresh,
 		generate,
 		fetchWords,
-		deleteTask
+		deleteTask,
+		generateImpression
 	} = useAdminTasks({
 		date: props.date,
 		initialTasks: props.initialTasks,
@@ -81,6 +82,17 @@ export default function AdminDayPanel(props: Props) {
 		}
 	};
 
+	const handleImpression = async () => {
+		try {
+			await generateImpression();
+			await refreshArticles(props.date);
+			setCollapsed(false);
+			message.success('IMPRESSION任务已创建');
+		} catch (e) {
+			console.error(e);
+		}
+	};
+
 	// 非管理员不渲染（双重保险，虽然 AdminDrawer 已经判断过）
 	if (!isAdmin) return null;
 
@@ -90,6 +102,7 @@ export default function AdminDayPanel(props: Props) {
 				loading={loading}
 				onFetchWords={handleFetchWords}
 				onGenerate={handleGenerate}
+				onImpression={handleImpression}
 			/>
 
 			{error && (

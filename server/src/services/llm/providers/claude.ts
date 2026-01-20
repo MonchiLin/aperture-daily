@@ -18,11 +18,7 @@ import {
     Stage3OutputSchema
 } from '../../../schemas/stage_io';
 import {
-    SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
-    DRAFT_SYSTEM_INSTRUCTION,
     JSON_SYSTEM_INSTRUCTION,
-    buildSearchAndSelectionUserPrompt,
-    buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
 } from '../prompts';
 import { extractJson, stripCitations, buildSourceUrls } from '../utils';
@@ -202,18 +198,10 @@ export class ClaudeProvider implements DailyNewsProvider {
 
     async runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output> {
         console.log('[Claude] Running Stage 1: Search & Selection');
-        const userPrompt = buildSearchAndSelectionUserPrompt({
-            candidateWords: input.candidateWords,
-            topicPreference: input.topicPreference,
-            currentDate: input.currentDate,
-            recentTitles: input.recentTitles,
-            topics: input.topics,               // 用户配置的主题列表
-            newsCandidates: input.newsCandidates // RSS 预取的新闻候选
-        });
 
         const response = await this.generate({
-            system: SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
-            prompt: userPrompt
+            system: input.systemPrompt,
+            prompt: input.userPrompt
         });
 
         const cleanJson = extractJson(response.text);
@@ -239,16 +227,10 @@ export class ClaudeProvider implements DailyNewsProvider {
 
     async runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output> {
         console.log('[Claude] Running Stage 2: Draft Generation');
-        const userPrompt = buildDraftGenerationUserPrompt({
-            selectedWords: input.selectedWords,
-            newsSummary: input.newsSummary,
-            sourceUrls: input.sourceUrls,
-            currentDate: input.currentDate,
-        });
 
         const response = await this.generate({
-            system: DRAFT_SYSTEM_INSTRUCTION,
-            prompt: userPrompt,
+            system: input.systemPrompt,
+            prompt: input.userPrompt,
             config: {
                 tools: [{
                     type: "web_search_20250305",

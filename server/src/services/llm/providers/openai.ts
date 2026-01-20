@@ -15,11 +15,7 @@ import {
     Stage3OutputSchema
 } from '../../../schemas/stage_io';
 import {
-    SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
-    DRAFT_SYSTEM_INSTRUCTION,
     JSON_SYSTEM_INSTRUCTION,
-    buildSearchAndSelectionUserPrompt,
-    buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
 } from '../prompts';
 import { stripCitations, extractJson, buildSourceUrls } from '../utils';
@@ -77,25 +73,10 @@ export class OpenAIProvider implements DailyNewsProvider {
     async runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output> {
         console.log('[OpenAI] 执行阶段 1: 搜索与选题');
 
-        // [Stage 1 Strategy]
-        // 目标：从候选词生成新闻摘要和选题。
-        // 工具：强制开启 `web_search`，让模型先搜索最新的相关新闻，再做决策。
-        // 目前为为了保持跨模型一致性，我们要求输出 JSON 字符串，而不是直接使用 OpenAI Functions (虽然那样更结构化)，
-        // 这样可以复用通用的 Zod Schema 校验逻辑。
-
-        const userPrompt = buildSearchAndSelectionUserPrompt({
-            candidateWords: input.candidateWords,
-            topicPreference: input.topicPreference,
-            currentDate: input.currentDate,
-            recentTitles: input.recentTitles,
-            topics: input.topics,               // 用户配置的主题列表
-            newsCandidates: input.newsCandidates // RSS 预取的新闻候选
-        });
-
         // Responses API with search
         const response = await this.generate({
-            prompt: userPrompt,
-            system: SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
+            prompt: input.userPrompt,
+            system: input.systemPrompt,
             config: {
                 tools: [{ type: 'web_search' }]
             }
@@ -124,16 +105,10 @@ export class OpenAIProvider implements DailyNewsProvider {
 
     async runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output> {
         console.log('[OpenAI] Running Stage 2: Draft Generation');
-        const userPrompt = buildDraftGenerationUserPrompt({
-            selectedWords: input.selectedWords,
-            newsSummary: input.newsSummary,
-            sourceUrls: input.sourceUrls,
-            currentDate: input.currentDate,
-        });
 
         const response = await this.generate({
-            prompt: userPrompt,
-            system: DRAFT_SYSTEM_INSTRUCTION,
+            prompt: input.userPrompt,
+            system: input.systemPrompt,
             config: {
                 tools: [{ type: 'web_search' }]
             }

@@ -14,11 +14,7 @@ import {
     Stage3OutputSchema
 } from '../../../schemas/stage_io';
 import {
-    SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
-    DRAFT_SYSTEM_INSTRUCTION,
     JSON_SYSTEM_INSTRUCTION,
-    buildSearchAndSelectionUserPrompt,
-    buildDraftGenerationUserPrompt,
     buildJsonConversionUserPrompt
 } from '../prompts';
 import { stripCitations, extractJson, buildSourceUrls } from '../utils';
@@ -166,19 +162,11 @@ export class GeminiProvider implements DailyNewsProvider {
 
     async runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output> {
         console.log('[Gemini] Running Stage 1: Search & Selection');
-        const userPrompt = buildSearchAndSelectionUserPrompt({
-            candidateWords: input.candidateWords,
-            topicPreference: input.topicPreference,
-            currentDate: input.currentDate,
-            recentTitles: input.recentTitles,
-            topics: input.topics,
-            newsCandidates: input.newsCandidates // [NEW] Pass fetched news
-        });
 
-        // Stage 1 Explicitly enables Google Search (redundant if default, but safe)
+        // Stage 1 Explicitly enables Google Search
         const response = await this.generate({
-            system: SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
-            prompt: userPrompt,
+            system: input.systemPrompt,
+            prompt: input.userPrompt,
             config: {
                 tools: [{ googleSearch: {} }]
             }
@@ -223,18 +211,12 @@ export class GeminiProvider implements DailyNewsProvider {
 
     async runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output> {
         console.log('[Gemini] Running Stage 2: Draft Generation');
-        const userPrompt = buildDraftGenerationUserPrompt({
-            selectedWords: input.selectedWords,
-            newsSummary: input.newsSummary,
-            sourceUrls: input.sourceUrls,
-            currentDate: input.currentDate,
-        });
 
         const response = await this.generate({
-            system: DRAFT_SYSTEM_INSTRUCTION,
-            prompt: userPrompt,
+            system: input.systemPrompt,
+            prompt: input.userPrompt,
             config: {
-                tools: [{ googleSearch: {} }] // Search always on
+                tools: [{ googleSearch: {} }]
             }
         });
 

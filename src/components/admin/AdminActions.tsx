@@ -1,13 +1,14 @@
-import { FileDown, Play, Minus, Plus } from 'lucide-react';
+import { FileDown, Play, Minus, Plus, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 type AdminActionsProps = {
     loading: boolean;
     onFetchWords: () => void;
     onGenerate: (count: number) => void;
+    onImpression?: () => void;
 };
 
-export default function AdminActions({ loading, onFetchWords, onGenerate }: AdminActionsProps) {
+export default function AdminActions({ loading, onFetchWords, onGenerate, onImpression }: AdminActionsProps) {
     const [generateCount, setGenerateCount] = useState(5);
 
     const decrement = (e: React.MouseEvent) => {
@@ -21,7 +22,7 @@ export default function AdminActions({ loading, onFetchWords, onGenerate }: Admi
     };
 
     return (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
             <button
                 onClick={onFetchWords}
                 disabled={loading}
@@ -62,6 +63,16 @@ export default function AdminActions({ loading, onFetchWords, onGenerate }: Admi
                     </button>
                 </div>
             </div>
+            {onImpression && (
+                <button
+                    onClick={onImpression}
+                    disabled={loading}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-stone-600 bg-white border border-stone-300 hover:border-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all disabled:opacity-50"
+                >
+                    <Sparkles size={14} className="text-indigo-500" />
+                    Impression
+                </button>
+            )}
         </div>
     );
 }

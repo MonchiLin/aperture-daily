@@ -24,6 +24,7 @@ import { getUsedWordsToday, getRecentTitles, buildCandidateWords, uniqueStrings 
 
 import { createClient, type LLMClientConfig } from '../llm/client';
 import { runPipeline, type PipelineCheckpoint } from '../llm/pipeline';
+import type { GenerationMode } from '../llm/promptStrategies';
 
 export class TaskExecutor {
     constructor(private db: AppKysely) { }
@@ -42,19 +43,49 @@ export class TaskExecutor {
         // ─────────────────────────────────────────────────────────────
         // [2] 准备候选词
         //
-        // 策略：新词优先，已被当日其他文章使用的词会被过滤
-        // 这样多个 Profile 可以生成不同词汇组合的文章
+        // 策略：
+        // - IMPRESSION 模式：使用 result_json 中预存的候选词
+        // - Normal 模式：从 daily_word_references 获取新词+复习词
         // ─────────────────────────────────────────────────────────────
-        const wordRefs = await this.db.selectFrom('daily_word_references')
-            .select(['word', 'type'])
-            .where('date', '=', task.task_date)
-            .execute();
+        const taskData = task.result_json as any;
+        const isImpressionMode = taskData?.mode === 'impression';
+        const generationMode: GenerationMode = isImpressionMode ? 'impression' : 'normal';
 
-        const newWords = uniqueStrings(wordRefs.filter(w => w.type === 'new').map(w => w.word));
-        const reviewWords = uniqueStrings(wordRefs.filter(w => w.type === 'review').map(w => w.word));
+        let candidateWordStrings: string[];
+        let recentTitles: string[] = [];
+        // 提升到外层作用域，确保后续 saveArticleResult 能正确使用
+        let newWords: string[] = [];
+        let reviewWords: string[] = [];
 
-        if (newWords.length + reviewWords.length === 0) {
-            throw new Error('Daily words record is empty');
+        if (isImpressionMode && taskData?.candidateWords) {
+            // IMPRESSION 模式：直接使用预存的候选词
+            candidateWordStrings = taskData.candidateWords;
+            recentTitles = await getRecentTitles(this.db, task.task_date);
+            // IMPRESSION 模式不区分 new/review，保持空数组
+            console.log(`[Task ${task.id}] IMPRESSION mode with ${candidateWordStrings.length} candidate words`);
+        } else {
+            // Normal 模式：从 daily_word_references 获取
+            const wordRefs = await this.db.selectFrom('daily_word_references')
+                .select(['word', 'type'])
+                .where('date', '=', task.task_date)
+                .execute();
+
+            newWords = uniqueStrings(wordRefs.filter(w => w.type === 'new').map(w => w.word));
+            reviewWords = uniqueStrings(wordRefs.filter(w => w.type === 'review').map(w => w.word));
+
+            if (newWords.length + reviewWords.length === 0) {
+                throw new Error('Daily words record is empty');
+            }
+
+            const usedWords = await getUsedWordsToday(this.db, task.task_date);
+            recentTitles = await getRecentTitles(this.db, task.task_date);
+            const candidates = buildCandidateWords(newWords, reviewWords, usedWords);
+
+            if (candidates.length === 0) {
+                throw new Error('All words have been used today');
+            }
+
+            candidateWordStrings = candidates.map(c => c.word);
         }
 
         // [Refactor] Fetch associated topics
@@ -64,14 +95,6 @@ export class TaskExecutor {
             .where('profile_topics.profile_id', '=', profile.id)
             .where('topics.is_active', '=', 1)
             .execute();
-
-        const usedWords = await getUsedWordsToday(this.db, task.task_date);
-        const recentTitles = await getRecentTitles(this.db, task.task_date);
-        const candidates = buildCandidateWords(newWords, reviewWords, usedWords);
-
-        if (candidates.length === 0) {
-            throw new Error('All words have been used today');
-        }
 
         // [NEW] Query used RSS links for deduplication
         const usedRssRows = await this.db.selectFrom('articles')
@@ -134,8 +157,6 @@ export class TaskExecutor {
             }
         }
 
-        const candidateWordStrings = candidates.map(c => c.word);
-
         // ─────────────────────────────────────────────────────────────
         // [5] 执行生成流水线
         // ─────────────────────────────────────────────────────────────
@@ -150,12 +171,17 @@ export class TaskExecutor {
             topics: topics.map(t => ({ ...t, prompts: t.prompts || undefined })), // [NEW] Pass fetched topics
             candidateWords: candidateWordStrings,
             recentTitles,
-            excludeRssLinks, // [NEW]
+            excludeRssLinks,
             checkpoint,
+            mode: generationMode,  // 传递生成模式
             onCheckpoint: async (cp) => {
                 // 每个阶段完成后持久化 Checkpoint
+                // 保留 mode 和 candidateWords，确保恢复时能正确识别任务类型
+                const checkpointData = isImpressionMode
+                    ? { ...cp, mode: 'impression', candidateWords: candidateWordStrings }
+                    : cp;
                 await this.db.updateTable('tasks')
-                    .set({ result_json: JSON.stringify(cp) })
+                    .set({ result_json: JSON.stringify(checkpointData) })
                     .where('id', '=', task.id)
                     .execute();
                 console.log(`[Task ${task.id}] Saved checkpoint: ${cp.stage}`);
@@ -208,9 +234,8 @@ export class TaskExecutor {
 
         const finishedAt = new Date().toISOString();
         const resultData = {
-            new_count: newWords.length,
-            review_count: reviewWords.length,
-            candidate_count: candidates.length,
+            mode: generationMode,
+            candidate_count: candidateWordStrings.length,
             selected_words: output.selectedWords,
             generated: { model: clientConfig.model, provider, article_id: articleId },
             usage: output.usage ?? null

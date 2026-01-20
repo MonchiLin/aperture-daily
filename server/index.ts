@@ -30,6 +30,7 @@ import { configRoutes } from './routes/config';
 import { setupRoutes } from './routes/setup';
 import { topicsRoutes } from './routes/topics';
 import { rssRoutes } from './routes/rss';
+import { impressionRoutes } from './routes/impression';
 import { env } from './config/env';
 
 // ─────────────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ const app = new Elysia()
             path.startsWith('/api/words') ||
             path.startsWith('/api/cron') ||
             path.startsWith('/api/topics') || // [Protect Topics]
+            path.startsWith('/api/impression') || // [Protect Impression]
             (path.startsWith('/api/articles') && (request.method === 'DELETE' || request.method === 'PATCH'));
 
         if (!isProtected) return;
@@ -154,7 +156,8 @@ const app = new Elysia()
     .use(configRoutes)
     .use(setupRoutes)
     .use(topicsRoutes)
-    .use(rssRoutes) // [Register RSS]
+    .use(rssRoutes)
+    .use(impressionRoutes(queue))
     .listen(Number(process.env.PORT) || 3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

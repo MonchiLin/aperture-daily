@@ -125,6 +125,25 @@ export function useAdminTasks({ date, initialTasks, onSucceeded }: UseAdminTasks
         }
     };
 
+    const generateImpression = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const llm = localStorage.getItem('admin_selected_llm');
+            await apiFetch('/api/impression/generate', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ task_date: date, llm })
+            });
+            await refresh();
+        } catch (e) {
+            setError((e as Error).message);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         tasks,
         loading,
@@ -132,7 +151,8 @@ export function useAdminTasks({ date, initialTasks, onSucceeded }: UseAdminTasks
         refresh,
         generate,
         fetchWords,
-        deleteTask
+        deleteTask,
+        generateImpression
     };
 }
 

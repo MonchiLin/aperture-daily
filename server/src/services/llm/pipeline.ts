@@ -18,6 +18,7 @@ import type { DailyNewsOutput } from '../../schemas/dailyNews';
 import { type ArticleWithAnalysis } from './analyzer';
 import type { PipelineConfig, Topic, NewsItem } from './types'; // [Fixed Import]
 import { NewsFetcher } from '../news/fetcher';
+import { getStrategy, type GenerationMode } from './promptStrategies';
 
 // ============ 类型定义 ============
 
@@ -39,12 +40,13 @@ export interface PipelineArgs {
     config?: PipelineConfig;
     currentDate: string;
     topicPreference: string;
-    topics?: Topic[]; // [NEW]
+    topics?: Topic[];
     candidateWords: string[];
     recentTitles?: string[];
     checkpoint?: PipelineCheckpoint | null;
     onCheckpoint?: (checkpoint: PipelineCheckpoint) => Promise<void>;
-    excludeRssLinks?: string[]; // [NEW]
+    excludeRssLinks?: string[];
+    mode?: GenerationMode; // 策略模式：默认 'normal'
 }
 
 // ... inside runPipeline ...
@@ -79,6 +81,9 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     const currentStage = args.checkpoint?.stage || 'start';
     const config = args.config || {};
 
+    // 策略模式：根据 mode 获取对应的 Prompt 策略
+    const strategy = getStrategy(args.mode);
+
 
 
     // [Stage 1] 搜索与选题 (Search & Selection)
@@ -98,18 +103,30 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
             // 不阻断流程，仅记录警告
         }
 
+        // 策略模式：根据 mode 构建对应的 Prompt
+        const stage1System = strategy.stage1.system;
+        const stage1User = strategy.stage1.buildUser({
+            candidateWords: args.candidateWords,
+            topicPreference: args.topicPreference,
+            currentDate: args.currentDate,
+            recentTitles: args.recentTitles,
+            topics: args.topics,
+            newsCandidates,
+        });
+
         const res = await args.client.runStage1_SearchAndSelection({
             candidateWords: args.candidateWords,
             topicPreference: args.topicPreference,
             currentDate: args.currentDate,
             recentTitles: args.recentTitles,
             topics: args.topics,
-            newsCandidates, // [NEW] 注入推荐新闻
-            config // Pass pipeline config if needed for tools override
+            newsCandidates,
+            config,
+            systemPrompt: stage1System,
+            userPrompt: stage1User,
         });
 
         selectedWords = res.selectedWords;
-        newsSummary = res.newsSummary;
         newsSummary = res.newsSummary;
         sourceUrls = res.sourceUrls;
         selectedRssId = res.selectedRssId;
@@ -136,13 +153,25 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     // 输入：Selected Words, News Summary, Source URLs
     // 输出：纯文本草稿 (Draft Text)
     if (currentStage === 'start' || currentStage === 'search_selection') {
+        // 策略模式：根据 mode 构建对应的 Prompt
+        const stage2System = strategy.stage2.system;
+        const stage2User = strategy.stage2.buildUser({
+            selectedWords,
+            newsSummary,
+            sourceUrls,
+            currentDate: args.currentDate,
+            topicPreference: args.topicPreference,
+        });
+
         const res = await args.client.runStage2_DraftGeneration({
             selectedWords,
             newsSummary,
             sourceUrls,
             currentDate: args.currentDate,
             topicPreference: args.topicPreference,
-            config
+            config,
+            systemPrompt: stage2System,
+            userPrompt: stage2User,
         });
 
         draftText = res.draftText;

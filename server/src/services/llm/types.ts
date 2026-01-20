@@ -101,6 +101,9 @@ export interface Stage1Input {
     topics?: Topic[];
     newsCandidates?: NewsItem[]; // [NEW] RSS News Candidates
     config?: any;
+    // 策略模式：Pipeline 层必须传入，Provider 层直接使用
+    systemPrompt: string;
+    userPrompt: string;
 }
 
 export interface Stage1Output {
@@ -127,6 +130,9 @@ export interface Stage2Input {
     currentDate: string;
     topicPreference: string;
     config?: any;
+    // 策略模式：Pipeline 层必须传入，Provider 层直接使用
+    systemPrompt: string;
+    userPrompt: string;
 }
 
 export interface Stage2Output {

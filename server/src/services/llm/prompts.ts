@@ -102,6 +102,8 @@ ${JSON.stringify(args.candidateWords)}
 
 // ============ Stage 2: 草稿生成 ============
 
+import { LEVELS_XML, FORMATTING_XML, buildStage2Context } from './prompts.shared';
+
 const WRITING_GUIDELINES_XML = `
 <guidelines>
   <core_principle>
@@ -109,40 +111,9 @@ const WRITING_GUIDELINES_XML = `
     三篇文章应讲述同一个故事，但使用不同的语言复杂度。
   </core_principle>
 
-  <levels>
-    <level id="1" name="Elementary (初级)">
-      <target_audience>CEFR A2 学习者</target_audience>
-      <constraints>
-        - 词数: 90 - 120 words
-        - 句法: 仅使用简单句 (SVO) 和基础并列句 (and/but)。避免从句。
-        - 时态: 仅使用一般现在时、一般过去时。
-        - 风格: 直白、清晰，类似 VOA Special English。
-      </constraints>
-    </level>
+${LEVELS_XML}
 
-    <level id="2" name="Intermediate (中级)">
-      <target_audience>CEFR B1/B2 学习者</target_audience>
-      <constraints>
-        - 词数: 150 - 200 words
-        - 句法: 引入定语从句 (who/which) 和状语从句 (when/because)。
-        - 风格: 标准新闻报道风格，客观、专业。
-      </constraints>
-    </level>
-
-    <level id="3" name="Advanced (高级)">
-      <target_audience>CEFR C1 学习者</target_audience>
-      <constraints>
-        - 词数: 250 - 300 words
-        - 句法: 复杂的句式结构，包含倒装、虚拟语气、长难句。
-        - 风格: 本土化表达，类似《经济学人》或《纽约时报》的深度分析风格。
-      </constraints>
-    </level>
-  </levels>
-
-  <formatting>
-    <rule>Target words must be kept in PLAIN TEXT. DO NOT use markdown bolding (e.g., **word**).</rule>
-    <rule>Form adaptation (morphology) is allowed and encouraged for natural flow (e.g., run -> ran/running).</rule>
-  </formatting>
+${FORMATTING_XML}
 </guidelines>`;
 
 export const DRAFT_SYSTEM_INSTRUCTION = `<role>
@@ -171,16 +142,7 @@ export function buildDraftGenerationUserPrompt(args: {
   sourceUrls: string[];
   currentDate: string;
 }) {
-  return `
-<context>
-    <date>${args.currentDate}</date>
-    <target_words>${JSON.stringify(args.selectedWords)}</target_words>
-    <source_urls>${args.sourceUrls.join(', ')}</source_urls>
-</context>
-
-<news_material>
-${args.newsSummary}
-</news_material>
+  return `${buildStage2Context(args)}
 
 <mission>
 请基于 <news_material>，使用英文为我撰写三级分级阅读文章。

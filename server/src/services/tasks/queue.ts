@@ -82,6 +82,72 @@ export class TaskQueue {
     }
 
     /**
+     * IMPRESSION 入队：从词库随机选词创建生成任务
+     *
+     * 与 enqueue 的区别：
+     * 1. 不依赖 daily_word_references，直接从 words 表随机选取
+     * 2. 候选词存入 result_json，执行时直接使用
+     * 3. 只创建单个任务（不按 Profile 分裂）
+     */
+    async enqueueImpression(taskDate: string, wordCount: number = 1024, llm?: string) {
+        // 从 words 表随机选取词汇
+        const randomWords = await this.db
+            .selectFrom('words')
+            .select('word')
+            .orderBy(({ fn }) => fn('random', []))
+            .limit(wordCount)
+            .execute();
+
+        if (randomWords.length === 0) {
+            throw new Error('No words in database. Please add words first.');
+        }
+
+        // 获取默认 Profile
+        let profile = await this.db.selectFrom('generation_profiles')
+            .selectAll()
+            .limit(1)
+            .executeTakeFirst();
+
+        // 若无 Profile，创建默认
+        if (!profile) {
+            const defId = crypto.randomUUID();
+            await this.db.insertInto('generation_profiles')
+                .values({ id: defId, name: 'Default' })
+                .execute();
+            // 重新查询以获取完整字段
+            profile = await this.db.selectFrom('generation_profiles')
+                .selectAll()
+                .where('id', '=', defId)
+                .executeTakeFirstOrThrow();
+        }
+
+        const taskId = crypto.randomUUID();
+        const candidateWords = randomWords.map(w => w.word);
+
+        await this.db.insertInto('tasks')
+            .values({
+                id: taskId,
+                task_date: taskDate,
+                type: 'article_generation',
+                trigger_source: 'manual',
+                status: 'queued',
+                profile_id: profile.id,
+                version: 0,
+                llm: (llm as any) || null,
+                // 存储候选词和模式标识
+                result_json: JSON.stringify({
+                    mode: 'impression',
+                    candidateWords,
+                }) as any,
+            })
+            .execute();
+
+        console.log(`[TaskQueue] Created IMPRESSION task ${taskId} with ${candidateWords.length} words`);
+
+        return [{ id: taskId, profileId: profile.id, wordCount: candidateWords.length }];
+    }
+
+    /**
      * 认领任务（乐观锁实现）
      *
      * 为什么用乐观锁而非悲观锁？
