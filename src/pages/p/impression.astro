@@ -1,0 +1,25 @@
+---
+import "@/styles/global.css";
+import "@/styles/grain-overlay.css";
+import { Font } from "astro:assets";
+import { ImpressionLayout } from "@/components/impression/ImpressionLayout";
+---
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Impression Mode (Classical Editorial)</title>
+        
+        <!-- Fonts -->
+        <Font cssVariable="--font-inter" preload />
+        <Font cssVariable="--font-merriweather" preload />
+        <Font cssVariable="--font-noto-serif-sc" preload />
+        <Font cssVariable="--font-playfair" preload />
+
+        
+    </head>
+    <body class="bg-[#F5F5F0] min-h-screen">
+        <ImpressionLayout client:only="react" />
+    </body>
+</html>
