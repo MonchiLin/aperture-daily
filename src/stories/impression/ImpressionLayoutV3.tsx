@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
-import { Maximize2, Minimize2, Volume2, ArrowLeft } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 
 // --- Types & Data ---
 // Re-defining InsightData locally for this story if needed, or using a specific one.
@@ -114,7 +114,7 @@ const InteractivePhrase = ({
 
 export const ImpressionLayoutV3 = () => {
     const [activeInsightId, setActiveInsightId] = useState<string | null>(null);
-    const [headerVisible, setHeaderVisible] = useState(true);
+
 
     // Smooth scroll progress
     const { scrollY } = useScroll();

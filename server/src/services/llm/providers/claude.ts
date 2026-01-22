@@ -20,7 +20,7 @@ import {
 import {
     JSON_SYSTEM_INSTRUCTION,
     buildJsonConversionUserPrompt
-} from '../prompts';
+} from '../prompts.shared';
 import { extractJson, stripCitations, buildSourceUrls } from '../utils';
 import { runSentenceAnalysis } from '../analyzer';
 

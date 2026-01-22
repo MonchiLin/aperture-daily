@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+
 import { useStore } from '@nanostores/react';
-import { $activeInsight, $isHovering, setInsight, clearInsight, type InsightData } from '../../components/impression/impressionStore';
+import { $activeInsight, setInsight, clearInsight } from '../../components/impression/impressionStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Components ---
@@ -58,7 +58,7 @@ const StickyMeta = () => {
 
 const InsightLens = () => {
     const insight = useStore($activeInsight);
-    const isHovering = useStore($isHovering);
+
 
     return (
         <aside className="hidden lg:block h-[calc(100vh-4rem)] sticky top-8 pl-8 border-l border-stone-100">

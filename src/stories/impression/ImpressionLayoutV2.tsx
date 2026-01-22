@@ -1,8 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useStore } from '@nanostores/react';
-import { $activeInsight, $isHovering, setInsight, clearInsight, type InsightData } from '../../components/impression/impressionStore';
+import { useRef, useState } from 'react';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, X, AlignLeft, Search } from 'lucide-react';
+import { Sparkles, AlignLeft, Search } from 'lucide-react';
 
 // --- Data (Reused/Extended) ---
 // Using local mock data for V2 specific structures
@@ -39,7 +38,7 @@ const MOCK_DEFINITIONS: Record<string, any> = {
 
 // --- Components ---
 
-const MarginCard = ({ data, yPos, onClose }: { data: any, yPos: number, onClose: () => void }) => {
+const MarginCard = ({ data, yPos }: { data: any, yPos: number }) => {
     return (
         <motion.div
             className="absolute left-0 w-full"
@@ -104,7 +103,7 @@ const InteractiveWord = ({ word, setFocus }: { word: string, setFocus: (data: an
             // This is a simplified calculation for the prototype
             // specific to the "relative" parent of the grid row
             const offsetTop = ref.current.offsetTop;
-            const lineHeight = 32; // approx
+
             setFocus(MOCK_DEFINITIONS[term], offsetTop - 20); // Adjust to align visually
         }
     };
@@ -127,6 +126,11 @@ export const ImpressionLayoutV2 = () => {
     const [focusY, setFocusY] = useState(0);
 
     // Auto-clear focus when scrolling far? Maybe not for now.
+
+    const handleFocus = (data: any, y: number) => {
+        setFocusedData(data);
+        setFocusY(y);
+    };
 
     return (
         <div className="min-h-screen bg-[#FDFBF7] text-slate-800 font-sans selection:bg-orange-200">
@@ -159,7 +163,7 @@ export const ImpressionLayoutV2 = () => {
                                 Philosophy of Design
                             </div>
                             <h1 className="text-5xl lg:text-7xl font-display font-black text-slate-900 leading-[1.1] mb-8 tracking-tight">
-                                The Urban <br /> <InteractiveWord word="Palimpsest" setFocus={setFocusedData} />
+                                The Urban <br /> <InteractiveWord word="Palimpsest" setFocus={handleFocus} />
                             </h1>
                             <div className="flex items-center gap-4 text-sm text-stone-500 font-mono border-t border-b border-stone-200 py-4">
                                 <span>ISSUE 042</span>
@@ -172,13 +176,13 @@ export const ImpressionLayoutV2 = () => {
 
                         <article className="prose prose-lg prose-stone font-serif leading-loose prose-p:text-lg prose-p:text-slate-700/90 text-[19px]">
                             <p className="first-letter:text-6xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-[-10px] first-letter:font-display">
-                                Cities are not written once, but rewritten endlessly. We walk through streets that are <InteractiveWord word="liminal" setFocus={setFocusedData} /> spaces,
+                                Cities are not written once, but rewritten endlessly. We walk through streets that are <InteractiveWord word="liminal" setFocus={handleFocus} /> spaces,
                                 suspended between what they were and what they are becoming. To understand the modern metropolis,
-                                one must adopt the gaze of the <InteractiveWord word="flaneur" setFocus={setFocusedData} />—the idle observer who finds truth in the aimless drift.
+                                one must adopt the gaze of the <InteractiveWord word="flaneur" setFocus={handleFocus} />—the idle observer who finds truth in the aimless drift.
                             </p>
 
                             <p>
-                                Every building facade hides the ghost of the structure that stood there before. This layering creates a visual <InteractiveWord word="gestalt" setFocus={setFocusedData} />
+                                Every building facade hides the ghost of the structure that stood there before. This layering creates a visual <InteractiveWord word="gestalt" setFocus={handleFocus} />
                                 —a complete experience that is richer, stranger, and more complex than any single architect intended.
                                 The steel beam does not just support the glass; it frames the memory of the brick it replaced.
                             </p>
@@ -195,7 +199,7 @@ export const ImpressionLayoutV2 = () => {
                             </p>
 
                             <p>
-                                When we scrutinize the <InteractiveWord word="liminal" setFocus={setFocusedData} /> boundaries of our interfaces,
+                                When we scrutinize the <InteractiveWord word="liminal" setFocus={handleFocus} /> boundaries of our interfaces,
                                 we find that users crave friction. They want to feel the grain of the paper, even if pixels have no grain.
                                 They want the content to resist them slightly, to demand attention, rather than sliding past like oil on glass.
                             </p>
@@ -217,7 +221,6 @@ export const ImpressionLayoutV2 = () => {
                                             key={focusedData.term}
                                             data={focusedData}
                                             yPos={focusY}
-                                            onClose={() => setFocusedData(null)}
                                         />
                                     ) : (
                                         // Default "Ambient" State for the margin

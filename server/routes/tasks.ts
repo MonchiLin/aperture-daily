@@ -6,7 +6,7 @@ import { toCamelCase } from '../src/utils/casing';
 
 import { AppError } from '../src/errors/AppError';
 
-interface GenerateBody { task_date?: string; date?: string; llm?: string; }
+interface GenerateBody { task_date?: string; date?: string; llm?: string; mode?: 'rss' | 'impression'; }
 
 export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
     .post('/generate', async ({ body }) => {
@@ -14,7 +14,7 @@ export const tasksRoutes = (queue: TaskQueue) => new Elysia({ prefix: '/api' })
         console.log("收到生成请求:", b);
         const date = b.task_date || b.date || getBusinessDate();
 
-        const tasks = await queue.enqueue(date, 'manual', b.llm);
+        const tasks = await queue.enqueue(date, 'manual', b.llm, b.mode);
         return { status: "ok", tasks: toCamelCase(tasks) };
     })
     .get('/tasks', async ({ query: { task_date } }) => {

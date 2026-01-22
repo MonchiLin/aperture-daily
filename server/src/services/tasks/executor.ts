@@ -49,7 +49,7 @@ export class TaskExecutor {
         // ─────────────────────────────────────────────────────────────
         const taskData = task.result_json as any;
         const isImpressionMode = taskData?.mode === 'impression';
-        const generationMode: GenerationMode = isImpressionMode ? 'impression' : 'normal';
+        const generationMode: GenerationMode = isImpressionMode ? 'impression' : 'rss';
 
         let candidateWordStrings: string[];
         let recentTitles: string[] = [];
@@ -64,7 +64,7 @@ export class TaskExecutor {
             // IMPRESSION 模式不区分 new/review，保持空数组
             console.log(`[Task ${task.id}] IMPRESSION mode with ${candidateWordStrings.length} candidate words`);
         } else {
-            // Normal 模式：从 daily_word_references 获取
+            // RSS 模式：从 daily_word_references 获取
             const wordRefs = await this.db.selectFrom('daily_word_references')
                 .select(['word', 'type'])
                 .where('date', '=', task.task_date)

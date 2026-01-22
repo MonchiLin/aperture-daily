@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'framer-motion';
-import { Volume2, Heart, ArrowRight, Play, Pause, Share2, MoreHorizontal, Bookmark, ChevronLeft, Type } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { Volume2, ArrowRight, Share2, Bookmark, ChevronLeft, Type } from 'lucide-react';
 
 // --- Types ---
 interface InsightData {
@@ -97,18 +97,7 @@ const INSIGHTS: Record<string, InsightData> = {
     }
 };
 
-// --- Theme Colors ---
-const THEME = {
-    bg: '#F5F5F0', // Warm paper
-    text: '#1A1A1A', // Soft black
-    accent: '#D9480F', // Rust orange
-    secondary: '#666666',
-    border: '#E6E6E1',
-    cardOptions: {
-        bg: '#FFFFFF',
-        border: '#EAEAEA'
-    }
-}
+
 
 // --- Components ---
 

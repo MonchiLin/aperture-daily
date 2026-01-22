@@ -17,7 +17,7 @@ import {
 import {
     JSON_SYSTEM_INSTRUCTION,
     buildJsonConversionUserPrompt
-} from '../prompts';
+} from '../prompts.shared';
 import { stripCitations, extractJson, buildSourceUrls } from '../utils';
 import { runSentenceAnalysis } from '../analyzer';
 

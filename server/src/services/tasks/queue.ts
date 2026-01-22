@@ -29,7 +29,7 @@ export class TaskQueue {
      * 每个 generation_profile 会创建一个独立任务，支持多主题并行生成。
      * 若无 Profile 存在，会自动创建一个默认 Profile（首次使用场景）。
      */
-    async enqueue(taskDate: string, triggerSource: 'manual' | 'cron' = 'manual', llm?: string) {
+    async enqueue(taskDate: string, triggerSource: 'manual' | 'cron' = 'manual', llm?: string, mode: 'rss' | 'impression' = 'rss') {
         const profiles = await this.db.selectFrom('generation_profiles').selectAll().execute();
 
         // 首次使用时自动创建默认 Profile，降低上手门槛
@@ -71,7 +71,8 @@ export class TaskQueue {
                     status: 'queued',
                     profile_id: profile.id,
                     version: 0,  // 乐观锁初始版本
-                    llm: (llm as any) || null
+                    llm: (llm as any) || null,
+                    result_json: JSON.stringify({ mode }) as any
                 })
                 .execute();
 

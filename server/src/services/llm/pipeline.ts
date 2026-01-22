@@ -46,7 +46,7 @@ export interface PipelineArgs {
     checkpoint?: PipelineCheckpoint | null;
     onCheckpoint?: (checkpoint: PipelineCheckpoint) => Promise<void>;
     excludeRssLinks?: string[];
-    mode?: GenerationMode; // 策略模式：默认 'normal'
+    mode?: GenerationMode; // 策略模式：默认 'rss'
 }
 
 // ... inside runPipeline ...

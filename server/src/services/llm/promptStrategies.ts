@@ -20,7 +20,7 @@ import {
     DRAFT_SYSTEM_INSTRUCTION,
     buildSearchAndSelectionUserPrompt,
     buildDraftGenerationUserPrompt,
-} from './prompts';
+} from './prompts.rss';
 
 // IMPRESSION 模式 Prompt
 import {
@@ -33,7 +33,7 @@ import {
 // ============ 类型定义 ============
 
 /** 支持的生成模式 */
-export type GenerationMode = 'normal' | 'impression';
+export type GenerationMode = 'rss' | 'impression';
 
 /** buildUser 函数的输入类型（排除 Prompt 字段，因为这正是要构建的内容） */
 export type Stage1BuildUserArgs = Omit<Stage1Input, 'systemPrompt' | 'userPrompt'>;
@@ -62,7 +62,7 @@ export const strategies: Record<GenerationMode, PromptStrategy> = {
      * - 新闻来源：RSS 优先，搜索兜底
      * - 选词策略：4-7 个
      */
-    normal: {
+    rss: {
         stage1: {
             system: SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION,
             buildUser: buildSearchAndSelectionUserPrompt,
@@ -96,7 +96,7 @@ export const strategies: Record<GenerationMode, PromptStrategy> = {
  *
  * @param mode 生成模式，默认 'normal'
  */
-export function getStrategy(mode: GenerationMode = 'normal'): PromptStrategy {
+export function getStrategy(mode: GenerationMode = 'rss'): PromptStrategy {
     const strategy = strategies[mode];
     if (!strategy) {
         throw new Error(`Unknown generation mode: ${mode}`);

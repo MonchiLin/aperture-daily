@@ -13,7 +13,7 @@
 
 import { extractJson } from './utils';
 import type { LLMProvider } from './types';
-import { ANALYSIS_SYSTEM_INSTRUCTION } from './prompts';
+import { ANALYSIS_SYSTEM_INSTRUCTION } from './prompts.shared';
 
 // ============ 类型定义 ============
 

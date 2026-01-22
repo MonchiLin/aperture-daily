@@ -1,4 +1,4 @@
-import { atom, map } from 'nanostores';
+import { atom } from 'nanostores';
 
 export interface InsightData {
     term: string;
