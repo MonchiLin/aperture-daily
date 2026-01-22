@@ -1,0 +1,80 @@
+/* Default Reading Mode Styles */
+
+/* Level Switcher (Opacity Transition) */
+.article-level {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transition: opacity 0.5s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.article-level[data-active] {
+    opacity: 1;
+    visibility: visible;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+#article-content {
+    transition: height 0.5s ease;
+}
+
+/* Level Button Active State */
+.level-btn[data-active] {
+    background-color: rgb(15 23 42);
+    color: white;
+    border-color: rgb(15 23 42);
+}
+
+/* Target Words - Default Bold Orange Style */
+.target-word {
+    color: #ea580c;
+    /* orange-600 */
+    font-weight: 600;
+    border-bottom: 2px dotted #ea580c;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.target-word:hover {
+    background-color: var(--color-accent-soft);
+    color: white;
+    border-style: solid;
+}
+
+/* Golden Soul Pin (History Indicator) */
+.target-word[data-has-history="true"] {
+    border-bottom-color: #f59e0b;
+    /* amber-500 */
+}
+
+.target-word[data-has-history="true"]::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    width: 4px;
+    height: 4px;
+    background: #fbbf24;
+    /* amber-400 */
+    border-radius: 99px;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+    opacity: 0.8;
+}
+
+/* Force override for Audio Playing Highlight */
+span.w-token.bg-orange-200 {
+    background-color: #fed7aa !important;
+    color: #7c2d12 !important;
+    box-shadow: 0 0 0 2px #fed7aa;
+    border-radius: 2px;
+    position: relative;
+    z-index: 10;
+}

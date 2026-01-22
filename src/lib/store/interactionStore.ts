@@ -37,11 +37,23 @@ export type EchoData = {
     timeAgo: string;
 }[] | null;
 
+/** 单词定义数据 (From loader.ts -> types.ts WordDefinition) */
+export interface WordDefinitionData {
+    word: string;
+    phonetic?: string;
+    reading?: string; // ja-JP
+    definition: string;
+    translation?: string;
+    pos?: string;
+    audio?: string;
+}
+
 /** 全局交互状态 */
 export type InteractionState = {
     activeWord: string | null;       // 当前悬停词（小写）
     currentLevel: number;            // 当前难度级别
     echoData: EchoData;              // 词汇历史上下文
+    definition: WordDefinitionData | null; // 单词定义
     hoveredSentenceIndex: number | null;  // 音频播放器同步高亮
 }
 
@@ -76,6 +88,38 @@ export const initEchoes = (echoes: Record<string, any>) => {
     echoesRegistry = echoes || {};
 };
 
+/**
+ * 单词定义注册表
+ */
+let definitionsRegistry: Record<string, WordDefinitionData> = {};
+
+/** 初始化定义数据 */
+/** 初始化定义数据 */
+export const initDefinitions = (defs: any[]) => {
+    // 转换为 Map 以便快速查找 (Key = lowercase)
+    definitionsRegistry = {};
+    defs.forEach(d => {
+        // [Adapter] Handle Server Schema (definitions: Array) -> Store Schema (definition: string)
+        let primaryDef = '';
+        let primaryPos = '';
+
+        if (d.definitions && Array.isArray(d.definitions) && d.definitions.length > 0) {
+            primaryDef = d.definitions[0].definition;
+            primaryPos = d.definitions[0].pos;
+        } else if (typeof d.definition === 'string') {
+            // Fallback: already flat
+            primaryDef = d.definition;
+            primaryPos = d.pos || '';
+        }
+
+        definitionsRegistry[d.word.toLowerCase()] = {
+            ...d,
+            definition: primaryDef,
+            pos: primaryPos
+        };
+    });
+};
+
 /** 查找词汇历史上下文 (内部 helper) */
 function lookupEchoData(word: string): EchoData {
     const mems = echoesRegistry[word];
@@ -89,6 +133,11 @@ function lookupEchoData(word: string): EchoData {
         }));
     }
     return null;
+}
+
+/** 查找单词定义 */
+export function lookupDefinition(word: string): WordDefinitionData | null {
+    return definitionsRegistry[word.toLowerCase()] || null;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -116,6 +165,7 @@ export const setInteraction = (word: string, rect: { top: number; left: number; 
     if (currentStore.activeWord !== normalized) {
         interactionStore.setKey('activeWord', normalized);
         interactionStore.setKey('echoData', lookupEchoData(normalized));
+        interactionStore.setKey('definition', lookupDefinition(normalized));
     }
 };
 
@@ -133,6 +183,7 @@ export const interactionStore = map<InteractionState>({
     activeWord: null,
     currentLevel: 1,
     echoData: null,
+    definition: null, // Add definition to store state
     hoveredSentenceIndex: null
 });
 
@@ -154,6 +205,7 @@ export const setActiveWord = (word: string | null) => {
     const normalized = word ? word.toLowerCase() : null;
     interactionStore.setKey('activeWord', normalized);
     interactionStore.setKey('echoData', normalized ? lookupEchoData(normalized) : null);
+    interactionStore.setKey('definition', normalized ? lookupDefinition(normalized) : null);
 };
 
 /** 切换文章难度级别 */

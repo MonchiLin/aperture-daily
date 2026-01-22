@@ -1,0 +1,238 @@
+---
+/**
+ * Impression Article Page (独立的 Impression 风格文章页)
+ * 
+ * 路由: /2023-10-01/impression/my-article
+ * 
+ * 与默认文章页的区别：
+ * - 单栏居中布局，无侧边栏
+ * - 视觉风格（间距）与默认模式保持一致
+ * - 配色保持 Impression 独特的报纸风格
+ * 
+ * 复用逻辑：
+ * - 数据加载: loader.ts
+ * - 单词高亮: AnnotationEngine + AnnotatedText
+ * - 音频播放: AudioInit + FloatingAudioPlayer
+ */
+import Layout from "@/layouts/Layout.astro";
+import ArticleHeader from "@/components/article/ArticleHeader.astro";
+import FloatingAudioPlayer from "@/components/FloatingAudioPlayer";
+import AudioInit from "@/components/AudioInit";
+import HistoricalEchoes from "@/components/HistoricalEchoes";
+import { ImpressionStyleController } from "@/components/article/ImpressionStyleController";
+import ArticleDataInjectors from "@/components/article/ArticleDataInjectors.astro";
+
+import "@/styles/article/shared.css";
+import "@/styles/article/impression.css";
+
+
+import { 
+    loadArticleBySlug, 
+    buildWordMatchConfigs, 
+    getReadingStats,
+    getAllArticleContents 
+} from "@/lib/articles/loader";
+import { buildAnalysisTree } from "@/lib/features/syntax/AnnotationEngine";
+import AnnotatedText from "@/components/analysis/AnnotatedText.astro";
+
+// 解析路由参数
+const { date, slug } = Astro.params;
+const slugParts = (slug || '').split('/');
+const levelPart = slugParts[slugParts.length - 1]?.toUpperCase();
+const isLevelParam = ['L1', 'L2', 'L3'].includes(levelPart);
+
+const articleSlug = isLevelParam 
+    ? slugParts.slice(0, -1).join('/') 
+    : slugParts.join('/'); 
+
+const initialLevel = isLevelParam
+    ? parseInt(levelPart.replace('L', ''))
+    : 1;
+
+if (!date || !articleSlug) {
+    return Astro.redirect('/');
+}
+
+// 复用 loader.ts 加载数据
+const articleData = await loadArticleBySlug(date, articleSlug);
+
+if (!articleData) {
+    return Astro.redirect('/404');
+}
+
+const {
+    row,
+    sources,
+    wordDefinitions,
+    sidebarWords,
+    dateLabel,
+    sortedArticles,
+    title,
+    category,
+    echoes,
+} = articleData;
+
+const id = row?.articles?.id;
+
+// 缓存策略
+if (row) {
+    Astro.response.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=31536000');
+}
+
+// 复用单词匹配配置
+const wordMatchConfigs = buildWordMatchConfigs(wordDefinitions);
+
+// 复用音频内容
+const allArticleContents = getAllArticleContents(sortedArticles);
+---
+
+
+
+<Layout title={`${title} - UpWord`} mainClass="w-full max-w-full p-0">
+    <!-- Style Override for Impression Mode Colors -->
+    <!-- 
+      We wrap everything in a div that applies the Impression-specific color variables/classes
+      that might be overridden by the Layout's default gray.
+      Original Impression Colors: bg-[#F5F5F0] text-[#1A1A1A]
+      Updated: Removed bg-[#F5F5F0] to match default mode background.
+    -->
+    <div class="min-h-screen text-[#1A1A1A] font-serif selection:bg-[#D9480F]/20 selection:text-[#1A1A1A]">
+        <!-- Redirect controller -->
+        <ImpressionStyleController client:only="react" generationMode={articleData.generationMode} isImpressionPage={true} />
+
+        <!-- Data Injection -->
+        <ArticleDataInjectors echoes={echoes} wordDefinitions={wordDefinitions} />
+        
+        <!-- Main Content Container MATCHING DEFAULT SPACING -->
+        <!-- "mx-auto w-full max-w-3xl px-4 py-10" is from the Default Mode configuration -->
+        <main 
+            class="relative z-10 mx-auto w-full max-w-4xl px-4 py-10"
+            data-article-id={id}
+        >
+            <!-- Article Header -->
+            <ArticleHeader 
+                title={title}
+                dateLabel={dateLabel}
+                category={category}
+                initialLevel={initialLevel}
+                backHref={`/day/${row?.tasks?.taskDate || ''}`}
+            />
+            
+            <!-- Article Content -->
+            <!-- Typography updated to match Default Mode exactly: slate-800/90 -->
+            <article id="article-content" class="font-serif leading-loose text-lg text-slate-800/90 md:text-xl">
+                {sortedArticles.map((article: any) => {
+                    const stats = getReadingStats(article.content);
+                    
+                    const paragraphs = buildAnalysisTree(
+                        article.content || '',
+                        article.sentences || [],
+                        article.syntax || [],
+                        wordMatchConfigs
+                    );
+
+                    return (
+                        <div
+                            class="article-level"
+                            data-level={article.level}
+                            data-word-count={stats.wordCount}
+                            data-minutes={stats.minutes}
+                            data-active={article.level === initialLevel ? "" : undefined}
+                        >
+                            {paragraphs.map((blockNodes: any[], pIndex: number) => (
+                                // Matches default indentation: first paragraph drop-cap (optional), others indent-8
+                                <p class={`mb-6 ${pIndex === 0 ? 'drop-cap-p' : 'indent-8'}`}>
+                                    <AnnotatedText nodes={blockNodes} />
+                                </p>
+                            ))}
+                        </div>
+                    );
+                })}
+            </article>
+            
+            <!-- Sources -->
+            {sources.length > 0 && (
+                <footer id="article-sources" class="mt-8 pt-8 border-t border-[#E6E6E1] font-sans">
+                    <h4 class="text-[10px] font-bold tracking-widest text-[#999999] uppercase mb-4">Sources</h4>
+                    <ul class="text-xs text-[#666666] space-y-1">
+                        {sources.map((url: string) => {
+                            let domain = url;
+                            try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch {}
+                            return (
+                                <li class="flex items-center gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-stone-300"></span>
+                                    <a href={url} target="_blank" rel="noreferrer" class="hover:text-[#D9480F] transition-colors">
+                                        {domain}
+                                    </a>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </footer>
+            )}
+        </main>
+        
+        <!-- Audio Player -->
+        {sidebarWords.length > 0 && (
+            <div class="fixed bottom-6 right-6 z-50">
+                <AudioInit 
+                    client:idle 
+                    allContent={allArticleContents} 
+                    articleId={id || ""} 
+                />
+                <FloatingAudioPlayer client:only="react" />
+            </div>
+        )}
+        
+        <!-- Historical Echoes & Popover -->
+        <HistoricalEchoes client:idle showDefinition={true} articleId={id} />
+    </div>
+</Layout>
+
+
+
+<script>
+import { initLevelSwitcher } from '../../../lib/features/reading/levelSwitcher';
+import { initReadTracker, trackReading } from '../../../lib/features/reading/readTracker';
+import { initEchoes, initDefinitions } from '../../../lib/store/interactionStore';
+import { initInteractionController } from '../../../lib/features/echoes/hoverController';
+
+function initImpressionPage() {
+    // 注入 Echoes 数据
+    try {
+        const dataEl = document.getElementById('memories-data');
+        if (dataEl && dataEl.textContent) {
+            const echoes = JSON.parse(dataEl.textContent);
+            initEchoes(echoes);
+        }
+    } catch (e) { console.error(e); }
+
+    // 注入 Definitions 数据
+    try {
+        const defsEl = document.getElementById('definitions-data');
+        if (defsEl && defsEl.textContent) {
+            const defs = JSON.parse(defsEl.textContent);
+            initDefinitions(defs);
+        }
+    } catch (e) { console.error(e); }
+
+    initLevelSwitcher();
+    initReadTracker();
+    
+    // 使用 CLICK 模式
+    initInteractionController('click');
+    
+    window.addEventListener('level-change', () => trackReading());
+    
+    // Initial Time Update
+    const activeLevel = document.querySelector('.article-level[data-active]');
+    const minutes = activeLevel?.getAttribute('data-minutes') || '1';
+    const readingTimeEl = document.getElementById('reading-time');
+    if (readingTimeEl && minutes) {
+        readingTimeEl.textContent = `${minutes} Minute${minutes !== '1' ? 's' : ''}`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initImpressionPage);
+document.addEventListener('astro:page-load', initImpressionPage);
+</script>

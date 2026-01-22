@@ -53,6 +53,8 @@ export interface ArticleRow {
         createdAt?: string;
     };
     tasks?: Task;
+    /** 文章生成模式：rss 或 impression */
+    generationMode?: 'rss' | 'impression';
 }
 
 export interface Task {

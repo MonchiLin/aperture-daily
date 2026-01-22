@@ -15,7 +15,7 @@ import { setVoice } from '../../lib/store/audioStore';
 
 import { apiFetch } from '../../lib/api';
 
-export type SettingsTab = 'general' | 'audio' | 'profiles' | 'topics';
+export type SettingsTab = 'general' | 'reading' | 'audio';
 
 export function useSettings() {
     const [adminKey, setAdminKey] = useState('');

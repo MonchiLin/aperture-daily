@@ -28,6 +28,8 @@ export interface ArticleData {
     readLevels: number;
     category?: string;
     echoes: Record<string, unknown>;
+    /** 文章生成模式 */
+    generationMode: 'rss' | 'impression';
 }
 
 export interface WordMatchConfig {
@@ -205,5 +207,6 @@ function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): A
         category,
         readLevels,
         echoes,
+        generationMode: row?.generationMode || 'rss',
     };
 }

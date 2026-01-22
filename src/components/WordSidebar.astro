@@ -12,7 +12,6 @@
  *    这对于侧边栏这种非首屏关键路径 (Critical Path) 的组件非常重要，它不会阻塞主要内容的 LCP (Largest Contentful Paint)。
  */
 import WordReflectionCard from "./WordReflectionCard";
-import ArticleInfoButton from "./ArticleInfoButton";
 
 interface Definition {
     pos: string;
@@ -39,7 +38,6 @@ const { words, articleId } = Astro.props;
         <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900">
             Margin Notes
         </h2>
-        {articleId && <ArticleInfoButton client:idle articleId={articleId} />}
     </div>
     
     <!-- 词汇列表 (React Components) -->

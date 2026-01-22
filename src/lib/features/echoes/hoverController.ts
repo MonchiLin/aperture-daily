@@ -6,27 +6,31 @@
  */
 import { setInteraction, clearInteraction } from "../../store/interactionStore";
 
-export function initHoverController() {
+export type InteractionMode = 'hover' | 'click';
+
+export function initInteractionController(mode: InteractionMode = 'hover') {
     // 1. Find the article container
     const container = document.querySelector('article') || document.body;
     let hoverTimer: any = null;
     let isHoveringPopup = false;
 
-    // Helper: Clean up old popups
+    // Helper: Clean up interaction
     const closePopup = () => {
-        // Give a small grace period for moving mouse from word to popup
-        hoverTimer = setTimeout(() => {
-            if (!isHoveringPopup) {
-                clearInteraction();
-            }
-        }, 150); // 150ms grace period
+        // Give a small grace period for moving mouse from word to popup (only for hover mode)
+        if (mode === 'hover') {
+            hoverTimer = setTimeout(() => {
+                if (!isHoveringPopup) {
+                    clearInteraction();
+                }
+            }, 150);
+        } else {
+            clearInteraction();
+        }
     };
 
-    // 2. Mouse Over (Enter)
-    container.addEventListener('mouseover', (e) => {
-        const target = e.target as HTMLElement;
+    // Helper: Trigger interaction
+    const triggerInteraction = (target: HTMLElement) => {
         const wordEl = target.closest('.target-word');
-
         if (wordEl) {
             if (hoverTimer) clearTimeout(hoverTimer);
 
@@ -40,28 +44,58 @@ export function initHoverController() {
                     height: rect.height
                 });
             }
+            return true;
         }
-    });
+        return false;
+    };
 
-    // 3. Mouse Out (Leave)
-    container.addEventListener('mouseout', (e) => {
-        const target = e.target as HTMLElement;
-        const wordEl = target.closest('.target-word');
+    if (mode === 'hover') {
+        // --- HOVER MODE (Default) ---
+        container.addEventListener('mouseover', (e) => triggerInteraction(e.target as HTMLElement));
 
-        if (wordEl) {
+        container.addEventListener('mouseout', (e) => {
+            if ((e.target as HTMLElement).closest('.target-word')) {
+                closePopup();
+            }
+        });
+
+        // Handle Popup Hover (Prevent closing when moving to popup)
+        window.addEventListener('historical-popup-enter', () => {
+            isHoveringPopup = true;
+            if (hoverTimer) clearTimeout(hoverTimer);
+        });
+
+        window.addEventListener('historical-popup-leave', () => {
+            isHoveringPopup = false;
             closePopup();
-        }
-    });
+        });
 
-    // 4. Handle Popup Hover (Prevent closing when moving to popup)
-    // We listen to a global event that the React component will dispatch
-    window.addEventListener('historical-popup-enter', () => {
-        isHoveringPopup = true;
-        if (hoverTimer) clearTimeout(hoverTimer);
-    });
+    } else {
+        // --- CLICK MODE (Impression) ---
+        // Toggle on click
+        container.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            // If clicked on a word, toggle it
+            if (triggerInteraction(target)) {
+                e.stopPropagation(); // Prevent document click from closing it immediately
+            }
+        });
 
-    window.addEventListener('historical-popup-leave', () => {
-        isHoveringPopup = false;
-        closePopup();
-    });
+        // Close when clicking empty space
+        document.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            // Ignore clicks inside the popup (handled by popup itself usually, but safe to check)
+            if (!target.closest('[data-popover-content]') && !target.closest('.target-word')) {
+                clearInteraction();
+            }
+        });
+
+        // Also close on scroll to prevent misalignment
+        window.addEventListener('scroll', () => {
+            clearInteraction();
+        }, { passive: true });
+    }
 }
+
+// Alias for backward compatibility if needed, or update callers
+export const initHoverController = () => initInteractionController('hover');

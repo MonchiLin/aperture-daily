@@ -1,0 +1,164 @@
+---
+import { BackButton } from "../ui/BackButton";
+
+interface Props {
+    title: string;
+    dateLabel: string;
+    category?: string;
+    initialLevel: number;
+    backHref: string;
+}
+
+const { title, dateLabel, category, initialLevel, backHref } = Astro.props;
+---
+
+<header class="mb-10 md:mb-12 border-b-4 border-double border-slate-900/80 pb-6">
+    <div class="flex items-center justify-between text-xs md:text-sm font-bold tracking-widest uppercase text-stone-500 mb-6">
+        <div class="flex items-center gap-3">
+            <BackButton client:load href={backHref} label="Day" />
+            <div class="h-4 w-px bg-stone-300"></div>
+            <span class="text-slate-900">{dateLabel}</span>
+            <span class="text-stone-300">|</span>
+            <span id="reading-time">Loading...</span>
+            {category && (
+                <>
+                    <span class="text-stone-300">|</span>
+                    <span class="text-slate-900 font-bold bg-stone-100 px-2 py-0.5 rounded text-[10px] tracking-wider uppercase border border-stone-200">
+                        {category}
+                    </span>
+                </>
+            )}
+        </div>
+        
+        <!-- 难度切换器 + 复制按钮 -->
+        <div class="flex items-center gap-1">
+            <!-- 复制按钮容器 -->
+            <div class="relative">
+                <button
+                    type="button"
+                    id="copy-article-btn"
+                    title="复制原文"
+                    class="w-8 h-6 flex items-center justify-center text-stone-400 hover:text-slate-900 transition-all rounded-sm border border-transparent hover:border-stone-200 cursor-pointer"
+                >
+                    <!-- 复制图标 -->
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 transition-transform duration-200">
+                        <path d="M7 3.5A1.5 1.5 0 018.5 2h3.879a1.5 1.5 0 011.06.44l3.122 3.12A1.5 1.5 0 0117 6.622V12.5a1.5 1.5 0 01-1.5 1.5h-1v-3.379a3 3 0 00-.879-2.121L10.5 5.379A3 3 0 008.379 4.5H7v-1z" />
+                        <path d="M4.5 6A1.5 1.5 0 003 7.5v9A1.5 1.5 0 004.5 18h7a1.5 1.5 0 001.5-1.5v-5.879a1.5 1.5 0 00-.44-1.06L9.44 6.439A1.5 1.5 0 008.378 6H4.5z" />
+                    </svg>
+                    <!-- 成功图标（打勾） -->
+                    <svg id="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 hidden text-green-600">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <!-- 复制成功提示 -->
+                <span 
+                    id="copy-tooltip" 
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs font-medium text-white bg-slate-800 rounded shadow-lg whitespace-nowrap opacity-0 pointer-events-none transition-all duration-200 scale-95"
+                >
+                    Copied!
+                </span>
+            </div>
+            
+            <!-- 难度切换器 -->
+            <div class="flex gap-1" id="level-switcher">
+                {[1, 2, 3].map((level) => (
+                    <button
+                        type="button"
+                        data-level-btn={level}
+                        class:list={[
+                            "level-btn w-8 h-6 flex items-center justify-center text-xs font-bold transition-all rounded-sm border leading-none cursor-pointer",
+                            level === initialLevel 
+                                ? "bg-slate-900 text-white border-slate-900" 
+                                : "bg-transparent text-stone-400 border-transparent hover:border-stone-200 hover:text-stone-600"
+                        ]}
+                    >
+                        L{level}
+                    </button>
+                ))}
+            </div>
+        </div>
+    </div>
+    
+    <h1 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] font-display mb-2">
+        {title}
+    </h1>
+</header>
+
+<script>
+    /**
+     * 初始化复制原文按钮
+     * 复制当前难度等级的文章原文，保留段落格式
+     */
+    function initCopyButton() {
+        const copyBtn = document.getElementById('copy-article-btn');
+        const copyIcon = document.getElementById('copy-icon');
+        const checkIcon = document.getElementById('check-icon');
+        const tooltip = document.getElementById('copy-tooltip');
+        if (!copyBtn || !copyIcon || !checkIcon || !tooltip) return;
+        
+        // Remove existing listeners if any (though Astro scoping handles this usually, safe to re-add)
+        // With View Transitions, this runs on page load.
+        
+        // Clone node to remove old listeners if re-initializing on same page (less likely here but good practice)
+        // const newBtn = copyBtn.cloneNode(true);
+        // copyBtn.parentNode?.replaceChild(newBtn, copyBtn);
+        // const btn = newBtn as HTMLElement;
+        
+        // Using a named handler to avoid duplication if we check for it, or just rely on idempotency
+        
+        copyBtn.onclick = async () => {
+            // 获取当前激活的文章等级
+            const activeLevel = document.querySelector('.article-level[data-active]');
+            if (!activeLevel) return;
+            
+            // 获取标题
+            const titleEl = document.querySelector('header h1');
+            const title = titleEl?.textContent?.trim() || '';
+            
+            // 获取所有段落的文本，每段一行
+            const paragraphs = activeLevel.querySelectorAll('p');
+            const bodyContent = Array.from(paragraphs)
+                .map(p => p.textContent?.trim() || '')
+                .filter(text => text.length > 0)
+                .join('\n\n');
+            
+            // 组合标题和正文
+            const textContent = title + '\n\n' + bodyContent;
+            
+            try {
+                await navigator.clipboard.writeText(textContent);
+                
+                // 显示 tooltip
+                tooltip.classList.remove('opacity-0', 'scale-95');
+                tooltip.classList.add('opacity-100', 'scale-100');
+                
+                // 动画：缩小复制图标
+                copyIcon.classList.add('scale-0');
+                
+                // 切换图标
+                setTimeout(() => {
+                    copyIcon.classList.add('hidden');
+                    checkIcon.classList.remove('hidden');
+                    checkIcon.classList.add('scale-100');
+                }, 100);
+                
+                // 1.5秒后恢复
+                setTimeout(() => {
+                    // 隐藏 tooltip
+                    tooltip.classList.add('opacity-0', 'scale-95');
+                    tooltip.classList.remove('opacity-100', 'scale-100');
+                    
+                    // 恢复图标
+                    checkIcon.classList.add('hidden');
+                    copyIcon.classList.remove('hidden', 'scale-0');
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        };
+    }
+
+    // Run on load and after swap
+    document.addEventListener('DOMContentLoaded', initCopyButton);
+    document.addEventListener('astro:page-load', initCopyButton);
+</script>

@@ -1,0 +1,7 @@
+/* Shared Article Styles */
+
+/* Common container foundation */
+#article-content {
+    position: relative;
+    min-height: 200px;
+}

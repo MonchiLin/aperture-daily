@@ -133,12 +133,26 @@ async function getArticleDetails(id: string) {
 
     const camelArticle = toCamelCase(article) as Record<string, any>;
 
+    // 从 task.result_json 提取生成模式
+    let generationMode: 'rss' | 'impression' = 'rss';
+    if (task?.result_json) {
+        try {
+            const parsed = typeof task.result_json === 'string'
+                ? JSON.parse(task.result_json)
+                : task.result_json;
+            if (parsed?.mode === 'impression') {
+                generationMode = 'impression';
+            }
+        } catch { /* 解析失败时使用默认值 */ }
+    }
+
     // We append `contentJson` property.
     return {
         articles: {
             ...camelArticle,
             contentJson: content_json_reconstructed
         },
-        tasks: toCamelCase(task)
+        tasks: toCamelCase(task),
+        generationMode,
     };
 }

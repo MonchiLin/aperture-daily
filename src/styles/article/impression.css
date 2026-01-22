@@ -1,0 +1,60 @@
+/* Impression Mode Styles */
+
+/* Level Switcher (Display Toggle - No Fade) */
+.article-level {
+    display: none;
+}
+
+.article-level[data-active] {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* First Letter Drop Cap - Impression Style */
+.drop-cap-p::first-letter {
+    float: left;
+    font-size: 5rem;
+    line-height: 4rem;
+    font-weight: 700;
+    margin-right: 0.75rem;
+    margin-top: -0.5rem;
+    font-family: inherit;
+    color: inherit;
+    /* Follows text color */
+}
+
+/* Target Words - Editorial Style (Black + Dotted Orange) */
+.target-word {
+    color: #1A1A1A;
+    font-weight: inherit;
+    /* Regular weight */
+    border-bottom: 1.5px dotted rgba(217, 72, 15, 0.5);
+    /* #D9480F at 50% */
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.target-word:hover {
+    color: #D9480F;
+    border-bottom-color: #D9480F;
+    background-color: transparent;
+    /* Explicitly clear background */
+}
+
+/* Hide Golden Echo Pins to maintain clean editorial look */
+.target-word[data-has-history="true"]::after {
+    display: none;
+}

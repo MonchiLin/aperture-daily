@@ -9,6 +9,7 @@ import { GearIcon } from '@radix-ui/react-icons';
 import { clsx } from 'clsx';
 import Modal from './ui/Modal';
 import GeneralTab from './settings/GeneralTab';
+import ReadingTab from './settings/ReadingTab';
 import AudioTab from './settings/AudioTab';
 import { useSettings } from './settings/useSettings';
 
@@ -78,6 +79,12 @@ export default function SettingsPanel() {
 						General
 					</TabButton>
 					<TabButton
+						active={tab === 'reading'}
+						onClick={() => setTab('reading')}
+					>
+						Reading
+					</TabButton>
+					<TabButton
 						active={tab === 'audio'}
 						onClick={() => setTab('audio')}
 					>
@@ -86,7 +93,7 @@ export default function SettingsPanel() {
 				</div>
 
 				{/* Tab Content */}
-				{tab === 'general' ? (
+				{tab === 'general' && (
 					<GeneralTab
 						adminKey={adminKey}
 						setAdminKey={setAdminKey}
@@ -99,7 +106,9 @@ export default function SettingsPanel() {
 						availableLLMs={availableLLMs}
 						isAdmin={isAdmin}
 					/>
-				) : (
+				)}
+				{tab === 'reading' && <ReadingTab />}
+				{tab === 'audio' && (
 					<AudioTab
 						voices={VOICES}
 						voice={voice}

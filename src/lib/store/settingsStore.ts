@@ -6,13 +6,29 @@
  * 设置项：
  * - autoCopy: 点击词汇时是否自动复制到剪贴板
  * - defaultLevel: 默认显示的文章难度级别 (1-3)
+ * - readingStyles: 不同生成模式的阅读风格配置
  */
 
 import { persistentAtom } from '@nanostores/persistent';
 
-interface Settings {
+/** 阅读风格类型 */
+export type ReadingStyle = 'default' | 'impression';
+
+/** 生成模式类型 */
+export type GenerationMode = 'rss' | 'impression';
+
+/** 各生成模式的阅读风格配置 */
+export interface ReadingStylesConfig {
+    /** RSS 模式使用的阅读风格 */
+    rss: ReadingStyle;
+    /** Impression 模式使用的阅读风格 */
+    impression: ReadingStyle;
+}
+
+export interface Settings {
     autoCopy: boolean;
     defaultLevel: 1 | 2 | 3;
+    readingStyles: ReadingStylesConfig;
 }
 
 /**
@@ -25,6 +41,10 @@ export const settingsStore = persistentAtom<Settings>(
     {
         autoCopy: false,
         defaultLevel: 1,
+        readingStyles: {
+            rss: 'default',           // RSS 模式默认使用默认风格
+            impression: 'impression', // Impression 模式默认使用 Impression 风格
+        },
     },
     {
         encode: JSON.stringify,
@@ -40,3 +60,19 @@ export function updateSetting<K extends keyof Settings>(key: K, value: Settings[
     });
 }
 
+/** 更新指定生成模式的阅读风格 */
+export function updateReadingStyle(mode: GenerationMode, style: ReadingStyle) {
+    const current = settingsStore.get();
+    settingsStore.set({
+        ...current,
+        readingStyles: {
+            ...current.readingStyles,
+            [mode]: style,
+        },
+    });
+}
+
+/** 根据生成模式获取对应的阅读风格 */
+export function getReadingStyleForMode(mode: GenerationMode): ReadingStyle {
+    return settingsStore.get().readingStyles[mode];
+}
