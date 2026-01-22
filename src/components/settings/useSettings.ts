@@ -53,10 +53,6 @@ export function useSettings() {
         } catch { /* ignore */ }
     }, []);
 
-    useEffect(() => {
-        if (!isAdmin && tab === 'profiles') setTab('general');
-    }, [isAdmin, tab]);
-
     // 保存设置并登录 (Login Action)
     async function save() {
         const nextKey = adminKey.trim();
