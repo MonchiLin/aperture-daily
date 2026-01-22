@@ -19,6 +19,22 @@ interface Props {
     initialTasks?: any[]; // SSR 预取的任务数据
 }
 
+// Helper: 状态指示器
+// 失败 > 运行中/排队中 > 空
+const StatusIndicator = ({ mounted, taskStatus }: { mounted: boolean, taskStatus: any }) => {
+    if (!mounted) return null;
+
+    if (taskStatus.hasFailed) {
+        return <span className="w-1.5 h-1.5 rounded-full bg-red-500" title="有失败任务" />;
+    }
+
+    if (taskStatus.hasRunning || taskStatus.hasQueued) {
+        return <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" title="有进行中任务" />;
+    }
+
+    return null;
+};
+
 export default function AdminDrawer({ date, initialTasks }: Props) {
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -27,14 +43,6 @@ export default function AdminDrawer({ date, initialTasks }: Props) {
     useEffect(() => {
         setMounted(true);
     }, []);
-
-    // 状态指示器：失败 > 运行中/排队中
-    // 状态指示器：失败 > 运行中/排队中
-    const statusIndicator = !mounted ? null : taskStatus.hasFailed ? (
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500" title="有失败任务" />
-    ) : (taskStatus.hasRunning || taskStatus.hasQueued) ? (
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" title="有进行中任务" />
-    ) : null;
 
     return (
         <ConfigProvider
@@ -51,7 +59,7 @@ export default function AdminDrawer({ date, initialTasks }: Props) {
                 >
                     <Settings size={12} />
                     MANAGE
-                    {statusIndicator}
+                    <StatusIndicator mounted={mounted} taskStatus={taskStatus} />
                 </button>
                 <Drawer
                     title={

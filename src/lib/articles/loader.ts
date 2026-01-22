@@ -49,19 +49,17 @@ export interface WordMatchConfig {
 export async function loadArticle(id: string): Promise<ArticleData | null> {
     try {
         // 并行请求文章数据和 echoes
+        // Strict Mode: Echoes failure will cause the whole page to fail (500)
         const [articleRes, echoesRes] = await Promise.all([
             apiFetch<ArticleRow>(`/api/articles/${id}`),
-            apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ article_id: id })
-            }).catch(() => ({ echoes: {} }))
+            fetchEchoesData(id)
         ]);
 
-        const echoes = echoesRes?.echoes || {};
+        const echoes = echoesRes || {};
         return processArticleData(articleRes, echoes);
     } catch (e: any) {
         console.error("[SSR] Failed to fetch article:", e.message);
+        // Let the caller handle null (likely rendering 404 or 500)
         return null;
     }
 }
@@ -85,25 +83,16 @@ export function buildWordMatchConfigs(wordDefinitions: WordDefinition[]): WordMa
 }
 
 /**
- * @deprecated 请使用包含并行获取 memories 逻辑的 loadArticle() 替代
+ * 内部辅助：获取 Echoes 数据
+ * Note: No try-catch here. Errors should bubble up.
  */
-export async function fetchEchoes(
-    _targetWords: string[],
-    articleId: string,
-    _adminKey: string | undefined
-): Promise<Record<string, unknown>> {
-    console.warn('[DEPRECATED] fetchEchoes: Use loadArticle() instead');
-    try {
-        const data = await apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ article_id: articleId })
-        });
-        return data?.echoes || {};
-    } catch (e) {
-        console.error("Failed to fetch echoes:", e);
-        return {};
-    }
+async function fetchEchoesData(articleId: string): Promise<Record<string, unknown>> {
+    const data = await apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ article_id: articleId })
+    });
+    return data?.echoes || {};
 }
 
 /**
@@ -141,17 +130,8 @@ export async function loadArticleBySlug(date: string, slug: string): Promise<Art
         const articleId = articleRes.articles?.id;
         let echoes = {};
         if (articleId) {
-            try {
-                // Log the raw response to debug
-                // console.log("[Loader] Raw Article Response:", JSON.stringify(articleRes, null, 2));
-
-                const echoesData = await apiFetch<{ echoes?: Record<string, unknown> }>('/api/echoes/batch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ article_id: articleId })
-                });
-                echoes = echoesData?.echoes || {};
-            } catch { }
+            // Strict Mode: If echoes fail, the page fails.
+            echoes = await fetchEchoesData(articleId);
         }
 
         return processArticleData(articleRes, echoes);

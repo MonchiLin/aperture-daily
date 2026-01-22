@@ -11,7 +11,7 @@
  * - 无 HistoricalEchoes (历史回响)
  * - 单词交互改为点击弹窗
  */
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { TriggerWord } from './TriggerWord';
 import { WordPopover } from './WordPopover';
@@ -21,6 +21,66 @@ interface ArticleContent {
     level: number;
     content: string;
 }
+
+// --- Subcomponents ---
+
+interface ImpressionParagraphProps {
+    text: string;
+    paragraphIndex: number;
+    wordMap: Map<string, SidebarWord>;
+    activeWordKey?: string;
+    onWordClick: (key: string, rect: DOMRect) => void;
+    isFirst: boolean;
+}
+
+const ImpressionParagraph = React.memo(({
+    text,
+    paragraphIndex,
+    wordMap,
+    activeWordKey,
+    onWordClick,
+    isFirst
+}: ImpressionParagraphProps) => {
+    // 简单的单词匹配：将文本分割为单词和空格
+    const tokens = useMemo(() => text.split(/(\s+)/), [text]);
+
+    const renderedTokens = tokens.map((token, tokenIndex) => {
+        const cleanWord = token.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        const wordData = wordMap.get(cleanWord);
+
+        if (wordData) {
+            const key = `${paragraphIndex}-${tokenIndex}-${cleanWord}`;
+            return (
+                <TriggerWord
+                    key={key}
+                    wordKey={key}
+                    isActive={activeWordKey === key}
+                    onClick={() => {
+                        // 需要获取实际的 rect，这里使用一个临时方案
+                        // 实际实现中 TriggerWord 会传递正确的 rect
+                        onWordClick(key, new DOMRect());
+                    }}
+                >
+                    {token}
+                </TriggerWord>
+            );
+        }
+        return <span key={`${paragraphIndex}-${tokenIndex}`}>{token}</span>;
+    });
+
+    return (
+        <p
+            className={`mb-6 ${isFirst
+                ? 'first-letter:float-left first-letter:text-[5rem] first-letter:leading-[4rem] first-letter:font-bold first-letter:mr-3 first-letter:mt-[-0.5rem]'
+                : 'indent-8'
+                }`}
+        >
+            {renderedTokens}
+        </p>
+    );
+});
+
+// --- Main Component ---
 
 interface ImpressionArticleLayoutProps {
     /** 文章标题 */
@@ -81,36 +141,6 @@ export function ImpressionArticleLayout({
     // 当前文章内容
     const currentArticle = articles.find((a) => a.level === activeLevel);
 
-    // 渲染带有高亮的段落
-    const renderParagraph = (text: string, paragraphIndex: number) => {
-        // 简单的单词匹配：将文本分割为单词和空格
-        const tokens = text.split(/(\s+)/);
-
-        return tokens.map((token, tokenIndex) => {
-            const cleanWord = token.replace(/[^a-zA-Z]/g, '').toLowerCase();
-            const wordData = wordMap.get(cleanWord);
-
-            if (wordData) {
-                const key = `${paragraphIndex}-${tokenIndex}-${cleanWord}`;
-                return (
-                    <TriggerWord
-                        key={key}
-                        wordKey={key}
-                        isActive={activeWord?.key === key}
-                        onClick={() => {
-                            // 需要获取实际的 rect，这里使用一个临时方案
-                            // 实际实现中 TriggerWord 会传递正确的 rect
-                            handleWordClick(key, new DOMRect());
-                        }}
-                    >
-                        {token}
-                    </TriggerWord>
-                );
-            }
-            return <span key={`${paragraphIndex}-${tokenIndex}`}>{token}</span>;
-        });
-    };
-
     // 阅读时间估算
     const wordCount = currentArticle?.content.split(/\s+/).length || 0;
     const readingMinutes = Math.max(1, Math.ceil(wordCount / 120));
@@ -145,8 +175,8 @@ export function ImpressionArticleLayout({
                                     key={level}
                                     onClick={() => onLevelChange(level)}
                                     className={`px-1.5 rounded-sm transition-colors ${level === activeLevel
-                                            ? 'bg-[#1A1A1A] text-white'
-                                            : 'text-[#999999] hover:text-[#666666]'
+                                        ? 'bg-[#1A1A1A] text-white'
+                                        : 'text-[#999999] hover:text-[#666666]'
                                         }`}
                                 >
                                     L{level}
@@ -163,15 +193,15 @@ export function ImpressionArticleLayout({
                 {/* Article Content */}
                 <article className="text-[20px] leading-[1.7] text-[#2D2D2D]">
                     {currentArticle?.content.split('\n\n').map((paragraph, idx) => (
-                        <p
+                        <ImpressionParagraph
                             key={idx}
-                            className={`mb-6 ${idx === 0
-                                    ? 'first-letter:float-left first-letter:text-[5rem] first-letter:leading-[4rem] first-letter:font-bold first-letter:mr-3 first-letter:mt-[-0.5rem]'
-                                    : 'indent-8'
-                                }`}
-                        >
-                            {renderParagraph(paragraph, idx)}
-                        </p>
+                            text={paragraph}
+                            paragraphIndex={idx}
+                            wordMap={wordMap}
+                            activeWordKey={activeWord?.key}
+                            onWordClick={handleWordClick}
+                            isFirst={idx === 0}
+                        />
                     ))}
                 </article>
 
