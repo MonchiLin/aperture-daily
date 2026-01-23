@@ -41,10 +41,6 @@ export class TaskQueue {
                     id: defId,
                     name: 'Default',
                 })
-                .values({
-                    id: defId,
-                    name: 'Default',
-                })
                 .onConflict((oc) => oc.doNothing())
                 .execute();
         }
@@ -168,7 +164,20 @@ export class TaskQueue {
         const now = new Date();
         const nowStr = now.toISOString();
 
-        // 查找可用任务：(Status=queued) OR (Status=running AND LockExpired)
+        // 1. 全局并发控制：检查是否有 *有效持有锁* 的运行中任务
+        // 如果有任务正在运行且锁未过期，则不允许开始新任务
+        const runningValid = await this.db.selectFrom('tasks')
+            .selectAll()
+            .where('status', '=', 'running')
+            .where('locked_until', '>', nowStr)
+            .executeTakeFirst();
+
+        if (runningValid) {
+            // [Debug] Found running task ${runningValid.id} locked until ${runningValid.locked_until}
+            return null;
+        }
+
+        // 2. 查找可用任务：(Status=queued) OR (Status=running AND LockExpired)
         // 允许重试因 Crash 而锁过期的任务
         const candidate = await this.db.selectFrom('tasks')
             .selectAll()
