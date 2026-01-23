@@ -25,6 +25,7 @@ import { getUsedWordsToday, getRecentTitles, buildCandidateWords, uniqueStrings 
 import { createClient, type LLMClientConfig } from '../llm/client';
 import { runPipeline, type PipelineCheckpoint } from '../llm/pipeline';
 import type { GenerationMode } from '../llm/promptStrategies';
+import { DeletionService } from './deletion';
 
 export class TaskExecutor {
     constructor(private db: AppKysely) { }
@@ -211,11 +212,11 @@ export class TaskExecutor {
         if (existingArticles.length > 0) {
             const articleIds = existingArticles.map(a => a.id);
 
-            // 手动级联删除：先删子表再删主表
-            await this.db.deleteFrom('highlights').where('article_id', 'in', articleIds).execute();
-            await this.db.deleteFrom('article_word_index').where('article_id', 'in', articleIds).execute();
-            await this.db.deleteFrom('article_variants').where('article_id', 'in', articleIds).execute();
-            await this.db.deleteFrom('articles').where('id', 'in', articleIds).execute();
+            // Use unified deletion service
+            // Note: We intentionally process sequentially or use Promise.all to ensure completion before retry
+            for (const id of articleIds) {
+                await DeletionService.deleteArticleWithCascade(id);
+            }
 
             console.log(`[Task ${task.id}] Cleaned up ${existingArticles.length} existing article(s) before retry.`);
         }
