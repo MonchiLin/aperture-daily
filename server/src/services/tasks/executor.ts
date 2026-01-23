@@ -47,8 +47,7 @@ export class TaskExecutor {
         // - IMPRESSION 模式：使用 result_json 中预存的候选词
         // - Normal 模式：从 daily_word_references 获取新词+复习词
         // ─────────────────────────────────────────────────────────────
-        const taskData = task.result_json as any;
-        const isImpressionMode = taskData?.mode === 'impression';
+        const isImpressionMode = task.mode === 'impression';
         const generationMode: GenerationMode = isImpressionMode ? 'impression' : 'rss';
 
         let candidateWordStrings: string[];
@@ -57,12 +56,20 @@ export class TaskExecutor {
         let newWords: string[] = [];
         let reviewWords: string[] = [];
 
-        if (isImpressionMode && taskData?.candidateWords) {
-            // IMPRESSION 模式：直接使用预存的候选词
-            candidateWordStrings = taskData.candidateWords;
+        if (isImpressionMode) {
+            // [Refactor] IMPRESSION 模式：运行时随机生成候选词
+            // 之前的逻辑是从 result_json 读取，现在直接从 words 表随机取
+            // 既然用户说"无所谓"，我们就不做复杂的种子随机，直接 random()
+            const randomWords = await this.db
+                .selectFrom('words')
+                .select('word')
+                .orderBy(({ fn }) => fn('random', []))
+                .limit(10) // Hardcoded 10 for now, or fetch from config
+                .execute();
+
+            candidateWordStrings = randomWords.map(w => w.word);
             recentTitles = await getRecentTitles(this.db, task.task_date);
-            // IMPRESSION 模式不区分 new/review，保持空数组
-            console.log(`[Task ${task.id}] IMPRESSION mode with ${candidateWordStrings.length} candidate words`);
+            console.log(`[Task ${task.id}] IMPRESSION mode with ${candidateWordStrings.length} runtime candidate words`);
         } else {
             // RSS 模式：从 daily_word_references 获取
             const wordRefs = await this.db.selectFrom('daily_word_references')
@@ -144,12 +151,12 @@ export class TaskExecutor {
         //
         // 为什么需要 Checkpoint？
         // - LLM 调用耗时长（分钟级），进程崩溃或网络中断时不想从头重来
-        // - 每个阶段完成后保存中间状态到 result_json
+        // - 每个阶段完成后保存中间状态到 context_json
         // - 重新执行时检测有效 Checkpoint 并跳过已完成阶段
         // ─────────────────────────────────────────────────────────────
         let checkpoint: PipelineCheckpoint | null = null;
-        if (task.result_json) {
-            const parsed = task.result_json as any;
+        if (task.context_json) {
+            const parsed = task.context_json as any;
             const validStages = ['search_selection', 'draft', 'conversion', 'grammar_analysis'];
             if (parsed && typeof parsed === 'object' && 'stage' in parsed && validStages.includes(parsed.stage)) {
                 checkpoint = parsed as PipelineCheckpoint;
@@ -176,19 +183,16 @@ export class TaskExecutor {
             mode: generationMode,  // 传递生成模式
             onCheckpoint: async (cp) => {
                 // 每个阶段完成后持久化 Checkpoint
-                // 保留 mode 和 candidateWords，确保恢复时能正确识别任务类型
-                const checkpointData = isImpressionMode
-                    ? { ...cp, mode: 'impression', candidateWords: candidateWordStrings }
-                    : cp;
+                // Context JSON is purely for runtime state recovery
                 await this.db.updateTable('tasks')
-                    .set({ result_json: JSON.stringify(checkpointData) })
+                    .set({ context_json: JSON.stringify(cp) })
                     .where('id', '=', task.id)
                     .execute();
                 console.log(`[Task ${task.id}] Saved checkpoint: ${cp.stage}`);
             }
         });
 
-        const articleId = crypto.randomUUID();
+        // const articleId = crypto.randomUUID(); // Removed unused
 
         // ─────────────────────────────────────────────────────────────
         // [6] 幂等清理：删除该任务之前生成的文章
@@ -233,18 +237,16 @@ export class TaskExecutor {
         });
 
         const finishedAt = new Date().toISOString();
-        const resultData = {
-            mode: generationMode,
-            candidate_count: candidateWordStrings.length,
-            selected_words: output.selectedWords,
-            generated: { model: clientConfig.model, provider, article_id: articleId },
-            usage: output.usage ?? null
-        };
+        // Result data (mode, usage etc) is no longer persisted in result_json.
+        // usage stats could be logged or stored in a separate table if needed.
+        if (output.usage) {
+            console.log(`[Task ${task.id}] Usage:`, output.usage);
+        }
 
         await this.db.updateTable('tasks')
             .set({
                 status: 'succeeded',
-                result_json: JSON.stringify(resultData),
+                context_json: null, // Clear checkpoints on success
                 finished_at: finishedAt,
                 published_at: finishedAt
             })

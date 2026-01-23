@@ -6,7 +6,9 @@ export type TaskRow = {
     status: string;
     profile_id: string;
     profileName?: string;
-    result_json: string | null;
+    mode: 'rss' | 'impression';
+    context_json: string | null; // Checkpoints
+    // result_json: string | null; // Removed
     error_message: string | null;
     error_context_json: string | null;
     created_at: string;

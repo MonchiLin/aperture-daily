@@ -4,6 +4,7 @@ import { formatTime } from '@server/lib/time';
 import { clsx } from 'clsx';
 import { useState } from 'react';
 import { Popconfirm } from 'antd';
+import TaskProgress from './TaskProgress';
 
 type TaskQueueListProps = {
     tasks: TaskRow[];
@@ -137,26 +138,13 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, taskDate }: 
                                         <Trash2 size={12} />
                                     </button>
                                 </Popconfirm>
+                                <TaskProgress contextJson={t.context_json} status={t.status} />
                             </div>
                         </div>
 
                         <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-stone-500">
                             <div className="flex items-center gap-2">
                                 <span className="font-mono">{formatTime(t.created_at)}</span>
-                                {t.status === 'running' && (() => {
-                                    let stageText = 'Stage 1/4: 搜索选词';
-                                    try {
-                                        const cp = t.result_json ? JSON.parse(t.result_json) : null;
-                                        if (cp?.stage === 'search_selection') stageText = 'Stage 2/4: 撰写草稿';
-                                        else if (cp?.stage === 'draft') stageText = 'Stage 3/4: 格式转换';
-                                        else if (cp?.stage === 'conversion' || cp?.stage === 'grammar_analysis') stageText = 'Stage 4/4: 语法透视';
-                                    } catch { }
-                                    return (
-                                        <span className="text-orange-500 font-serif italic font-medium lowercase tracking-normal bg-orange-50 px-1.5 py-0.5 rounded-sm">
-                                            {stageText}
-                                        </span>
-                                    );
-                                })()}
                             </div>
                             {t.status === 'failed' && <span className="text-red-600 font-bold">Failed</span>}
                             {t.status === 'running' && <span className="text-orange-600 font-bold">Processing</span>}

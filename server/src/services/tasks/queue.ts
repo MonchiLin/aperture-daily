@@ -72,7 +72,8 @@ export class TaskQueue {
                     profile_id: profile.id,
                     version: 0,  // 乐观锁初始版本
                     llm: (llm as any) || null,
-                    result_json: JSON.stringify({ mode }) as any
+                    mode,
+                    // result_json: removed
                 })
                 .execute();
 
@@ -135,11 +136,8 @@ export class TaskQueue {
                 profile_id: profile.id,
                 version: 0,
                 llm: (llm as any) || null,
-                // 存储候选词和模式标识
-                result_json: JSON.stringify({
-                    mode: 'impression',
-                    candidateWords,
-                }) as any,
+                mode: 'impression',
+                // result_json: removed (candidates are now generated at runtime)
             })
             .execute();
 
@@ -218,12 +216,12 @@ export class TaskQueue {
     }
 
     /** 标记任务成功完成 */
-    async complete(taskId: string, resultJson: any) {
+    async complete(taskId: string) {
         const now = new Date().toISOString();
         await this.db.updateTable('tasks')
             .set({
                 status: 'succeeded',
-                result_json: resultJson,
+                // result_json: removed
                 finished_at: now,
                 published_at: now,
                 error_message: null,

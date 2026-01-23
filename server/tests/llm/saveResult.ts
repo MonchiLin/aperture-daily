@@ -35,7 +35,8 @@ export async function saveTestPipelineResult(
         status: 'succeeded',
         profile_id: profileId,
         llm: 'openai', // Default or from clientConfig.provider if mapped
-        result_json: JSON.stringify(result.output),
+        mode: 'rss',
+        // result_json: JSON.stringify(result.output), // Removed
         finished_at: now,
         published_at: now
     }).execute();

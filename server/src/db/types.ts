@@ -1,4 +1,5 @@
 import type { Generated, JSONColumnType } from 'kysely';
+import type { CheckpointContext, AnalysisAnnotation, SentenceData, HighlightMeta, HighlightStyle } from './jsonTypes';
 
 export interface Database {
     generation_profiles: GenerationProfilesTable;
@@ -39,9 +40,11 @@ export interface TasksTable {
     status: 'queued' | 'running' | 'succeeded' | 'failed' | 'canceled';
     llm: 'gemini' | 'openai' | 'claude' | null;
     profile_id: string;
+    mode: 'rss' | 'impression';
+    context_json: JSONColumnType<CheckpointContext> | null; // Checkpoints
 
     // JSON Columns - Using generic types for now, can be refined later
-    result_json: JSONColumnType<any> | null;
+    // result_json: JSONColumnType<any> | null; // Removed in migration 0006
     error_message: string | null;
     error_context_json: JSONColumnType<any> | null;
 
@@ -109,8 +112,8 @@ export interface ArticleVariantsTable {
     summary: string | null;    // [NEW]
 
     // JSON Columns
-    syntax_json: JSONColumnType<any> | null;
-    sentences_json: JSONColumnType<any> | null;
+    syntax_json: JSONColumnType<AnalysisAnnotation[]> | null;
+    sentences_json: JSONColumnType<SentenceData[]> | null;
 
     created_at: Generated<string>;
 }
@@ -140,12 +143,12 @@ export interface HighlightsTable {
     article_id: string;
     actor: string;
 
-    start_meta_json: JSONColumnType<any>;
-    end_meta_json: JSONColumnType<any>;
+    start_meta_json: JSONColumnType<HighlightMeta>;
+    end_meta_json: JSONColumnType<HighlightMeta>;
 
     text: string;
     note: string | null;
-    style_json: JSONColumnType<any> | null;
+    style_json: JSONColumnType<HighlightStyle> | null;
 
     created_at: Generated<string>;
     updated_at: Generated<string>;

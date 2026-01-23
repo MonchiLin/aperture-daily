@@ -14,14 +14,12 @@
 import { extractJson } from './utils';
 import type { LLMProvider } from './types';
 import { ANALYSIS_SYSTEM_INSTRUCTION } from './prompts.shared';
+import type { AnalysisRole, SentenceData, AnalysisAnnotation } from '../../db/jsonTypes';
 
 // ============ 类型定义 ============
 
-export type AnalysisRole =
-    | 's' | 'v' | 'o' | 'io' | 'cmp'  // Core
-    | 'rc' | 'pp' | 'adv' | 'app'     // Clauses & Phrases
-    | 'pas' | 'con'                   // Voice & Connectives
-    | 'inf' | 'ger' | 'ptc';          // Non-finite
+
+// ============ 类型定义 ============
 
 export interface TokenUsage {
     inputTokens: number;
@@ -29,21 +27,6 @@ export interface TokenUsage {
     totalTokens: number;
 }
 
-/** 句子数据 */
-export interface SentenceData {
-    id: number;
-    start: number;
-    end: number;
-    text: string;
-}
-
-/** 语法结构标注 */
-export interface AnalysisAnnotation {
-    start: number;
-    end: number;
-    role: AnalysisRole;
-    text: string;
-}
 
 /** LLM 返回的单个标注 */
 interface LLMAnnotation {
