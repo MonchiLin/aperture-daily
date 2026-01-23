@@ -22,7 +22,19 @@
  * - 悬停时展示 "你曾在 N 天前的文章中见过这个词"
  */
 
-import { map } from 'nanostores';
+import { map, atom } from 'nanostores';
+
+// ════════════════════════════════════════════════════════════════
+// Popover Hover State (替代 window 事件)
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Popover 悬停状态
+ * 
+ * 解决问题：鼠标从单词移动到 Popover 时，Popover 不应关闭。
+ * 原方案使用 window.dispatchEvent 是反模式，现改用 nanostores。
+ */
+export const popoverHoverState = atom<boolean>(false);
 
 // ════════════════════════════════════════════════════════════════
 // 类型定义

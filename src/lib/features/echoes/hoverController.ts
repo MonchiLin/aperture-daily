@@ -4,7 +4,7 @@
  * Implements Event Delegation for O(1) performance.
  * Instead of 2000 listeners, we use one on the container.
  */
-import { setInteraction, clearInteraction } from "../../store/interactionStore";
+import { setInteraction, clearInteraction, popoverHoverState } from "../../store/interactionStore";
 
 export type InteractionMode = 'hover' | 'click';
 
@@ -60,14 +60,14 @@ export function initInteractionController(mode: InteractionMode = 'hover') {
         });
 
         // Handle Popup Hover (Prevent closing when moving to popup)
-        window.addEventListener('historical-popup-enter', () => {
-            isHoveringPopup = true;
-            if (hoverTimer) clearTimeout(hoverTimer);
-        });
-
-        window.addEventListener('historical-popup-leave', () => {
-            isHoveringPopup = false;
-            closePopup();
+        // Using nanostores instead of window events for better traceability
+        popoverHoverState.subscribe((isHovering) => {
+            isHoveringPopup = isHovering;
+            if (isHovering) {
+                if (hoverTimer) clearTimeout(hoverTimer);
+            } else {
+                closePopup();
+            }
         });
 
     } else {

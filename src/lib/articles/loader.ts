@@ -161,7 +161,7 @@ function processArticleData(row: ArticleRow, echoes: Record<string, unknown>): A
     if (row?.articles?.contentJson) {
         console.log("[Loader] Content JSON found, length:", row.articles.contentJson.length);
         parsed = parseArticleContent(row.articles.contentJson);
-        console.log("[Loader] Parsed Content:", JSON.stringify(parsed, null, 2));
+        // console.log("[Loader] Parsed Content:", JSON.stringify(parsed, null, 2));
 
         sources = extractSources(parsed);
         wordDefinitions = extractWordDefinitions(parsed);
