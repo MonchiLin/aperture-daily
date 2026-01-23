@@ -54,6 +54,7 @@ export interface TasksTable {
     started_at: string | null;
     finished_at: string | null;
     published_at: string | null;
+    locked_until: string | null;
 }
 
 // =========================================

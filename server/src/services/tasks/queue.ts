@@ -11,10 +11,11 @@ import { TaskExecutor } from './executor';
  *   queued → running → succeeded
  *                   ↘ failed
  *
- * 关键设计决策：
- * 1. 单并发执行：同一时刻只允许一个任务运行，避免 LLM API 并发限制和资源竞争
  * 2. 乐观锁：通过 version 字段防止多 Worker 重复认领同一任务
- * 3. 僵尸检测：自动恢复卡住超过 30 分钟的任务，防止队列阻塞
+ * 3. 可见性超时 (Visibility Timeout)：
+ *    Worker 认领任务时获得 5 分钟租约 (locked_until)。
+ *    若 Worker 崩溃导致锁过期，其他 Worker 可自动接手重试。
+ *    正常运行的 Worker 需定期调用 keepAlive() 续租。
  */
 export class TaskQueue {
     private executor: TaskExecutor;
@@ -36,6 +37,10 @@ export class TaskQueue {
         if (profiles.length === 0) {
             const defId = crypto.randomUUID();
             await this.db.insertInto('generation_profiles')
+                .values({
+                    id: defId,
+                    name: 'Default',
+                })
                 .values({
                     id: defId,
                     name: 'Default',
@@ -160,50 +165,47 @@ export class TaskQueue {
      * 4. 更新失败时递归重试（冲突后可能有新任务可认领）
      */
     async claimTask(): Promise<TaskRow | null> {
-        // 单并发检查：若已有任务运行，直接返回
-        const runningCount = await this.db.selectFrom('tasks')
-            .select((eb) => eb.fn.countAll<number>().as('count'))
-            .where('status', '=', 'running')
-            .executeTakeFirst();
+        const now = new Date();
+        const nowStr = now.toISOString();
 
-        if (Number(runningCount?.count || 0) > 0) return null;
-
-        // FIFO 选择：按创建时间升序取最早的任务
+        // 查找可用任务：(Status=queued) OR (Status=running AND LockExpired)
+        // 允许重试因 Crash 而锁过期的任务
         const candidate = await this.db.selectFrom('tasks')
             .selectAll()
-            .where('status', '=', 'queued')
+            .where((eb) => eb.or([
+                eb('status', '=', 'queued'),
+                eb.and([
+                    eb('status', '=', 'running'),
+                    eb('locked_until', '<', nowStr)
+                ])
+            ]))
             .orderBy('created_at', 'asc')
             .limit(1)
             .executeTakeFirst();
 
         if (!candidate) return null;
 
-        const now = new Date().toISOString();
+        // 获得 5 分钟租约
+        const limitDate = new Date(now.getTime() + 5 * 60 * 1000); // +5 min
+        const lockedUntil = limitDate.toISOString();
 
-        // 乐观锁更新：version 条件确保任务未被其他 Worker 修改
+        // 乐观锁更新
         const result = await this.db.updateTable('tasks')
             .set({
                 status: 'running',
-                started_at: now,
+                started_at: nowStr,
                 version: (eb) => eb('version', '+', 1),
-                error_message: null,        // 重试时清除上次错误
+                locked_until: lockedUntil,
+                error_message: null,
                 error_context_json: null
             })
             .where('id', '=', candidate.id)
-            .where('status', '=', 'queued')
-            .where('version', '=', candidate.version)
+            .where('version', '=', candidate.version) // 确保未被抢占
             .executeTakeFirst();
 
-        // 更新失败：任务已被其他 Worker 认领
         if (Number(result.numUpdatedRows) === 0) {
-            // 再次检查是否有任务在运行，避免无限递归
-            const currentRunning = await this.db.selectFrom('tasks')
-                .select((eb) => eb.fn.countAll<number>().as('count'))
-                .where('status', '=', 'running')
-                .executeTakeFirst();
-
-            if (Number(currentRunning?.count || 0) > 0) return null;
-            return this.claimTask();  // 递归重试
+            // 争抢失败，递归重试（可能还有其他任务）
+            return this.claimTask();
         }
 
         // 返回更新后的任务数据
@@ -234,62 +236,40 @@ export class TaskQueue {
     /** 标记任务失败，记录错误信息供调试 */
     async fail(taskId: string, errorMessage: string, errorContext: Record<string, unknown>) {
         const now = new Date().toISOString();
+        const retryCount = (errorContext.retryCount as number) || 0;
+
         await this.db.updateTable('tasks')
             .set({
                 status: 'failed',
                 error_message: errorMessage,
                 error_context_json: JSON.stringify(errorContext),
-                finished_at: now
+                finished_at: now,
+                locked_until: null // 释放锁
             })
             .where('id', '=', taskId)
             .execute();
     }
 
     /**
-     * 处理队列（由 Worker 定期调用）
-     *
-     * 僵尸任务检测：
-     * - 任务 running 超过 30 分钟视为卡住（可能是进程崩溃或网络中断）
-     * - 自动重置为 queued 状态，version+1 防止原 Worker 继续操作
-     *
-     * 为什么用 while(true) 循环？
-     * - 一次调用处理所有可用任务，减少 Worker 轮询开销
-     * - claimTask 返回 null 时自动退出
+     * 续租锁 (Keep Alive)
+     * 给当前任务续命 5 分钟，防止被其他 Worker 抢占
      */
-    async processQueue() {
-        // 僵尸检测阈值：30 分钟（LLM 生成通常 5-10 分钟完成）
-        const stuckTimeout = 30 * 60 * 1000;
+    async keepAlive(taskId: string) {
+        const now = Date.now();
+        const nextLock = new Date(now + 5 * 60 * 1000).toISOString();
 
-        const runningTasks = await this.db.selectFrom('tasks')
-            .select(['id', 'started_at'])
-            .where('status', '=', 'running')
+        await this.db.updateTable('tasks')
+            .set({ locked_until: nextLock })
+            .where('id', '=', taskId)
+            .where('status', '=', 'running') // 只有运行中的任务才需要续租
             .execute();
 
-        const nowMs = Date.now();
-        const stuckTasks = runningTasks.filter((t) => {
-            if (!t.started_at) return false;
-            const started = new Date(t.started_at).getTime();
-            return (nowMs - started) > stuckTimeout;
-        });
+        // Silent update, no logs to avoid noise
+    }
 
-        if (stuckTasks.length > 0) {
-            console.log(`[TaskQueue] Found ${stuckTasks.length} stuck tasks, resetting...`);
-            for (const stuck of stuckTasks) {
-                // version+1 使原 Worker 的后续操作失效
-                await this.db.updateTable('tasks')
-                    .set((eb) => ({
-                        status: 'queued',
-                        started_at: null,
-                        version: eb('version', '+', 1)
-                    }))
-                    .where('id', '=', stuck.id)
-                    .execute();
-                console.log(`[TaskQueue] Reset stuck task ${stuck.id}`);
-            }
-        } else if (runningTasks.length > 0) {
-            // 有正常运行的任务，不处理新任务
-            return;
-        }
+    async processQueue() {
+        // [Refactor] 移除了传统的僵尸检测逻辑
+        // 可见性超时机制 (claimTask 中的 locked_until 判断) 会自动处理卡死的任务
 
         // 循环处理所有可用任务
         while (true) {
@@ -299,7 +279,7 @@ export class TaskQueue {
             console.log(`[TaskQueue] Processing task ${task.id} for date ${task.task_date}`);
 
             try {
-                await this.executor.executeTask(task);
+                await this.executor.executeTask(task, this); // Pass queue instance for keepAlive
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'Unknown error';
                 console.error(`[TaskQueue] Task ${task.id} failed:`, message);

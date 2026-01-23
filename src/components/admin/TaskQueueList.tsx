@@ -199,7 +199,9 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, taskDate }: 
                                     content={
                                         <div className="max-w-md max-h-64 overflow-auto text-xs font-mono whitespace-pre-wrap">
                                             {t.errorContextJson
-                                                ? JSON.stringify(JSON.parse(t.errorContextJson), null, 2)
+                                                ? (typeof t.errorContextJson === 'string'
+                                                    ? JSON.stringify(JSON.parse(t.errorContextJson), null, 2)
+                                                    : JSON.stringify(t.errorContextJson, null, 2))
                                                 : 'No context available'}
                                         </div>
                                     }

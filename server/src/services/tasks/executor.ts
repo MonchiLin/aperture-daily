@@ -30,231 +30,241 @@ import { DeletionService } from './deletion';
 export class TaskExecutor {
     constructor(private db: AppKysely) { }
 
-    async executeTask(task: TaskRow) {
-        // ─────────────────────────────────────────────────────────────
-        // [1] 加载生成配置
-        // ─────────────────────────────────────────────────────────────
-        const profile = await this.db.selectFrom('generation_profiles')
-            .selectAll()
-            .where('id', '=', task.profile_id)
-            .executeTakeFirst();
+    async executeTask(task: TaskRow, queue: { keepAlive: (id: string) => Promise<void> }) {
+        // [New] Keep-Alive Timer (Standard Visibility Timeout Pattern)
+        const keepAliveInterval = setInterval(() => {
+            queue.keepAlive(task.id).catch(err => console.error(`[Task ${task.id}] Keep-Alive failed:`, err));
+        }, 60 * 1000); // 1 minute interval (Lease is 5 mins)
 
-        if (!profile) throw new Error(`Profile not found: ${task.profile_id}`);
+        try {
+            // ─────────────────────────────────────────────────────────────
+            // [1] 加载生成配置
+            // ─────────────────────────────────────────────────────────────
+            const profile = await this.db.selectFrom('generation_profiles')
+                .selectAll()
+                .where('id', '=', task.profile_id)
+                .executeTakeFirst();
 
-        // ─────────────────────────────────────────────────────────────
-        // [2] 准备候选词
-        //
-        // 策略：
-        // - IMPRESSION 模式：使用 result_json 中预存的候选词
-        // - Normal 模式：从 daily_word_references 获取新词+复习词
-        // ─────────────────────────────────────────────────────────────
-        const isImpressionMode = task.mode === 'impression';
-        const generationMode: GenerationMode = isImpressionMode ? 'impression' : 'rss';
+            if (!profile) throw new Error(`Profile not found: ${task.profile_id}`);
 
-        let candidateWordStrings: string[];
-        let recentTitles: string[] = [];
-        // 提升到外层作用域，确保后续 saveArticleResult 能正确使用
-        let newWords: string[] = [];
-        let reviewWords: string[] = [];
+            // ─────────────────────────────────────────────────────────────
+            // [2] 准备候选词
+            //
+            // 策略：
+            // - IMPRESSION 模式：使用 result_json 中预存的候选词
+            // - Normal 模式：从 daily_word_references 获取新词+复习词
+            // ─────────────────────────────────────────────────────────────
+            const isImpressionMode = task.mode === 'impression';
+            const generationMode: GenerationMode = isImpressionMode ? 'impression' : 'rss';
 
-        if (isImpressionMode) {
-            // [Refactor] IMPRESSION 模式：运行时随机生成候选词
-            // 之前的逻辑是从 result_json 读取，现在直接从 words 表随机取
-            // 既然用户说"无所谓"，我们就不做复杂的种子随机，直接 random()
-            const randomWords = await this.db
-                .selectFrom('words')
-                .select('word')
-                .orderBy(({ fn }) => fn('random', []))
-                .limit(10) // Hardcoded 10 for now, or fetch from config
-                .execute();
+            let candidateWordStrings: string[];
+            let recentTitles: string[] = [];
+            // 提升到外层作用域，确保后续 saveArticleResult 能正确使用
+            let newWords: string[] = [];
+            let reviewWords: string[] = [];
 
-            candidateWordStrings = randomWords.map(w => w.word);
-            recentTitles = await getRecentTitles(this.db, task.task_date);
-            console.log(`[Task ${task.id}] IMPRESSION mode with ${candidateWordStrings.length} runtime candidate words`);
-        } else {
-            // RSS 模式：从 daily_word_references 获取
-            const wordRefs = await this.db.selectFrom('daily_word_references')
-                .select(['word', 'type'])
-                .where('date', '=', task.task_date)
-                .execute();
-
-            newWords = uniqueStrings(wordRefs.filter(w => w.type === 'new').map(w => w.word));
-            reviewWords = uniqueStrings(wordRefs.filter(w => w.type === 'review').map(w => w.word));
-
-            if (newWords.length + reviewWords.length === 0) {
-                throw new Error('Daily words record is empty');
-            }
-
-            const usedWords = await getUsedWordsToday(this.db, task.task_date);
-            recentTitles = await getRecentTitles(this.db, task.task_date);
-            const candidates = buildCandidateWords(newWords, reviewWords, usedWords);
-
-            if (candidates.length === 0) {
-                throw new Error('All words have been used today');
-            }
-
-            candidateWordStrings = candidates.map(c => c.word);
-        }
-
-        // [Refactor] Fetch associated topics
-        const topics = await this.db.selectFrom('profile_topics')
-            .innerJoin('topics', 'profile_topics.topic_id', 'topics.id')
-            .select(['topics.id', 'topics.label', 'topics.prompts'])
-            .where('profile_topics.profile_id', '=', profile.id)
-            .where('topics.is_active', '=', 1)
-            .execute();
-
-        // [NEW] Query used RSS links for deduplication
-        const usedRssRows = await this.db.selectFrom('articles')
-            .select('rss_link')
-            .where('rss_link', 'is not', null)
-            .execute();
-        const excludeRssLinks = usedRssRows.map(r => r.rss_link as string);
-
-        // ─────────────────────────────────────────────────────────────
-        // [3] 构建 LLM 客户端配置
-        //
-        // 优先级：任务指定 > 环境变量 > 默认 Gemini
-        // ─────────────────────────────────────────────────────────────
-        const provider = (task.llm || env.LLM_PROVIDER || 'gemini') as 'gemini' | 'openai' | 'claude';
-        let clientConfig: LLMClientConfig;
-
-        if (provider === 'openai') {
-            if (!env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required');
-            clientConfig = {
-                provider: 'openai',
-                apiKey: env.OPENAI_API_KEY,
-                baseUrl: env.OPENAI_BASE_URL,
-                model: env.OPENAI_MODEL || 'gpt-4'
-            };
-        } else if (provider === 'claude') {
-            if (!env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is required');
-            clientConfig = {
-                provider: 'claude',
-                apiKey: env.ANTHROPIC_API_KEY,
-                baseUrl: env.ANTHROPIC_BASE_URL,
-                model: env.ANTHROPIC_MODEL || 'claude-3-opus'
-            };
-        } else {
-            if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is required');
-            clientConfig = {
-                provider: 'gemini',
-                apiKey: env.GEMINI_API_KEY,
-                baseUrl: env.GEMINI_BASE_URL,
-                model: env.GEMINI_MODEL || 'gemini-pro'
-            };
-        }
-
-        console.log(`[Task ${task.id}] Starting generation with Provider: ${provider}, Model: ${clientConfig.model}`);
-
-        // ─────────────────────────────────────────────────────────────
-        // [4] Checkpoint 恢复（断点续传）
-        //
-        // 为什么需要 Checkpoint？
-        // - LLM 调用耗时长（分钟级），进程崩溃或网络中断时不想从头重来
-        // - 每个阶段完成后保存中间状态到 context_json
-        // - 重新执行时检测有效 Checkpoint 并跳过已完成阶段
-        // ─────────────────────────────────────────────────────────────
-        let checkpoint: PipelineCheckpoint | null = null;
-        if (task.context_json) {
-            const parsed = task.context_json as any;
-            const validStages = ['search_selection', 'draft', 'conversion', 'grammar_analysis'];
-            if (parsed && typeof parsed === 'object' && 'stage' in parsed && validStages.includes(parsed.stage)) {
-                checkpoint = parsed as PipelineCheckpoint;
-                console.log(`[Task ${task.id}] Resuming from checkpoint: ${checkpoint.stage}`);
-            }
-        }
-
-        // ─────────────────────────────────────────────────────────────
-        // [5] 执行生成流水线
-        // ─────────────────────────────────────────────────────────────
-        // Derive legacy string for pipeline compatibility
-        const topicPreference = topics.map(t => t.label).join(', ');
-
-        const client = createClient(clientConfig);
-        const output = await runPipeline({
-            client,
-            currentDate: task.task_date,
-            topicPreference, // Derived string
-            topics: topics.map(t => ({ ...t, prompts: t.prompts || undefined })), // [NEW] Pass fetched topics
-            candidateWords: candidateWordStrings,
-            recentTitles,
-            excludeRssLinks,
-            checkpoint,
-            mode: generationMode,  // 传递生成模式
-            onCheckpoint: async (cp) => {
-                // 每个阶段完成后持久化 Checkpoint
-                // Context JSON is purely for runtime state recovery
-                await this.db.updateTable('tasks')
-                    .set({ context_json: JSON.stringify(cp) })
-                    .where('id', '=', task.id)
+            if (isImpressionMode) {
+                // [Refactor] IMPRESSION 模式：运行时随机生成候选词
+                // 之前的逻辑是从 result_json 读取，现在直接从 words 表随机取
+                // 既然用户说"无所谓"，我们就不做复杂的种子随机，直接 random()
+                const randomWords = await this.db
+                    .selectFrom('words')
+                    .select('word')
+                    .orderBy(({ fn }) => fn('random', []))
+                    .limit(10) // Hardcoded 10 for now, or fetch from config
                     .execute();
-                console.log(`[Task ${task.id}] Saved checkpoint: ${cp.stage}`);
+
+                candidateWordStrings = randomWords.map(w => w.word);
+                recentTitles = await getRecentTitles(this.db, task.task_date);
+                console.log(`[Task ${task.id}] IMPRESSION mode with ${candidateWordStrings.length} runtime candidate words`);
+            } else {
+                // RSS 模式：从 daily_word_references 获取
+                const wordRefs = await this.db.selectFrom('daily_word_references')
+                    .select(['word', 'type'])
+                    .where('date', '=', task.task_date)
+                    .execute();
+
+                newWords = uniqueStrings(wordRefs.filter(w => w.type === 'new').map(w => w.word));
+                reviewWords = uniqueStrings(wordRefs.filter(w => w.type === 'review').map(w => w.word));
+
+                if (newWords.length + reviewWords.length === 0) {
+                    throw new Error('Daily words record is empty');
+                }
+
+                const usedWords = await getUsedWordsToday(this.db, task.task_date);
+                recentTitles = await getRecentTitles(this.db, task.task_date);
+                const candidates = buildCandidateWords(newWords, reviewWords, usedWords);
+
+                if (candidates.length === 0) {
+                    throw new Error('All words have been used today');
+                }
+
+                candidateWordStrings = candidates.map(c => c.word);
             }
-        });
 
-        // const articleId = crypto.randomUUID(); // Removed unused
+            // [Refactor] Fetch associated topics
+            const topics = await this.db.selectFrom('profile_topics')
+                .innerJoin('topics', 'profile_topics.topic_id', 'topics.id')
+                .select(['topics.id', 'topics.label', 'topics.prompts'])
+                .where('profile_topics.profile_id', '=', profile.id)
+                .where('topics.is_active', '=', 1)
+                .execute();
 
-        // ─────────────────────────────────────────────────────────────
-        // [6] 幂等清理：删除该任务之前生成的文章
-        //
-        // 为什么需要清理？
-        // - 任务重试时，旧数据会导致重复
-        // - 手动级联删除，因为 SQLite 外键约束配置可能不一致
-        // ─────────────────────────────────────────────────────────────
-        const existingArticles = await this.db.selectFrom('articles')
-            .select(['id'])
-            .where('generation_task_id', '=', task.id)
-            .where('model', '=', clientConfig.model)
-            .where('variant', '=', 1)
-            .execute();
+            // [NEW] Query used RSS links for deduplication
+            const usedRssRows = await this.db.selectFrom('articles')
+                .select('rss_link')
+                .where('rss_link', 'is not', null)
+                .execute();
+            const excludeRssLinks = usedRssRows.map(r => r.rss_link as string);
 
-        if (existingArticles.length > 0) {
-            const articleIds = existingArticles.map(a => a.id);
+            // ─────────────────────────────────────────────────────────────
+            // [3] 构建 LLM 客户端配置
+            //
+            // 优先级：任务指定 > 环境变量 > 默认 Gemini
+            // ─────────────────────────────────────────────────────────────
+            const provider = (task.llm || env.LLM_PROVIDER || 'gemini') as 'gemini' | 'openai' | 'claude';
+            let clientConfig: LLMClientConfig;
 
-            // Use unified deletion service
-            // Note: We intentionally process sequentially or use Promise.all to ensure completion before retry
-            for (const id of articleIds) {
-                await DeletionService.deleteArticleWithCascade(id);
+            if (provider === 'openai') {
+                if (!env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required');
+                clientConfig = {
+                    provider: 'openai',
+                    apiKey: env.OPENAI_API_KEY,
+                    baseUrl: env.OPENAI_BASE_URL,
+                    model: env.OPENAI_MODEL || 'gpt-4'
+                };
+            } else if (provider === 'claude') {
+                if (!env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is required');
+                clientConfig = {
+                    provider: 'claude',
+                    apiKey: env.ANTHROPIC_API_KEY,
+                    baseUrl: env.ANTHROPIC_BASE_URL,
+                    model: env.ANTHROPIC_MODEL || 'claude-3-opus'
+                };
+            } else {
+                if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is required');
+                clientConfig = {
+                    provider: 'gemini',
+                    apiKey: env.GEMINI_API_KEY,
+                    baseUrl: env.GEMINI_BASE_URL,
+                    model: env.GEMINI_MODEL || 'gemini-pro'
+                };
             }
 
-            console.log(`[Task ${task.id}] Cleaned up ${existingArticles.length} existing article(s) before retry.`);
+            console.log(`[Task ${task.id}] Starting generation with Provider: ${provider}, Model: ${clientConfig.model}`);
+
+            // ─────────────────────────────────────────────────────────────
+            // [4] Checkpoint 恢复（断点续传）
+            //
+            // 为什么需要 Checkpoint？
+            // - LLM 调用耗时长（分钟级），进程崩溃或网络中断时不想从头重来
+            // - 每个阶段完成后保存中间状态到 context_json
+            // - 重新执行时检测有效 Checkpoint 并跳过已完成阶段
+            // ─────────────────────────────────────────────────────────────
+            let checkpoint: PipelineCheckpoint | null = null;
+            if (task.context_json) {
+                const parsed = task.context_json as any;
+                const validStages = ['search_selection', 'draft', 'conversion', 'grammar_analysis'];
+                if (parsed && typeof parsed === 'object' && 'stage' in parsed && validStages.includes(parsed.stage)) {
+                    checkpoint = parsed as PipelineCheckpoint;
+                    console.log(`[Task ${task.id}] Resuming from checkpoint: ${checkpoint.stage}`);
+                }
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // [5] 执行生成流水线
+            // ─────────────────────────────────────────────────────────────
+            // Derive legacy string for pipeline compatibility
+            const topicPreference = topics.map(t => t.label).join(', ');
+
+            const client = createClient(clientConfig);
+            const output = await runPipeline({
+                client,
+                currentDate: task.task_date,
+                topicPreference, // Derived string
+                topics: topics.map(t => ({ ...t, prompts: t.prompts || undefined })), // [NEW] Pass fetched topics
+                candidateWords: candidateWordStrings,
+                recentTitles,
+                excludeRssLinks,
+                checkpoint,
+                mode: generationMode,  // 传递生成模式
+                onCheckpoint: async (cp) => {
+                    // 每个阶段完成后持久化 Checkpoint
+                    // Context JSON is purely for runtime state recovery
+                    await this.db.updateTable('tasks')
+                        .set({ context_json: JSON.stringify(cp) })
+                        .where('id', '=', task.id)
+                        .execute();
+                    console.log(`[Task ${task.id}] Saved checkpoint: ${cp.stage}`);
+                }
+            });
+
+            // const articleId = crypto.randomUUID(); // Removed unused
+
+            // ─────────────────────────────────────────────────────────────
+            // [6] 幂等清理：删除该任务之前生成的文章
+            //
+            // 为什么需要清理？
+            // - 任务重试时，旧数据会导致重复
+            // - 手动级联删除，因为 SQLite 外键约束配置可能不一致
+            // ─────────────────────────────────────────────────────────────
+            const existingArticles = await this.db.selectFrom('articles')
+                .select(['id'])
+                .where('generation_task_id', '=', task.id)
+                .where('model', '=', clientConfig.model)
+                .where('variant', '=', 1)
+                .execute();
+
+            if (existingArticles.length > 0) {
+                const articleIds = existingArticles.map(a => a.id);
+
+                // Use unified deletion service
+                // Note: We intentionally process sequentially or use Promise.all to ensure completion before retry
+                for (const id of articleIds) {
+                    await DeletionService.deleteArticleWithCascade(id);
+                }
+
+                console.log(`[Task ${task.id}] Cleaned up ${existingArticles.length} existing article(s) before retry.`);
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // [7] 持久化结果
+            // ─────────────────────────────────────────────────────────────
+            const { saveArticleResult } = await import('./saveArticle');
+            await saveArticleResult({
+                db: this.db,
+                result: output,
+                taskId: task.id,
+                taskDate: task.task_date,
+                model: clientConfig.model,
+                profileId: profile.id,
+                topicPreference,
+                newWords,
+                reviewWords
+            });
+
+            const finishedAt = new Date().toISOString();
+            // Result data (mode, usage etc) is no longer persisted in result_json.
+            // usage stats could be logged or stored in a separate table if needed.
+            if (output.usage) {
+                console.log(`[Task ${task.id}] Usage:`, output.usage);
+            }
+
+            await this.db.updateTable('tasks')
+                .set({
+                    status: 'succeeded',
+                    context_json: null, // Clear checkpoints on success
+                    finished_at: finishedAt,
+                    published_at: finishedAt,
+                    locked_until: null // Release lock
+                })
+                .where('id', '=', task.id)
+                .execute();
+
+            console.log(`[Task ${task.id}] Completed successfully`);
+        } finally {
+            clearInterval(keepAliveInterval);
         }
-
-        // ─────────────────────────────────────────────────────────────
-        // [7] 持久化结果
-        // ─────────────────────────────────────────────────────────────
-        const { saveArticleResult } = await import('./saveArticle');
-        await saveArticleResult({
-            db: this.db,
-            result: output,
-            taskId: task.id,
-            taskDate: task.task_date,
-            model: clientConfig.model,
-            profileId: profile.id,
-            topicPreference,
-            newWords,
-            reviewWords
-        });
-
-        const finishedAt = new Date().toISOString();
-        // Result data (mode, usage etc) is no longer persisted in result_json.
-        // usage stats could be logged or stored in a separate table if needed.
-        if (output.usage) {
-            console.log(`[Task ${task.id}] Usage:`, output.usage);
-        }
-
-        await this.db.updateTable('tasks')
-            .set({
-                status: 'succeeded',
-                context_json: null, // Clear checkpoints on success
-                finished_at: finishedAt,
-                published_at: finishedAt
-            })
-            .where('id', '=', task.id)
-            .execute();
-
-        console.log(`[Task ${task.id}] Completed successfully`);
     }
 }
 
