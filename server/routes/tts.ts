@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { EdgeTTS } from 'edge-tts-universal';
+import { generateSpeech } from '../src/services/edgeTtsService';
 import { db } from '../src/db/factory';
 import type { Context } from 'elysia';
 
@@ -62,32 +62,17 @@ export const ttsRoutes = new Elysia({ prefix: '/api/tts' })
 
             const selectedVoice = voice || "en-US-GuyNeural";
             const speedNum = parseFloat(speed) || 1.0;
-            const ratePct = speedNum === 1.0 ? "+0%" : `${speedNum > 1 ? '+' : ''}${Math.round((speedNum - 1) * 100)}%`;
+            // Convert simple speed mult to edge-tts percentage string (e.g. 1.2 -> +20%, 0.8 -> -20%)
+            const ratePct = speedNum === 1.0 ? "+0%" : `${speedNum >= 1 ? '+' : ''}${Math.round((speedNum - 1) * 100)}%`;
 
-            const tts = new EdgeTTS(textToSpeak, selectedVoice, {
+            const result = await generateSpeech(textToSpeak, selectedVoice, {
                 rate: ratePct,
-                volume: "+0%",
                 pitch: "+0Hz"
             });
 
-            const result = await Promise.race([
-                tts.synthesize(),
-                new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error("TTS Timeout")), 20000)
-                )
-            ]);
-
-            if (!result.audio) {
-                set.status = 500;
-                return "Failed to generate audio (No data)";
-            }
-
-            const buffer = await result.audio.arrayBuffer();
-            const base64Audio = Buffer.from(buffer).toString('base64');
-
             return {
-                audio: base64Audio,
-                boundaries: result.subtitle || []
+                audio: result.audio,
+                boundaries: result.boundaries || []
             };
         } catch (e) {
             const error = e as Error;
