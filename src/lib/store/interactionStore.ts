@@ -162,6 +162,20 @@ export const setInteraction = (word: string, rect: { top: number; left: number; 
     // 1. 坐标 (Rect) 是高频易变数据 -> 写入 Event Layer (Atom) -> 仅触发 VirtualRef 的 Effect。
     // 2. 词 (Word) 是低频业务数据 -> 写入 State Layer (Map) -> 触发 React UI 重绘。
     // 结果：鼠标微动不会导致整个 Popover 组件重渲染。
+
+    // 1. Event Layer (Positioning)
+    activeInteraction.setKey('current', {
+        word: normalized,
+        rect,
+        id: Math.random().toString(36).slice(2)
+    });
+
+    // 2. State Layer (Content)
+    if (interactionStore.get().activeWord !== normalized) {
+        interactionStore.setKey('activeWord', normalized);
+        interactionStore.setKey('echoData', lookupEchoData(normalized));
+        interactionStore.setKey('definition', lookupDefinition(normalized));
+    }
 };
 
 /** 清除交互状态（鼠标离开） */

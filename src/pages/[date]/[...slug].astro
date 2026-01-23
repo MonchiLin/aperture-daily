@@ -276,7 +276,12 @@ import { initSyntaxController } from '../../lib/features/syntax/SyntaxController
 import { initEchoes } from '../../lib/store/interactionStore';
 import { initHoverController } from '../../lib/features/echoes/hoverController';
 
+// 仅在 Default Mode 下初始化这些功能
+// Impression Mode 有自己的独立初始化逻辑 (见 ImpressionArticleLayout.astro)
 function initArticlePage() {
+    const isDefaultMode = !!document.querySelector('.default-mode');
+    if (!isDefaultMode) return;
+
     // [New] 注入 Echoes 数据到 Store (Single Source of Truth)
     try {
         const dataEl = document.getElementById('memories-data');
@@ -300,6 +305,7 @@ function initArticlePage() {
     });
     
     // [New] 初始化历史回响交互控制器 (Event Delegation)
+    // Default Mode: Hover to trigger
     initHoverController();
 }
 
@@ -313,8 +319,12 @@ function initArticlePage() {
 /**
  * 初始化目标单词交互 - 仅保留朗读功能
  * Hover 功能已移至 initHoverController (Event Delegation)
+ * 仅在 Default Mode 生效 (Impression Mode 下点击触发 Popover)
  */
 function initTargetWordInteraction() {
+    const isDefaultMode = !!document.querySelector('.default-mode');
+    if (!isDefaultMode) return;
+
     document.querySelectorAll('.target-word').forEach((el) => {
         el.addEventListener('click', (e) => {
             const word = el.getAttribute('data-word');
@@ -332,11 +342,15 @@ function initTargetWordInteraction() {
 document.addEventListener('DOMContentLoaded', initArticlePage);
 document.addEventListener('astro:page-load', initArticlePage);
 
-// Analysis Interaction
-document.addEventListener('DOMContentLoaded', initSyntaxController);
-document.addEventListener('astro:page-load', initSyntaxController);
+// Analysis Interaction (仅限 Default Mode)
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.querySelector('.default-mode')) initSyntaxController();
+});
+document.addEventListener('astro:page-load', () => {
+    if (document.querySelector('.default-mode')) initSyntaxController();
+});
 
-// Target Word Interaction (Click to Speak only)
+// Target Word Interaction (Click to Speak only - Default Mode)
 document.addEventListener('DOMContentLoaded', initTargetWordInteraction);
 document.addEventListener('astro:page-load', initTargetWordInteraction);
 </script>
