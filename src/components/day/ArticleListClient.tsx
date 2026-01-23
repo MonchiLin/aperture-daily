@@ -58,7 +58,7 @@ export default function ArticleListClient({ date, initialArticles = [] }: Articl
                                 index={idx}
                                 isRead={(article.read_levels || 0) > 0}
                                 date={date}
-                                generationMode={article.generation_mode || article.generationMode}
+                                generationMode={article.generation_mode}
                             />
                         ))}
                     </motion.div>

@@ -12,7 +12,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute();
 }
 
-export async function down(db: Kysely<any>): Promise<void> {
+export async function down(_db: Kysely<any>): Promise<void> {
     // SQLite does not support dropping columns easily, usually requires table recreation.
     // For simplicity in this dev environment, we skip strict down migration or would need complex logic.
     // Leaving empty as "irreversible" for now regarding column drop without data loss logic.

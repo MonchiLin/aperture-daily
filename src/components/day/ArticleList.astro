@@ -1,12 +1,12 @@
 ---
 /**
  * ArticleList - 文章列表
- * 
+ *
  * 纯 Astro 组件，SSR 渲染，零 JS
  * 使用 ArticleItem 子组件渲染每篇文章
  */
-import ArticleItem from './ArticleItem.astro';
-import type { Article } from '../../types';
+import ArticleItem from "./ArticleItem.astro";
+import type { Article } from "../../types";
 
 interface Props {
     articles: Article[];
@@ -17,21 +17,25 @@ const { articles, date } = Astro.props;
 ---
 
 <div class="flex-1">
-    {articles && articles.length > 0 ? (
-        <div class="flex flex-col">
-            {articles.map((article, idx) => (
-                <ArticleItem 
-                    title={article.title}
-                    index={idx}
-                    isRead={(article.read_levels || 0) > 0}
-                    date={date}
-                    generationMode={article.generation_mode || article.generationMode}
-                />
-            ))}
-        </div>
-    ) : (
-        <div class="py-12 flex flex-col items-center justify-center text-stone-400 gap-2">
-            <span class="font-serif italic text-base text-stone-500">No content.</span>
-        </div>
-    )}
+    {
+        articles && articles.length > 0 ? (
+            <div class="flex flex-col">
+                {articles.map((article, idx) => (
+                    <ArticleItem
+                        title={article.title}
+                        index={idx}
+                        isRead={(article.read_levels || 0) > 0}
+                        date={date}
+                        generationMode={article.generation_mode}
+                    />
+                ))}
+            </div>
+        ) : (
+            <div class="py-12 flex flex-col items-center justify-center text-stone-400 gap-2">
+                <span class="font-serif italic text-base text-stone-500">
+                    No content.
+                </span>
+            </div>
+        )
+    }
 </div>

@@ -11,6 +11,7 @@ export interface Article {
     model: string;
     title: string;
     read_levels?: number;
+    generation_mode?: 'rss' | 'impression';
 }
 
 export interface ArticlesState {

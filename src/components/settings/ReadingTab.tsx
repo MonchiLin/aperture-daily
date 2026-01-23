@@ -44,7 +44,7 @@ export default function ReadingTab() {
     // Sync draft with store only on mount to allow local editing
     useEffect(() => {
         if (settings.readingStyles) {
-            setDraft(current => ({
+            setDraft(_current => ({
                 ...settings.readingStyles,
                 // Only update if current matches store (no local changes)? 
                 // Actually simple approach: Initial State only, or we accept overwrite if store changes externally.

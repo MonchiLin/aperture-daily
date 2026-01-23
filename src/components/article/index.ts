@@ -8,4 +8,3 @@ export { WordPopover } from './WordPopover';
 export { ImpressionArticleLayout } from './ImpressionArticleLayout';
 export { ArticleLayoutSwitcher } from './ArticleLayoutSwitcher';
 export { ImpressionModeWrapper } from './ImpressionModeWrapper';
-export { ImpressionStyleController } from './ImpressionStyleController';

@@ -1,9 +1,9 @@
 ---
 /**
  * Word Sidebar Wrapper (React Islands Container)
- * 
+ *
  * 架构模式：React in Astro (Islands Architecture)
- * 
+ *
  * 核心逻辑：
  * 这个 Astro 组件充当以 React 编写的复杂交互组件 (`WordReflectionCard`, `ArticleInfoButton`) 的容器。
  * 为什么使用 Wrapper？
@@ -29,26 +29,30 @@ interface Props {
     articleId?: string;
 }
 
-const { words, articleId } = Astro.props;
+const { words, articleId: _articleId } = Astro.props;
 ---
 
 <div class="space-y-4">
     <!-- 标题 -->
-    <div class="flex items-center justify-between pb-2 mb-4 border-b-2 border-slate-900">
+    <div
+        class="flex items-center justify-between pb-2 mb-4 border-b-2 border-slate-900"
+    >
         <h2 class="text-xs font-bold uppercase tracking-widest text-slate-900">
             Margin Notes
         </h2>
     </div>
-    
+
     <!-- 词汇列表 (React Components) -->
     <div class="space-y-1">
-        {words.map((word) => (
-            <WordReflectionCard 
-                client:idle 
-                word={word.word} 
-                phonetic={word.phonetic} 
-                definitions={word.definitions} 
-            />
-        ))}
+        {
+            words.map((word) => (
+                <WordReflectionCard
+                    client:idle
+                    word={word.word}
+                    phonetic={word.phonetic}
+                    definitions={word.definitions}
+                />
+            ))
+        }
     </div>
 </div>

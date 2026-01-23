@@ -5,24 +5,20 @@ import ArticleHeader from "@/components/article/ArticleHeader.astro";
 import FloatingAudioPlayer from "@/components/FloatingAudioPlayer";
 import AudioInit from "@/components/AudioInit";
 import HistoricalEchoes from "@/components/HistoricalEchoes";
-import HistoricalEchoes from "@/components/HistoricalEchoes";
 import ArticleDataInjectors from "@/components/article/ArticleDataInjectors.astro";
 import AnnotatedText from "@/components/analysis/AnnotatedText.astro";
 
 import "@/styles/article/shared.css";
 import "@/styles/article/impression.css";
 
-import { 
-    buildWordMatchConfigs, 
+import {
+    buildWordMatchConfigs,
     getReadingStats,
-    getAllArticleContents 
+    getAllArticleContents,
 } from "@/lib/articles/loader";
 import { buildAnalysisTree } from "@/lib/features/syntax/AnnotationEngine";
 
-const {
-    articleData,
-    initialLevel 
-} = Astro.props;
+const { articleData, initialLevel } = Astro.props;
 
 const {
     row,
@@ -41,26 +37,35 @@ const wordMatchConfigs = buildWordMatchConfigs(wordDefinitions);
 const allArticleContents = getAllArticleContents(sortedArticles);
 ---
 
-<div class="impression-mode min-h-screen text-[#1A1A1A] font-serif selection:bg-[#D9480F]/20 selection:text-[#1A1A1A]">
+<div
+    class="impression-mode min-h-screen text-[#1A1A1A] font-serif selection:bg-[#D9480F]/20 selection:text-[#1A1A1A]"
+>
     <ArticleDataInjectors echoes={echoes} wordDefinitions={wordDefinitions} />
-    
-    <div class="relative z-10 mx-auto w-full max-w-4xl px-4 py-10" data-article-id={id}>
-            <ArticleHeader 
-                title={title}
-                dateLabel={dateLabel}
-                category={category}
-                initialLevel={initialLevel}
-                backHref={`/day/${row?.tasks?.taskDate || ''}`}
-            />
-            
-            <article id="article-content" class="font-serif leading-loose text-lg text-slate-800/90 md:text-xl">
-                {sortedArticles.map((article: any) => {
+
+    <div
+        class="relative z-10 mx-auto w-full max-w-4xl px-4 py-10"
+        data-article-id={id}
+    >
+        <ArticleHeader
+            title={title}
+            dateLabel={dateLabel}
+            category={category}
+            initialLevel={initialLevel}
+            backHref={`/day/${row?.tasks?.taskDate || ""}`}
+        />
+
+        <article
+            id="article-content"
+            class="font-serif leading-loose text-lg text-slate-800/90 md:text-xl"
+        >
+            {
+                sortedArticles.map((article: any) => {
                     const stats = getReadingStats(article.content);
                     const paragraphs = buildAnalysisTree(
-                        article.content || '',
+                        article.content || "",
                         article.sentences || [],
                         article.syntax || [],
-                        wordMatchConfigs
+                        wordMatchConfigs,
                     );
 
                     return (
@@ -69,46 +74,70 @@ const allArticleContents = getAllArticleContents(sortedArticles);
                             data-level={article.level}
                             data-word-count={stats.wordCount}
                             data-minutes={stats.minutes}
-                            data-active={article.level === initialLevel ? "" : undefined}
+                            data-active={
+                                article.level === initialLevel ? "" : undefined
+                            }
                         >
-                             {/* Summary */}
-                             {article.summary && (
+                            {/* Summary */}
+                            {article.summary && (
                                 <div class="mb-10 text-2xl font-serif italic text-stone-600 leading-relaxed border-l-4 border-amber-600 pl-6 py-2">
                                     {article.summary}
                                 </div>
                             )}
 
-                            {paragraphs.map((blockNodes: any[], pIndex: number) => {
-                                const isPullQuotePos = pIndex === 1 && article.pullQuote;
-                                return (
-                                    <>
-                                        <p class="mb-6 indent-8">
-                                            <AnnotatedText nodes={blockNodes} />
-                                        </p>
-                                        {isPullQuotePos && (
-                                            <blockquote class="border-l-2 border-slate-800 pl-6 italic text-slate-600 my-10 text-2xl font-serif leading-relaxed">
-                                                "{article.pullQuote}"
-                                            </blockquote>
-                                        )}
-                                    </>
-                                );
-                            })}
+                            {paragraphs.map(
+                                (blockNodes: any[], pIndex: number) => {
+                                    const isPullQuotePos =
+                                        pIndex === 1 && article.pullQuote;
+                                    return (
+                                        <>
+                                            <p class="mb-6 indent-8">
+                                                <AnnotatedText
+                                                    nodes={blockNodes}
+                                                />
+                                            </p>
+                                            {isPullQuotePos && (
+                                                <blockquote class="border-l-2 border-slate-800 pl-6 italic text-slate-600 my-10 text-2xl font-serif leading-relaxed">
+                                                    "{article.pullQuote}"
+                                                </blockquote>
+                                            )}
+                                        </>
+                                    );
+                                },
+                            )}
                         </div>
                     );
-                })}
-            </article>
-            
-            {sources.length > 0 && (
-                <footer id="article-sources" class="mt-8 pt-8 border-t border-[#E6E6E1] font-sans">
-                    <h4 class="text-[10px] font-bold tracking-widest text-[#999999] uppercase mb-4">Sources</h4>
+                })
+            }
+        </article>
+
+        {
+            sources.length > 0 && (
+                <footer
+                    id="article-sources"
+                    class="mt-8 pt-8 border-t border-[#E6E6E1] font-sans"
+                >
+                    <h4 class="text-[10px] font-bold tracking-widest text-[#999999] uppercase mb-4">
+                        Sources
+                    </h4>
                     <ul class="text-xs text-[#666666] space-y-1">
                         {sources.map((url: string) => {
                             let domain = url;
-                            try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch {}
+                            try {
+                                domain = new URL(url).hostname.replace(
+                                    /^www\./,
+                                    "",
+                                );
+                            } catch {}
                             return (
                                 <li class="flex items-center gap-2">
-                                    <span class="w-1 h-1 rounded-full bg-stone-300"></span>
-                                    <a href={url} target="_blank" rel="noreferrer" class="hover:text-[#D9480F] transition-colors">
+                                    <span class="w-1 h-1 rounded-full bg-stone-300" />
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        class="hover:text-[#D9480F] transition-colors"
+                                    >
                                         {domain}
                                     </a>
                                 </li>
@@ -116,51 +145,63 @@ const allArticleContents = getAllArticleContents(sortedArticles);
                         })}
                     </ul>
                 </footer>
-            )}
-        </div>
-        
-        {sidebarWords.length > 0 && (
+            )
+        }
+    </div>
+
+    {
+        sidebarWords.length > 0 && (
             <div class="fixed bottom-6 right-6 z-50">
-                <AudioInit client:idle allContent={allArticleContents} articleId={id || ""} />
+                <AudioInit
+                    client:idle
+                    allContent={allArticleContents}
+                    articleId={id || ""}
+                />
                 <FloatingAudioPlayer client:only="react" />
             </div>
-        )}
-        
+        )
+    }
+
     <HistoricalEchoes client:idle showDefinition={true} articleId={id} />
 </div>
 
 <script>
-import { initLevelSwitcher } from '@/lib/features/reading/levelSwitcher';
-import { initReadTracker, trackReading } from '@/lib/features/reading/readTracker';
-import { initEchoes, initDefinitions } from '@/lib/store/interactionStore';
-import { initInteractionController } from '@/lib/features/echoes/hoverController';
+    import { initLevelSwitcher } from "@/lib/features/reading/levelSwitcher";
+    import {
+        initReadTracker,
+        trackReading,
+    } from "@/lib/features/reading/readTracker";
+    import { initEchoes, initDefinitions } from "@/lib/store/interactionStore";
+    import { initInteractionController } from "@/lib/features/echoes/hoverController";
 
-function initImpressionPage() {
-    try {
-        const dataEl = document.getElementById('memories-data');
-        if (dataEl && dataEl.textContent) {
-            initEchoes(JSON.parse(dataEl.textContent));
-        }
-        const defsEl = document.getElementById('definitions-data');
-        if (defsEl && defsEl.textContent) {
-            initDefinitions(JSON.parse(defsEl.textContent));
-        }
-    } catch (e) { }
+    function initImpressionPage() {
+        try {
+            const dataEl = document.getElementById("memories-data");
+            if (dataEl && dataEl.textContent) {
+                initEchoes(JSON.parse(dataEl.textContent));
+            }
+            const defsEl = document.getElementById("definitions-data");
+            if (defsEl && defsEl.textContent) {
+                initDefinitions(JSON.parse(defsEl.textContent));
+            }
+        } catch (e) {}
 
-    initLevelSwitcher();
-    initReadTracker();
-    initInteractionController('click');
-    window.addEventListener('level-change', () => trackReading());
-    
-    // Initial Time Update
-    const activeLevel = document.querySelector('.article-level[data-active]');
-    const minutes = activeLevel?.getAttribute('data-minutes') || '1';
-    const readingTimeEl = document.getElementById('reading-time');
-    if (readingTimeEl && minutes) {
-        readingTimeEl.textContent = `${minutes} Minute${minutes !== '1' ? 's' : ''}`;
+        initLevelSwitcher();
+        initReadTracker();
+        initInteractionController("click");
+        window.addEventListener("level-change", () => trackReading());
+
+        // Initial Time Update
+        const activeLevel = document.querySelector(
+            ".article-level[data-active]",
+        );
+        const minutes = activeLevel?.getAttribute("data-minutes") || "1";
+        const readingTimeEl = document.getElementById("reading-time");
+        if (readingTimeEl && minutes) {
+            readingTimeEl.textContent = `${minutes} Minute${minutes !== "1" ? "s" : ""}`;
+        }
     }
-}
 
-document.addEventListener('DOMContentLoaded', initImpressionPage);
-document.addEventListener('astro:page-load', initImpressionPage);
+    document.addEventListener("DOMContentLoaded", initImpressionPage);
+    document.addEventListener("astro:page-load", initImpressionPage);
 </script>
