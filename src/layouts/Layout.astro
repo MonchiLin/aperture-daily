@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import "../styles/grain-overlay.css";
 import "../styles/analysis.css";
-import SetupEnforcer from '../components/onboarding/SetupEnforcer';
+import SetupEnforcer from "../components/onboarding/SetupEnforcer";
 import SettingsPanel from "../components/SettingsPanel";
 import HelpPanel from "../components/HelpPanel";
 import { ClientRouter } from "astro:transitions";
@@ -26,17 +26,37 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 		<!-- Astro Fonts API: 构建时下载字体，本地托管，消除 FOUT -->
 		<Font cssVariable="--font-inter" preload />
 		<Font cssVariable="--font-merriweather" preload />
-		<Font cssVariable="--font-noto-serif-sc" preload />
+
 		<Font cssVariable="--font-playfair" preload />
 		<title>{title}</title>
 		<!-- RSS 订阅发现 -->
-		<link rel="alternate" type="application/rss+xml" title="UpWord RSS" href="/rss.xml" />
-		<link rel="alternate" type="application/rss+xml" title="UpWord Easy" href="/rss/easy" />
-		<link rel="alternate" type="application/rss+xml" title="UpWord Medium" href="/rss/medium" />
-		<link rel="alternate" type="application/rss+xml" title="UpWord Hard" href="/rss/hard" />
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="UpWord RSS"
+			href="/rss.xml"
+		/>
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="UpWord Easy"
+			href="/rss/easy"
+		/>
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="UpWord Medium"
+			href="/rss/medium"
+		/>
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="UpWord Hard"
+			href="/rss/hard"
+		/>
 		<ClientRouter />
 	</head>
-<body
+	<body
 		class="min-h-screen flex flex-col bg-[#F3F2EE] text-slate-900 antialiased selection:bg-[#F3E5AB] selection:text-black"
 	>
 		<!-- 拟真纸张质感叠加层 -->
@@ -51,13 +71,26 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 				<a
 					href="/"
 					class="font-serif text-2xl font-bold tracking-tight text-slate-900 hover:text-slate-700 transition-colors"
-					>UpWord</a>
+					>UpWord</a
+				>
 				<div class="flex items-center gap-1">
 					<SetupEnforcer client:only="react" />
 					<nav class="flex items-center gap-4 mr-2">
-						<a href="/settings/profiles" class="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors">Profiles</a>
-						<a href="/settings/topics" class="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors">Topics</a>
-						<a href="/settings/rss" class="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors">RSS</a>
+						<a
+							href="/settings/profiles"
+							class="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors"
+							>Profiles</a
+						>
+						<a
+							href="/settings/topics"
+							class="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors"
+							>Topics</a
+						>
+						<a
+							href="/settings/rss"
+							class="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors"
+							>RSS</a
+						>
 					</nav>
 					<SettingsPanel client:load />
 					<HelpPanel client:load />
@@ -67,7 +100,7 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 		<main class={`w-full ${resolvedMainClass}`}>
 			<slot />
 		</main>
-		
+
 		<!-- 
 			Global Global Styles & NProgress
 			为什么要在这里定义？
@@ -95,11 +128,13 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 				right: 0px;
 				width: 100px;
 				height: 100%;
-				box-shadow: 0 0 10px #8b5cf6, 0 0 5px #8b5cf6;
+				box-shadow:
+					0 0 10px #8b5cf6,
+					0 0 5px #8b5cf6;
 				opacity: 1;
 				transform: rotate(3deg) translate(0px, -4px);
 			}
-			
+
 			/* Global Scrollbar Hiding (Like Safari) */
 			html {
 				scrollbar-width: none; /* Firefox */
@@ -109,31 +144,31 @@ const resolvedMainClass = mainClass ?? "mx-auto max-w-8xl px-4";
 				display: none; /* Chrome/Safari/Webkit */
 			}
 		</style>
-		
+
 		<script>
-			import NProgress from 'nprogress';
-			
+			import NProgress from "nprogress";
+
 			// Hydration Marker (注水标记)
 			// 用于 CSS 选择器，避免 SSR 内容与 Client 内容切换时的闪烁 (FOUC)。
-			document.documentElement.classList.add('hydrated');
-			
+			document.documentElement.classList.add("hydrated");
+
 			NProgress.configure({ showSpinner: false, speed: 200 });
-			
+
 			// 导航生命周期 (View Transitions API)
 			// Astro 作为一个 MPA，通过 View Transitions 模拟了 SPA 的路由体验。
 			// 我们不需要重载整个页面，只需替换 body 内容。
 			// 这里监听生命周期事件来显示进度条。
-			
+
 			// 1. 导航开始：用户点击链接，或 history.pushState
-			document.addEventListener('astro:before-preparation', () => {
+			document.addEventListener("astro:before-preparation", () => {
 				NProgress.start();
 			});
-			
+
 			// 2. 页面交换完成：DOM 已更新，但脚本可能还在运行
-			document.addEventListener('astro:after-swap', () => {
+			document.addEventListener("astro:after-swap", () => {
 				NProgress.done();
 				// 重新添加类名，因为新页面的 html 标签可能没有这个类
-				document.documentElement.classList.add('hydrated');
+				document.documentElement.classList.add("hydrated");
 			});
 		</script>
 	</body>

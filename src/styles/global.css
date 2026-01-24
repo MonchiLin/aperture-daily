@@ -6,8 +6,8 @@
 @theme {
 	/* 使用 Astro Fonts API 生成的 CSS 变量 */
 	--font-sans: var(--font-inter), "HarmonyOS Sans SC", system-ui, sans-serif;
-	--font-serif: var(--font-merriweather), var(--font-noto-serif-sc), "Times New Roman", serif;
-	--font-display: var(--font-playfair), var(--font-noto-serif-sc), serif;
+	--font-serif: var(--font-merriweather), "Songti SC", "SimSun", "STSong", "AR PL New Sung", "Noto Serif CJK SC", serif;
+	--font-display: var(--font-playfair), "Songti SC", "SimSun", "STSong", "AR PL New Sung", "Noto Serif CJK SC", serif;
 
 	--color-paper: #F9F9F8;
 	--color-paper-dark: #F2F0EB;

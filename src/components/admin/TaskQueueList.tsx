@@ -200,7 +200,7 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, taskDate }: 
                                         <div className="max-w-md max-h-64 overflow-auto text-xs font-mono whitespace-pre-wrap">
                                             {t.errorContextJson
                                                 ? (typeof t.errorContextJson === 'string'
-                                                    ? JSON.stringify(JSON.parse(t.errorContextJson), null, 2)
+                                                    ? t.errorContextJson
                                                     : JSON.stringify(t.errorContextJson, null, 2))
                                                 : 'No context available'}
                                         </div>
@@ -210,7 +210,7 @@ export default function TaskQueueList({ tasks, onRefresh, onDelete, taskDate }: 
                                 >
                                     <div className="text-[10px] text-red-600 font-serif italic bg-red-50 p-1.5 leading-tight cursor-pointer hover:bg-red-100 transition-colors flex items-start gap-1">
                                         <AlertCircle size={12} className="mt-0.5 shrink-0" />
-                                        <span>{t.errorMessage}</span>
+                                        <span>{typeof t.errorMessage === 'string' ? t.errorMessage : JSON.stringify(t.errorMessage)}</span>
                                     </div>
                                 </Popover>
                             </div>

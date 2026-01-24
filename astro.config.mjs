@@ -42,15 +42,7 @@ export default defineConfig({
         subsets: ["latin"],
         fallbacks: ["Georgia", "serif"],
       },
-      {
-        provider: fontProviders.google(),
-        name: "Noto Serif SC",
-        cssVariable: "--font-noto-serif-sc",
-        weights: [400, 700],
-        styles: ["normal"],
-        subsets: ["chinese-simplified", "latin"],
-        fallbacks: ["serif"],
-      },
+
       {
         provider: fontProviders.google(),
         name: "Playfair Display",
