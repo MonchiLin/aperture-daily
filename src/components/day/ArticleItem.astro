@@ -1,7 +1,7 @@
 ---
 /**
  * ArticleItem - 单篇文章条目
- * 
+ *
  * 纯 Astro 组件，SSR 渲染，零 JS
  */
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
     index: number;
     isRead?: boolean;
     date: string;
-    generationMode?: 'rss' | 'impression';
+    generationMode?: "rss" | "impression";
 }
 
 const { title, index, isRead = false, date } = Astro.props;
@@ -20,35 +20,65 @@ const slug = toArticleSlug(title);
 const href = `/${date}/${slug}`;
 ---
 
-<article class="group relative border-b border-stone-200/60 last:border-0 hover:bg-stone-50/80 -mx-4 px-4 transition-all duration-300 cursor-pointer active:scale-[0.995] hover:translate-x-1">
+<article
+    class="group relative border-b border-stone-200/60 last:border-0 hover:bg-stone-50/80 -mx-4 px-4 transition-all duration-300 cursor-pointer active:scale-[0.995] hover:translate-x-1"
+>
     <a href={href} class="flex items-baseline py-5 w-full gap-6">
         <!-- Number / Checkmark -->
-        <span class:list={[
-            "inline-flex shrink-0 transition-colors duration-300 select-none w-8 justify-end",
-            isRead 
-                ? "text-amber-600/60 translate-y-[2px]" 
-                : "font-display italic text-2xl text-stone-300/80 group-hover:text-stone-500 group-hover:translate-x-1 transition-all"
-        ]}>
-            {isRead ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-            ) : (
-                String(index + 1).padStart(2, '0')
-            )}
+        <span
+            class:list={[
+                "inline-flex shrink-0 transition-colors duration-300 select-none w-8 justify-end",
+                isRead
+                    ? "text-amber-600/60 translate-y-[2px]"
+                    : "font-display italic text-2xl text-stone-300/80 group-hover:text-stone-500 group-hover:translate-x-1 transition-all",
+            ]}
+        >
+            {
+                isRead ? (
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        class="w-4 h-4"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                ) : (
+                    String(index + 1).padStart(2, "0")
+                )
+            }
         </span>
 
         <!-- Title -->
-        <h3 class:list={[
-            "flex-1 font-serif text-xl leading-relaxed transition-colors pr-4",
-            isRead ? "text-stone-400 decoration-stone-300 line-through decoration-1" : "text-slate-900 group-hover:text-amber-900"
-        ]}>
+        <h3
+            class:list={[
+                "flex-1 font-serif text-xl leading-relaxed transition-colors pr-4",
+                isRead
+                    ? "text-stone-400 decoration-stone-300 line-through decoration-1"
+                    : "text-slate-900 group-hover:text-amber-900",
+            ]}
+        >
             {title}
         </h3>
 
         <!-- Arrow Icon (Subtle) -->
-        <div class="inline-flex items-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0 text-stone-300 self-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+        <div
+            class="inline-flex items-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0 text-stone-300 self-center"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-5 h-5"
+            >
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
             </svg>

@@ -148,7 +148,7 @@ const allArticleContents = getAllArticleContents(sortedArticles);
                     />
                     
                     <!-- 三个难度的文章内容 -->
-                    <article id="article-content" class="font-serif leading-loose text-lg text-slate-800/90 md:text-xl">
+                    <article id="article-content" class="font-serif leading-loose text-lg text-slate-800/90 md:text-xl animate-enter-content">
                         {sortedArticles.map((article: any) => {
                             const stats = getReadingStats(article.content);
                             
