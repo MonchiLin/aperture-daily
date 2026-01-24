@@ -30,12 +30,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // Only set header if not already set (allow pages to override)
     if (!response.headers.has("Cache-Control")) {
-        if (isAdmin) {
-            response.headers.set("Cache-Control", "private, no-cache");
-        } else {
-            // SWR Strategy: Cache for 60s, stale-while-revalidate for 1 day
-            response.headers.set("Cache-Control", "public, max-age=60, s-maxage=60, stale-while-revalidate=86400");
-        }
+        // Default Strategy: Public SWR.
+        // Server Islands handle private content, so the page shell is public.
+        response.headers.set("Cache-Control", "public, max-age=60, s-maxage=60, stale-while-revalidate=86400");
     }
 
     return response;

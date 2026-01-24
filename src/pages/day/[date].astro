@@ -10,8 +10,8 @@
  *   - ArticleList.astro - 文章列表 (SSR 首屏 + noscript 兜底)
  *   - ArticleListClient - 文章列表 (客户端动态更新)
  *   - DayStateSync - 状态同步 (轻量孤岛)
- *   - WordsDrawer - 词汇抽屉 (孤岛)
- *   - AdminDrawer - 管理抽屉 (条件孤岛)
+ *   - WordsIsland - 词汇抽屉 (服务端孤岛/延迟加载)
+ *   - AdminIsland - 管理抽屉 (服务端孤岛/延迟加载)
  */
 import Layout from "@/layouts/Layout.astro";
 import MacOSCalendarAstro from "@/components/MacOSCalendar.astro";
@@ -19,8 +19,8 @@ import DayHeader from "@/components/day/DayHeader.astro";
 import ArticleList from "@/components/day/ArticleList.astro";
 import ArticleListClient from "@/components/day/ArticleListClient";
 import DayStateSync from "@/components/day/DayStateSync";
-import WordsDrawer from "@/components/WordsDrawer";
-import AdminDrawer from "@/components/AdminDrawer";
+import WordsIsland from "@/components/day/WordsIsland.astro";
+import AdminIsland from "@/components/day/AdminIsland.astro";
 import { apiFetch } from "@/lib/api";
 
 // 获取路由参数
@@ -32,7 +32,7 @@ if (!date || !dateRegex.test(date)) {
     return Astro.redirect("/");
 }
 
-// 服务端并发预取数据
+// 服务端并发预取数据 (仅核心公共内容)
 const fetchDays = () =>
     apiFetch<{ days: string[] }>("/api/days").catch((e) => {
         console.error("[SSR] Failed to fetch days:", e);
@@ -45,69 +45,25 @@ const fetchDayData = () =>
         return { articles: [] };
     });
 
-const fetchWordData = () =>
-    apiFetch(`/api/day/${date}/words`).catch((e) => {
-        console.error(`[SSR] Failed to fetch word data for ${date}:`, e);
-        return {
-            new_words: [],
-            review_words: [],
-            new_count: 0,
-            review_count: 0,
-        };
-    });
-
-// Admin fetching logic
-const { isAdmin: checkIsAdmin } = Astro.locals.auth;
-
-const fetchAdminData = async () => {
-    if (!checkIsAdmin) return null;
-
-    // Retrieve token explicitly for API call (token is needed for the header)
-    const token = Astro.cookies.get("admin_key")?.value;
-    if (!token) return null;
-
-    try {
-        await apiFetch("/api/auth/check", { token });
-        const taskResponse = await apiFetch<{ tasks: any[] }>(
-            `/api/tasks?task_date=${encodeURIComponent(date)}`,
-            { token },
-        );
-        return {
-            isAdmin: true,
-            tasks: taskResponse.tasks || [],
-        };
-    } catch (e) {
-        console.error("[SSR] Admin auth failed:", e);
-        return null;
-    }
-};
-
 // 执行并行请求
-const [daysStats, dayDataResult, wordDataStats, adminDataResult] =
-    await Promise.all([
-        fetchDays(),
-        fetchDayData(),
-        fetchWordData(),
-        fetchAdminData(),
-    ]);
+const [daysStats, dayDataResult] = await Promise.all([
+    fetchDays(),
+    fetchDayData(),
+]);
 
 // 处理数据
 const publishedDays = daysStats?.days || [];
 const dayData = dayDataResult || { articles: [] };
-const wordData = wordDataStats || {
-    new_words: [],
-    review_words: [],
-    new_count: 0,
-    review_count: 0,
-};
-const adminData = adminDataResult;
 
-// 🔑 SSR 权限判断 - 决定是否渲染管理孤岛
-const isAdmin = !!adminData?.isAdmin;
+// 🔑 Admin Data is now handled by AdminIsland (Server Defer)
 
 // 设置缓存策略
+// 由于使用了 Server Islands，主页面不再包含私有数据，可以激进缓存
 if (dayData.articles?.length > 0) {
     // 5分钟新鲜度，1小时宽容度
+    // Astro Middleware will handle the default, but we can override here if needed.
+    // Given middleware sets a default, we might not need this unless we want different timings.
+    // Let's stick to the specific policy for this page.
     Astro.response.headers.set(
         "Cache-Control",
         "public, s-maxage=300, stale-while-revalidate=3600",
@@ -134,32 +90,35 @@ if (dayData.articles?.length > 0) {
                 transition:animate="slide"
             >
                 <!-- 🏝️ 状态同步孤岛 (不可见，仅同步数据) -->
+                <!-- Still needs logic to sync state, but maybe lighter now? -->
+                <!-- Note: DayStateSync might need adminData passed to it? -->
+                <!-- Checking DayStateSync implementation... It uses adminData to sync Zustand store. -->
+                <!-- If we defer AdminIsland, DayStateSync won't have adminData immediately. -->
+                <!-- Solution: Pass just the basic auth state or let AdminIsland handle the store sync? -->
+                <!-- For now, we will pass explicit null/empty to DayStateSync and rely on client-side fetch or AdminIsland to init store? -->
+                <!-- Actually, DayStateSync primarily syncs `articles`. adminData is for task queue state. -->
+                <!-- We can let AdminIsland handle admin-specific sync if needed, or keeping it strictly for visual drawer. -->
                 <DayStateSync
                     client:load
                     date={date}
                     articles={dayData.articles}
-                    adminData={adminData}
+                    adminData={null}
                 />
 
                 <!-- 日期头部 (纯 SSR) -->
                 <DayHeader date={date}>
                     <Fragment slot="actions">
-                        <!-- 🏝️ 词汇抽屉孤岛 -->
-                        <WordsDrawer
-                            client:idle
-                            date={date}
-                            wordData={wordData}
-                        />
-                        <!-- 🏝️ 管理抽屉孤岛 (条件渲染) -->
-                        {
-                            isAdmin && (
-                                <AdminDrawer
-                                    client:idle
-                                    date={date}
-                                    initialTasks={adminData?.tasks}
-                                />
-                            )
-                        }
+                        <!-- 🏝️ 词汇抽屉孤岛 (延迟加载) -->
+                        <WordsIsland server:defer date={date}>
+                            <div
+                                slot="fallback"
+                                class="w-8 h-8 rounded-full bg-stone-200 animate-pulse"
+                            >
+                            </div>
+                        </WordsIsland>
+
+                        <!-- 🏝️ 管理抽屉孤岛 (服务端延迟加载 + 内部鉴权) -->
+                        <AdminIsland server:defer date={date} />
                     </Fragment>
                 </DayHeader>
 

@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig, fontProviders } from 'astro/config';
+import { defineConfig, fontProviders, envField } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
@@ -97,5 +97,11 @@ export default defineConfig({
   adapter: cloudflare(),
   devToolbar: {
     enabled: false
+  },
+  env: {
+    schema: {
+      PUBLIC_API_BASE: envField.string({ context: 'client', access: 'public', url: true }),
+      SITE_URL: envField.string({ context: 'client', access: 'public', url: true }),
+    }
   }
 });

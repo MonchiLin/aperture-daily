@@ -11,7 +11,9 @@
  * 外部依赖: Native Fetch API
  * 注意事项: 本模块信任后端返回的 JSON 结构，暂未引入 Zod 进行运行时 Response 校验 (Runtime Validation)。
  */
-export const API_BASE = import.meta.env.PUBLIC_API_BASE;
+import { PUBLIC_API_BASE } from 'astro:env/client';
+// export const API_BASE = import.meta.env.PUBLIC_API_BASE;
+export const API_BASE = PUBLIC_API_BASE;
 
 type FetchOptions = RequestInit & {
     token?: string | null; // For x-admin-key header

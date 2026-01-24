@@ -2,15 +2,9 @@
 
 import type { Runtime } from '@astrojs/cloudflare';
 
-type UpWordsEnv = {
-	ADMIN_KEY: string;
-	SITE_URL: string;
-	PUBLIC_API_BASE: string;
-};
-
 declare global {
 	namespace App {
-		interface Locals extends Runtime<LumaWordsEnv> {
+		interface Locals extends Runtime {
 			auth: import('./types/auth').AdminState;
 		}
 	}

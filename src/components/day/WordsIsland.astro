@@ -1,0 +1,25 @@
+---
+import WordsDrawer from "@/components/WordsDrawer";
+import { apiFetch } from "@/lib/api";
+
+interface Props {
+    date: string;
+}
+
+const { date } = Astro.props;
+
+let wordData = {
+    new_words: [],
+    review_words: [],
+    new_count: 0,
+    review_count: 0,
+};
+
+try {
+    wordData = await apiFetch(`/api/day/${date}/words`);
+} catch (e) {
+    console.error(`[Island] Failed to fetch word data for ${date}:`, e);
+}
+---
+
+<WordsDrawer client:idle date={date} wordData={wordData} />

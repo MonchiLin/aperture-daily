@@ -1,0 +1,37 @@
+---
+import AdminDrawer from "@/components/AdminDrawer";
+import { apiFetch } from "@/lib/api";
+
+interface Props {
+    date: string;
+}
+
+const { date } = Astro.props;
+const { isAdmin } = Astro.locals.auth;
+
+if (!isAdmin) {
+    return null;
+}
+
+// Retrieve token for API call
+const token = Astro.cookies.get("admin_key")?.value;
+let tasks = [];
+
+if (token) {
+    try {
+        // We already checked auth via middleware/locals, but we need the token for the API
+        await apiFetch("/api/auth/check", { token });
+        const taskResponse = await apiFetch<{ tasks: any[] }>(
+            `/api/tasks?task_date=${encodeURIComponent(date)}`,
+            { token },
+        );
+        tasks = taskResponse.tasks || [];
+    } catch (e) {
+        console.error("[Island] Admin data fetch failed:", e);
+        // If fetch fails, we still render the drawer but maybe empty?
+        // Or we return null? Let's just return empty tasks for now to allow retry/view.
+    }
+}
+---
+
+<AdminDrawer client:idle date={date} initialTasks={tasks} />

@@ -35,6 +35,8 @@ const StatusIndicator = ({ mounted, taskStatus }: { mounted: boolean, taskStatus
     return null;
 };
 
+import { initFromSSR } from '../lib/store/adminStore';
+
 export default function AdminDrawer({ date, initialTasks }: Props) {
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -42,7 +44,11 @@ export default function AdminDrawer({ date, initialTasks }: Props) {
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        // Hydrate store from server data (Island architecture)
+        if (initialTasks) {
+            initFromSSR({ isAdmin: true, tasks: initialTasks });
+        }
+    }, [initialTasks]);
 
     return (
         <ConfigProvider
