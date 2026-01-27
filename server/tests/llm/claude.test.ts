@@ -37,7 +37,7 @@ describe('Claude Provider - Full Pipeline Test', () => {
         console.log(`[Claude Test] Date: ${TODAY}, Model: ${config.model}`);
     });
 
-    it('should complete full 4-stage pipeline', async () => {
+    it('should complete full 5-stage pipeline (Search -> Blueprint -> Draft -> JSON -> Analysis)', async () => {
         if (!config.apiKey || !config.model) {
             console.log('[Skip] No Claude credentials');
             return;
@@ -71,10 +71,8 @@ describe('Claude Provider - Full Pipeline Test', () => {
         if (complexArticles.length > 0) {
             const sample = complexArticles[0]!;
             if (sample.summary) expect(sample.summary.length).toBeGreaterThan(10);
-            if (sample.pull_quote) expect(sample.pull_quote.length).toBeGreaterThan(5);
             console.log(`[Claude] Checked L${sample.level} article extras:`, {
                 hasSummary: !!sample.summary,
-                hasQuote: !!sample.pull_quote
             });
         }
 
@@ -86,7 +84,7 @@ describe('Claude Provider - Full Pipeline Test', () => {
         console.log('[Claude] Article levels:', result.output.articles.length);
 
         // Save to Database
-        await saveTestPipelineResult(result, config);
+        await saveTestPipelineResult(result, config, undefined, TEST_TOPIC_PREFERENCE);
     }, 3600000); // 60 minute timeout for full pipeline as it includes thinking
 
     it('should support basic generation', async () => {

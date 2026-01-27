@@ -9,7 +9,15 @@
  * 3. **网络对策 (Network)**: Raw Fetch 允许我们在更底层注入 Proxy Agent 或 Custom Headers。
  */
 
-import type { DailyNewsProvider, GenerateOptions, GenerateResponse, Stage1Input, Stage1Output, Stage2Input, Stage2Output, Stage3Input, Stage3Output, Stage4Input, Stage4Output } from '../types';
+import type {
+    DailyNewsProvider, GenerateOptions, GenerateResponse,
+    Stage1Input, Stage1Output,
+    Stage2aInput, Stage2aOutput,
+    Stage2bInput, Stage2bOutput,
+    Stage2Input, Stage2Output,
+    Stage3Input, Stage3Output,
+    Stage4Input, Stage4Output
+} from '../types';
 import {
     Stage1OutputSchema,
     Stage2OutputSchema,
@@ -178,6 +186,7 @@ export class GeminiProvider implements DailyNewsProvider {
 
         const selectedWords = validated.selected_words;
         const newsSummary = validated.news_summary;
+        const originalStyleSummary = validated.original_style_summary; // [NEW] Style DNA
         const sourceUrls = await buildSourceUrls({
             validated,
             newsSummary,
@@ -202,6 +211,7 @@ export class GeminiProvider implements DailyNewsProvider {
         return {
             selectedWords,
             newsSummary,
+            originalStyleSummary,
             sourceUrls,
             selectedRssId,
             selectedRssItem,
@@ -209,8 +219,60 @@ export class GeminiProvider implements DailyNewsProvider {
         };
     }
 
+    // [New] Stage 2a: Blueprint Generation
+    async runStage2a_Blueprint(input: Stage2aInput): Promise<Stage2aOutput> {
+        console.log('[Gemini] Running Stage 2a: Architect (Blueprint)');
+
+        const response = await this.generate({
+            system: input.systemPrompt,
+            prompt: input.userPrompt,
+            config: input.config
+        });
+
+        // 提取 XML Blueprint
+        let blueprintXml = response.text.trim();
+        // 如果包含 markdown code block, 则提取
+        const codeBlockMatch = blueprintXml.match(/```xml\n?([\s\S]*?)\n?```/i);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+            blueprintXml = codeBlockMatch[1].trim();
+        }
+
+        return {
+            blueprintXml,
+            usage: response.usage
+        };
+    }
+
+    // [New] Stage 2b: Writer (Draft Generation)
+    async runStage2b_Draft(input: Stage2bInput): Promise<Stage2bOutput> {
+        console.log('[Gemini] Running Stage 2b: Writer (Draft)');
+
+        const response = await this.generate({
+            system: input.systemPrompt,
+            prompt: input.userPrompt,
+            config: input.config
+        });
+
+        // Draft Text is pure text, strip citations if any
+        let draftText = stripCitations(response.text.trim());
+
+        // Basic validation: Check length
+        if (draftText.length < 100) {
+            console.warn('[Gemini] Draft text unusually short:', draftText);
+        }
+
+        return {
+            draftText,
+            usage: response.usage
+        };
+    }
+
+    /**
+     * @deprecated Legacy Stage 2 (Draft Generation)
+     * Replaced by runStage2a_Blueprint + runStage2b_Draft
+     */
     async runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output> {
-        console.log('[Gemini] Running Stage 2: Draft Generation');
+        console.log('[Gemini] Running Stage 2: Draft Generation (DEPRECATED)');
 
         const response = await this.generate({
             system: input.systemPrompt,

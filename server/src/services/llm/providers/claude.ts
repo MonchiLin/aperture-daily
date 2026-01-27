@@ -11,7 +11,15 @@
  * 3. Thinking Protocol: 需要特殊处理 `thinking` 类型的数据块，区分“思考过程”与“最终文本”。
  */
 
-import type { DailyNewsProvider, GenerateOptions, GenerateResponse, Stage1Input, Stage1Output, Stage2Input, Stage2Output, Stage3Input, Stage3Output, Stage4Input, Stage4Output } from '../types';
+import type {
+    DailyNewsProvider, GenerateOptions, GenerateResponse,
+    Stage1Input, Stage1Output,
+    Stage2aInput, Stage2aOutput,
+    Stage2bInput, Stage2bOutput,
+    Stage2Input, Stage2Output,
+    Stage3Input, Stage3Output,
+    Stage4Input, Stage4Output
+} from '../types';
 import {
     Stage1OutputSchema,
     Stage2OutputSchema,
@@ -211,6 +219,7 @@ export class ClaudeProvider implements DailyNewsProvider {
         // 使用共享函数处理 URL
         const selectedWords = validated.selected_words;
         const newsSummary = validated.news_summary;
+        const originalStyleSummary = validated.original_style_summary;
         const sourceUrls = await buildSourceUrls({
             validated,
             newsSummary,
@@ -220,11 +229,48 @@ export class ClaudeProvider implements DailyNewsProvider {
         return {
             selectedWords,
             newsSummary,
+            originalStyleSummary,
             sourceUrls,
             usage: response.usage
         };
     }
 
+    async runStage2a_Blueprint(input: Stage2aInput): Promise<Stage2aOutput> {
+        console.log('[Claude] Running Stage 2a: Architect (Blueprint)');
+        const response = await this.generate({
+            system: input.systemPrompt,
+            prompt: input.userPrompt
+            // No web_search default tools
+        });
+
+        let blueprintXml = response.text.trim();
+        const codeBlockMatch = blueprintXml.match(/```xml\n?([\s\S]*?)\n?```/i);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+            blueprintXml = codeBlockMatch[1].trim();
+        }
+
+        return {
+            blueprintXml,
+            usage: response.usage
+        };
+    }
+
+    async runStage2b_Draft(input: Stage2bInput): Promise<Stage2bOutput> {
+        console.log('[Claude] Running Stage 2b: Writer (Draft)');
+        const response = await this.generate({
+            system: input.systemPrompt,
+            prompt: input.userPrompt
+        });
+
+        let draftText = stripCitations(response.text.trim());
+
+        return {
+            draftText,
+            usage: response.usage
+        };
+    }
+
+    /** @deprecated */
     async runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output> {
         console.log('[Claude] Running Stage 2: Draft Generation');
 

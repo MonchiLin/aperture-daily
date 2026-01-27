@@ -163,3 +163,6 @@ Hugging Face 免费 Space 在 48 小时无访问后会休眠。使用 [UptimeRob
 
 [ ] 统一超时
 
+[ ] 推送到频道(channel)
+
+[ ] 阅读成就

@@ -24,11 +24,24 @@ import { getStrategy, type GenerationMode } from './promptStrategies';
 // ============ 类型定义 ============
 
 export interface PipelineCheckpoint {
-    stage: 'search_selection' | 'draft' | 'conversion' | 'grammar_analysis';
+    /**
+     * [FSM State] 当前流水线所处的"完成态" (Completed State).
+     * 
+     * Definition:
+     * - 'start': 初始状态 (什么都没做)
+     * - 'search_selection': 已完成选题，准备进入架构规划
+     * - 'blueprint': 已完成架构图纸，准备进入撰写
+     * - 'writer': 已完成草稿，准备进入格式化
+     * - 'conversion': 已完成 JSON 转换，准备进入句法分析
+     * - 'grammar_analysis': 已完成句法分析 (最终态)
+     */
+    stage: 'search_selection' | 'blueprint' | 'writer' | 'conversion' | 'grammar_analysis';
     selectedWords?: string[];
     newsSummary?: string;
     sourceUrls?: string[];
+    originalStyleSummary?: string; // [NEW] Style DNA
     selectedRssItem?: NewsItem;
+    blueprintXml?: string; // [NEW] The Architect's Plan
     draftText?: string;
     completedLevels?: ArticleWithAnalysis[];
     usage?: Record<string, any>;
@@ -66,7 +79,7 @@ export interface PipelineResult {
  * 执行完整的文章生成流水线
  *
  * 逻辑流程:
- * Init -> [Checkpoint Restore] -> Stage 1 (选词) -> Stage 2 (Draft) -> Stage 3 (JSON) -> Stage 4 (NLP) -> Result
+ * Init -> [Checkpoint Restore] -> Stage 1 (选词) -> Stage 2a (Blueprint) -> Stage 2b (Writer) -> Stage 3 (JSON) -> Stage 4 (NLP) -> Result
  *
  * @param args 包含 LLM 客户端、运行时配置和 Checkpoint 数据
  */
@@ -75,33 +88,20 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     let selectedWords = args.checkpoint?.selectedWords || [];
     let newsSummary = args.checkpoint?.newsSummary || '';
     let sourceUrls = args.checkpoint?.sourceUrls || [];
+    let originalStyleSummary = args.checkpoint?.originalStyleSummary;
     let selectedRssItem = args.checkpoint?.selectedRssItem;
+    let blueprintXml = args.checkpoint?.blueprintXml || '';
     let draftText = args.checkpoint?.draftText || '';
     let usage: Record<string, any> = args.checkpoint?.usage || {};
     let selectedRssId = args.checkpoint?.selectedRssId;
 
     // "无状态服务"的有状态启动 (Stateful Resume for Stateless Service)
-    // 意图：Worker 可能因为超时、内存泄漏或部署而重启。Pipeline 必须即插即用。
-    // 实现：直接从 args.checkpoint.stage 读取上次中断的位置，跳过已完成的步骤。
     const currentStage = args.checkpoint?.stage || 'start';
     const config = args.config || {};
 
-    // 策略模式 (Strategy Pattern)
-    // 意图：解耦 "内容源" 与 "生成逻辑"。
-    // - RSS Mode: 侧重 factual accuracy，从新闻源提取信息。
-    // - Impression Mode: 侧重 creativity，基于抽象词汇进行创意写作。
-    // 效果：通过 mode 参数动态切换 System/User Prompts，核心 Pipeline 流程 (4 Stages) 保持不变。
     const strategy = getStrategy(args.mode);
 
-
-
     // [Stage 1] 搜索与选题 (Search & Selection)
-    // -----------------------------------------------------------------------
-    // 角色: Editor (主编)
-    // 目标: 确定"写什么"。
-    // 动作:
-    // 1. (Optional) 抓取 RSS 实时新闻作为素材。
-    // 2. 结合候选词 (Candidates) 和 话题偏好 (Topics)，向 LLM 索要最佳选题。
     // -----------------------------------------------------------------------
     if (currentStage === 'start') {
         // [RSS Fetch] 尝试获取外部新闻，失败不阻断。
@@ -110,7 +110,6 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
             const fetcher = new NewsFetcher();
             const topicIds = args.topics?.map(t => t.id) || [];
             newsCandidates = await fetcher.fetchAggregate(topicIds, args.currentDate, args.excludeRssLinks);
-            // console.log(`[Pipeline] Fetched ${newsCandidates.length} news candidates via RSS.`);
         } catch (error) {
             console.warn(`[Pipeline] Failed to fetch RSS news (falling back to pure search):`, error);
         }
@@ -139,6 +138,7 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
 
         selectedWords = res.selectedWords;
         newsSummary = res.newsSummary;
+        originalStyleSummary = res.originalStyleSummary;
         sourceUrls = res.sourceUrls;
         selectedRssId = res.selectedRssId;
         selectedRssItem = res.selectedRssItem;
@@ -151,6 +151,7 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
                 stage: 'search_selection',
                 selectedWords,
                 newsSummary,
+                originalStyleSummary,
                 sourceUrls,
                 selectedRssId,
                 usage
@@ -158,43 +159,95 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
         }
     }
 
-    // [Stage 2] Draft Generation (Writer Role)
-    // 意图：聚焦"内容创作"，彻底隔离"格式化"干扰。
-    // Trade-off：
-    // - 痛点：若强迫 LLM 同时进行 creative writing 和 JSON formatting，往往两头不到岸 (JSON 坏死或文笔干瘪)。
-    // - 决策：Stage 2 只输出 Pure Text，解放 LLM 的 Token 算力用于修辞和叙事。格式化留给 Stage 3。
-    if (currentStage === 'start' || currentStage === 'search_selection') {
-        const stage2System = strategy.stage2.system;
-        const stage2User = strategy.stage2.buildUser({
+    // [Stage 2a] The Architect (Blueprint Generation)
+    // -----------------------------------------------------------------------
+    // 角色: 架构师
+    // 目标: 规划 narrative key beats, word placement, style DNA
+    // -----------------------------------------------------------------------
+    // Runs if we are at Start (0) or Resume at Search Selection (1)
+    // Logic: "If I haven't done Stage 2a yet (am at start) OR I just finished Stage 1, do Stage 2a."
+    if (['start', 'search_selection'].includes(currentStage)) {
+        const stage2aSystem = strategy.stage2a.system;
+        const stage2aUser = strategy.stage2a.buildUser({
             selectedWords,
             newsSummary,
+            originalStyleSummary,
             sourceUrls,
             currentDate: args.currentDate,
             topicPreference: args.topicPreference,
         });
 
-        const res = await args.client.runStage2_DraftGeneration({
+        const res = await args.client.runStage2a_Blueprint({
             selectedWords,
             newsSummary,
+            originalStyleSummary,
             sourceUrls,
             currentDate: args.currentDate,
             topicPreference: args.topicPreference,
             config,
-            systemPrompt: stage2System,
-            userPrompt: stage2User,
+            systemPrompt: stage2aSystem,
+            userPrompt: stage2aUser,
+        });
+
+        blueprintXml = res.blueprintXml;
+        usage.blueprint = res.usage;
+
+        console.log(`[Pipeline] Stage 2a Complete. Blueprint generated.`);
+
+        if (args.onCheckpoint) {
+            await args.onCheckpoint({
+                stage: 'blueprint',
+                selectedWords,
+                newsSummary,
+                originalStyleSummary,
+                sourceUrls,
+                blueprintXml,
+                usage
+            });
+        }
+    }
+
+    // [Stage 2b] The Writer (Draft Generation)
+    // -----------------------------------------------------------------------
+    // 角色: 主笔
+    // 目标: 风格化微缩 (Style Mirroring)
+    // -----------------------------------------------------------------------
+    // Runs if we are at Start(0) -> Search Selection(1) -> Blueprint(2)
+    // Logic: "Fall-through execution. Continue if previous stages (Start/S1/S2a) are done."
+    if (['start', 'search_selection', 'blueprint'].includes(currentStage)) {
+        const stage2bSystem = strategy.stage2b.system;
+        const stage2bUser = strategy.stage2b.buildUser({
+            selectedWords,
+            newsSummary,
+            sourceUrls,
+            currentDate: args.currentDate,
+            blueprintXml,
+        });
+
+        const res = await args.client.runStage2b_Draft({
+            blueprintXml,
+            selectedWords,
+            newsSummary,
+            sourceUrls,
+            currentDate: args.currentDate,
+            config,
+            systemPrompt: stage2bSystem,
+            userPrompt: stage2bUser,
         });
 
         draftText = res.draftText;
         usage.draft = res.usage;
 
-        console.log(`[Pipeline] Stage 2 Complete. Draft: ${draftText.length} chars.`);
+        console.log(`[Pipeline] Stage 2b Complete. Draft: ${draftText.length} chars.`);
 
         if (args.onCheckpoint) {
             await args.onCheckpoint({
-                stage: 'draft',
+                stage: 'writer',
                 selectedWords,
                 newsSummary,
+                originalStyleSummary,
                 sourceUrls,
+                blueprintXml,
                 draftText,
                 usage
             });
@@ -204,9 +257,6 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
     // [Stage 3] 结构化转换 (JSON Conversion)
     // -----------------------------------------------------------------------
     // 角色: Formatter (排版)
-    // 目标: 将纯文本草稿转化为结构化数据 (Level 1/2/3 Variations)。
-    // 动作: 接收 Draft Text，要求 LLM 按 JSON Schema 输出。
-    // 注意: 此阶段通常耗时较短，属于"确定性变换"。
     // -----------------------------------------------------------------------
 
     const generation = await args.client.runStage3_JsonConversion({
@@ -225,18 +275,15 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
             stage: 'conversion',
             selectedWords,
             newsSummary,
+            originalStyleSummary,
             sourceUrls,
+            blueprintXml,
             draftText,
             usage
         });
     }
 
-    // [Stage 4] Syntax Analysis (Linguist Role)
-    // 难点：该步骤最耗时 (60s+)，且生成长 JSON 极易触发 Output Limit 或 Network Error。
-    // 策略：Incremental Checkpointing (增量存档)。
-    // 机制：利用 `onLevelComplete` 回调，每分析完一个 Level (共3个) 就立即刷写 DB。
-    // 收益：Worker 即使在 Level 3 崩溃，重启后 pipeline.ts 会跳过 Level 1/2，直接续跑，实现"断点续传"。
-    //   即便 Worker 在中途被杀，下次重启也能从已完成的 Level 接着跑 (断点续传)。
+    // [Stage 4] Syntax Analysis
     // -----------------------------------------------------------------------
     if (generation.output.articles && Array.isArray(generation.output.articles) && generation.output.articles.length > 0) {
         const completedFromCheckpoint = args.checkpoint?.completedLevels || [];
@@ -248,12 +295,14 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
             completedLevels: completedFromCheckpoint,
             config,
             onLevelComplete: args.onCheckpoint ? async (completedArticles) => {
-                // 增量保存: 即使整个 Stage 4 没跑完，也先把已跑完的 Levels 存下来
+                // 增量保存
                 await args.onCheckpoint!({
                     stage: 'grammar_analysis',
                     selectedWords,
                     newsSummary,
+                    originalStyleSummary,
                     sourceUrls,
+                    blueprintXml,
                     draftText,
                     completedLevels: completedArticles as any,
                     usage
@@ -271,7 +320,9 @@ export async function runPipeline(args: PipelineArgs): Promise<PipelineResult> {
                 stage: 'grammar_analysis',
                 selectedWords,
                 newsSummary,
+                originalStyleSummary,
                 sourceUrls,
+                blueprintXml,
                 draftText,
                 completedLevels: analysisRes.articles as any,
                 usage

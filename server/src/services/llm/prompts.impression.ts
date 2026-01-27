@@ -10,7 +10,7 @@
  * - 参考现有 Prompt 的 XML 结构化风格
  */
 
-import type { Stage1BuildUserArgs, Stage2BuildUserArgs } from './promptStrategies';
+import type { Stage1BuildUserArgs } from './promptStrategies';
 
 // ============ Stage 1: 搜索与选词 (IMPRESSION 版) ============
 
@@ -89,8 +89,12 @@ ${JSON.stringify(args.candidateWords)}
 </mission>`;
 }
 
-// ============ Stage 2: 草稿生成 (IMPRESSION 版) ============
 
+// ============ Stage 2: 草稿生成 (IMPRESSION 版) ============
+// [已弃用] 目前 Impression 模式复用 RSS 的 Stage 2a/2b 逻辑
+// 代码保留以备后续参考，但暂时注释掉以通过类型检查
+
+/*
 import { LEVELS_XML, FORMATTING_XML, buildStage2Context } from './prompts.shared';
 
 export const IMPRESSION_STAGE2_SYSTEM = `<role>
@@ -125,7 +129,7 @@ ${FORMATTING_XML}
 不要返回 JSON，专注于写作质量和词汇覆盖。
 </output_requirement>`;
 
-export function buildImpressionStage2User(args: Stage2BuildUserArgs): string {
+export function buildImpressionStage2User(args: any): string {
   return `${buildStage2Context(args)}
 
 <mission>
@@ -134,4 +138,5 @@ export function buildImpressionStage2User(args: Stage2BuildUserArgs): string {
 每个词汇可以使用其任意形态变化。
 </mission>`;
 }
+*/
 

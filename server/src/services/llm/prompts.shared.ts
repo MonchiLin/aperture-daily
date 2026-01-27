@@ -50,10 +50,25 @@ export const FORMATTING_XML = `  <formatting>
     <rule>Form adaptation (morphology) is allowed and encouraged for natural flow (e.g., run -> ran/running).</rule>
   </formatting>`;
 
+// ============ 共享的风格分析指令 (Style Extraction) ============
+
+export const STYLE_EXTRACTION_INSTRUCTION = `<style_analysis_rules>
+1. **Identify Tone**: Is it sarcastic, authoritative, playful, or dry?
+2. **Analyze Structure**: Does it start with an anecdote? Does it use bullet points?
+3. **Extract Signature**: What makes this author unique? (e.g., "Heavy use of data", "Short punchy sentences").
+Output a concise summary (max 50 words) describing the "Style DNA".
+</style_analysis_rules>`;
+
 // ============ 共享的 Stage 2 User Prompt 上下文 ============
 
 /** Stage 2 上下文构建所需的最小字段 */
-export type Stage2ContextArgs = Pick<Stage2Input, 'currentDate' | 'selectedWords' | 'sourceUrls' | 'newsSummary'>;
+export type Stage2ContextArgs = {
+  currentDate: string;
+  selectedWords: string[];
+  sourceUrls: string[];
+  newsSummary: string;
+  originalStyleSummary?: string; // [NEW] 为 Stage 2a/2b 提供风格参考
+};
 
 /**
  * 构建 Stage 2 的通用上下文部分
@@ -65,6 +80,7 @@ export function buildStage2Context(args: Stage2ContextArgs): string {
     <date>${args.currentDate}</date>
     <target_words count="${args.selectedWords.length}">${JSON.stringify(args.selectedWords)}</target_words>
     <source_urls>${args.sourceUrls.join(', ')}</source_urls>
+    ${args.originalStyleSummary ? `<original_style_summary>${args.originalStyleSummary}</original_style_summary>` : ''}
 </context>
 
 <news_material>
@@ -90,14 +106,12 @@ const JSON_SCHEMA_DEF = `{
       "level": 2, 
       "level_name": "Intermediate", 
       "content": "...",
-      "pull_quote": "String (Impactful quote, max 20 words)",
       "summary": "String (Lead paragraph, max 50 words)"
     },
     { 
       "level": 3, 
       "level_name": "Advanced", 
       "content": "...",
-      "pull_quote": "String (Impactful quote)",
       "summary": "String (Lead paragraph)"
     }
   ],
@@ -136,8 +150,8 @@ ${JSON_SCHEMA_DEF}
      - 例如: "Apple" 在文中指公司，就不要解释为水果。
      - 例如: "Run" 在文中指"经营"，就不要解释为"跑步"。
 4. **Level Constraints**:
-    - **Level 1**: **严禁**生成 \`pull_quote\` 和 \`summary\`，保持版面极简。
-    - **Level 2/3**: **必须**生成不为空的 \`pull_quote\` 和 \`summary\`。
+    - **Level 1**: **严禁**生成 \`summary\`，保持版面极简。
+    - **Level 2/3**: **必须**生成不为空的 \`summary\`。
 </constraints>`;
 
 export function buildJsonConversionUserPrompt(args: {

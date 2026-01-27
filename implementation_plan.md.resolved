@@ -1,0 +1,69 @@
+# 实施计划：文章生成质量革新 (v5 - The Brain-Hand Separation)
+
+## 目标描述
+通过重构底层生成架构，将 "AI 写作" 升级为 "AI 创作"。
+目标是产出具有**顶级媒体质感 (Journalistic Quality)** 的文章，同时精确控制 **教学法约束 (Pedagogical Constraints)**。
+
+## 核心哲学：脑手分离 (Separation of Brain & Hand)
+当前的质量瓶颈在于让模型"一边想一边写"（认知过载）。
+新架构将物理拆分 **决策 (Decision)** 与 **执行 (Execution)**：
+
+1.  **Stage 2a: The Architect (架构师)**
+    *   **任务**: 纯粹的思考。不写正文，只画图纸。
+    *   **产出**: `Blueprint (XML)` —— 包含叙事角度、词汇落位图、结构布局。
+2.  **Stage 2b: The Writer (主笔)**
+    *   **任务**: 纯粹的执行。不思考结构，只通过修辞填充图纸。
+    *   **产出**: `Draft (Text)` —— 极具文采的纯文本。
+
+## 详细架构设计
+
+### 1. 流水线重构 (Pipeline Refactor)
+状态机 [pipeline.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/pipeline.ts) 将从 4 阶段扩展为 **5 阶段**。
+这不仅仅是增加一步，而是引入了**中间检查点 (Checkpoint)**，确保如果"蓝图"画错了，我们可以重画，而不用重写。
+
+*   **Old**: [Selection](file:///d:/Creative/aperture-daily/server/src/services/llm/types.ts#202-203) -> [Draft](file:///d:/Creative/aperture-daily/server/src/services/llm/providers/gemini.ts#212-229) -> `JSON` -> [Analysis](file:///d:/Creative/aperture-daily/server/src/services/llm/types.ts#205-206)
+*   **New**: [Selection](file:///d:/Creative/aperture-daily/server/src/services/llm/types.ts#202-203) -> **`Blueprint`** -> **[Draft](file:///d:/Creative/aperture-daily/server/src/services/llm/providers/gemini.ts#212-229)** -> `JSON` -> [Analysis](file:///d:/Creative/aperture-daily/server/src/services/llm/types.ts#205-206)
+
+### 2. 文风矩阵 (The Voice Matrix)
+我们将把抽象的 "CEFR Level" 映射为具象的 "媒体人设"，并固化到 [prompts.shared.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/prompts.shared.ts) 中：
+
+| 等级 | 对应媒体 | 核心指令 (Keywords) | 禁忌 (Negative) |
+| :--- | :--- | :--- | :--- |
+| **Level 1** | **Axios** | **Smart Brevity**. 动词强有力，短句为主，信息密度高。 | 拒绝 "Baby Talk" (低幼化)，拒绝废话。 |
+| **Level 2** | **The Guardian** | **Narrative Flow**. 强调连词 (Connectors) 的使用，像讲故事一样流动。 | 拒绝碎片化，拒绝生硬的过渡。 |
+| **Level 3** | **The Economist** | **Chain of Density**. 每一句都要有新的实体信息 (Entity)，充满机锋与思辨。 | 拒绝车轱辘话，拒绝空洞的总结。 |
+
+### 3. 词汇自然度协议 (Naturalness Protocol)
+*   **Impression 模式特权**: 在 30-50 个词的高压任务下，允许 Level 1 **战略性放弃** 极难词汇。
+    *   *逻辑*: "与其写一个狗屁不通的句子，不如不写。"
+    *   *补救*: 必须确保该词在 Blueprint 阶段被分配到 Level 2 或 Level 3。
+
+## 代码变更清单
+
+### A. 核心定义层
+1.  **[src/services/llm/types.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/types.ts)**:
+    *   新增 `Stage2aInput`, `Stage2aOutput` (Blueprint)
+    *   新增 `Stage2bInput`, `Stage2bOutput` (Draft)
+    *   更新 [PipelineCheckpoint](file:///d:/Creative/aperture-daily/server/src/services/llm/pipeline.ts#26-37) 增加 `blueprint` 状态
+2.  **[src/services/llm/promptStrategies.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/promptStrategies.ts)**:
+    *   重构 [PromptStrategy](file:///d:/Creative/aperture-daily/server/src/services/llm/promptStrategies.ts#47-51) 接口，支持拆分后的 Stage 2a/2b。
+
+### B. Prompt 仓库层
+3.  **[src/services/llm/prompts.shared.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/prompts.shared.ts)**:
+    *   注入 `VOICE_MATRIX_XML` (Axios/Guardian/Economist)。
+    *   注入 `QUALITY_CONTROL_XML` (反 AI 味指令)。
+4.  **`src/services/llm/prompts.stage2.blueprint.ts`** (新增):
+    *   专职负责生成 XML 蓝图。
+5.  **`src/services/llm/prompts.stage2.writer.ts`** (新增):
+    *   专职负责根据蓝图写作。
+
+### C. 业务逻辑层
+6.  **[src/services/llm/pipeline.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/pipeline.ts)**:
+    *   实现新的 5 阶段状态机。
+    *   处理 Blueprint 的中间存储与透传。
+7.  **[src/services/llm/providers/gemini.ts](file:///d:/Creative/aperture-daily/server/src/services/llm/providers/gemini.ts)**:
+    *   实现 `runStage2a_Blueprint` 和 `runStage2b_Draft` 接口。
+
+## 用户复核
+*   [ ] 确认接受 **5-Stage Pipeline** 为最终方案。
+*   [ ] 确认接受重构带来的 **API 调用次数增加** (每次生成多一次调用)。

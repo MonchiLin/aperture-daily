@@ -13,6 +13,8 @@
 
 import type { Topic, NewsItem } from './types';
 
+import { STYLE_EXTRACTION_INSTRUCTION } from './prompts.shared';
+
 // ============ Stage 1: 搜索与选题 ============
 
 export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `<role>
@@ -27,12 +29,15 @@ export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `<role>
 3. **时效性**: 仅关注 <task_date> 前后 7 天内发生的事件（task_date 是目标生成日期，可能是历史日期）。
 </core_philosophy>
 
+${STYLE_EXTRACTION_INSTRUCTION}
+
 <workflow>
 1. **分析 (Analyze)**: 理解 <candidate_words> 中词汇的语义场 (Semantic Field) 和 <user_preference> 的偏好。
 2. **匹配 (Match)**:
     - **Step 2a (Check RSS)**: 仔细阅读 <rss_pool>。是否有新闻能自然串联起 4-7 个候选词？
     - **Step 2b (Web Search)**: 只有当 RSS 中**完全没有**合适内容时，才根据 Topic 指令生成关键词进行联网搜索。
 3. **决策 (Decide)**: 选定一篇新闻，并挑选出最能自然融入该新闻语境的 4-7 个词。
+4. **风格提取 (Extract)**: 按照 <style_analysis_rules> 分析所选新闻的风格。
 </workflow>
 
 <output_requirement>
@@ -41,6 +46,7 @@ export const SEARCH_AND_SELECTION_SYSTEM_INSTRUCTION = `<role>
 {
   "selected_words": ["word1", "word2", ...],  // 必须是候选词列表中的原词
   "news_summary": "...",                      // 200字以内的中文/英文摘要
+  "original_style_summary": "...",            // [NEW] Max 50 words style DNA
   "source": "...",                            // 来源 URL (RSS link 或 搜索到的 link)
   "selected_rss_id": 3                        // 如果从 RSS 池选择，返回对应 item 的 id；如果来自搜索则省略此字段
 }

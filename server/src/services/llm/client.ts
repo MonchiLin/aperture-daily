@@ -14,7 +14,15 @@
 import { GeminiProvider } from './providers/gemini';
 import { ClaudeProvider } from './providers/claude';
 import { OpenAIProvider } from './providers/openai';
-import type { DailyNewsProvider, GenerateOptions, GenerateResponse, Stage1Input, Stage1Output, Stage2Input, Stage2Output, Stage3Input, Stage3Output, Stage4Input, Stage4Output } from './types';
+import type {
+    DailyNewsProvider, GenerateOptions, GenerateResponse,
+    Stage1Input, Stage1Output,
+    Stage2aInput, Stage2aOutput,
+    Stage2bInput, Stage2bOutput,
+    Stage2Input, Stage2Output,
+    Stage3Input, Stage3Output,
+    Stage4Input, Stage4Output
+} from './types';
 
 export type { GenerateOptions, GenerateResponse };
 
@@ -68,6 +76,14 @@ export class LLMClient implements DailyNewsProvider {
 
     async runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output> {
         return this.provider.runStage1_SearchAndSelection(input);
+    }
+
+    async runStage2a_Blueprint(input: Stage2aInput): Promise<Stage2aOutput> {
+        return this.provider.runStage2a_Blueprint(input);
+    }
+
+    async runStage2b_Draft(input: Stage2bInput): Promise<Stage2bOutput> {
+        return this.provider.runStage2b_Draft(input);
     }
 
     async runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output> {

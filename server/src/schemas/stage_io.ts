@@ -17,9 +17,10 @@ import { dailyNewsOutputSchema } from './dailyNews';
 export const Stage1OutputSchema = z.object({
     selected_words: z.array(z.string()).min(1, 'At least one word must be selected'),
     news_summary: z.string().min(10, 'News summary too short'),
+    original_style_summary: z.string().optional(), // [NEW] Style DNA
     source: z.string().optional(),
     sources: z.array(z.string()).optional(),
-    selected_rss_id: z.number().optional()
+    selected_rss_id: z.number().nullable().optional()
 });
 
 export type Stage1OutputDTO = z.infer<typeof Stage1OutputSchema>;

@@ -95,26 +95,15 @@ const allArticleContents = getAllArticleContents(sortedArticles);
                                 </div>
                             )}
 
-                            {paragraphs.map(
-                                (blockNodes: any[], pIndex: number) => {
-                                    const isPullQuotePos =
-                                        pIndex === 1 && article.pullQuote;
-                                    return (
-                                        <>
-                                            <p class="mb-6 indent-8">
-                                                <AnnotatedText
-                                                    nodes={blockNodes}
-                                                />
-                                            </p>
-                                            {isPullQuotePos && (
-                                                <blockquote class="border-l-2 border-slate-800 pl-6 italic text-slate-600 my-10 text-2xl font-serif leading-relaxed">
-                                                    "{article.pullQuote}"
-                                                </blockquote>
-                                            )}
-                                        </>
-                                    );
-                                },
-                            )}
+                            {paragraphs.map((blockNodes: any[]) => {
+                                return (
+                                    <>
+                                        <p class="mb-6 indent-8">
+                                            <AnnotatedText nodes={blockNodes} />
+                                        </p>
+                                    </>
+                                );
+                            })}
                         </div>
                     );
                 })

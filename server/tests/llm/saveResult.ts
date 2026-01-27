@@ -10,7 +10,8 @@ import type { LLMClientConfig } from '../../src/services/llm/client';
 export async function saveTestPipelineResult(
     result: PipelineResult,
     clientConfig: LLMClientConfig,
-    forcedDate?: string
+    forcedDate?: string,
+    topicPreference: string = 'General'
 ) {
     console.log('[Test] Saving pipeline result...');
 
@@ -49,7 +50,7 @@ export async function saveTestPipelineResult(
         taskDate,
         model: clientConfig.model,
         profileId,
-        topicPreference: 'General'
+        topicPreference: topicPreference
     });
 
     console.log(`[Test] Result saved. Article ID: ${articleId}`);

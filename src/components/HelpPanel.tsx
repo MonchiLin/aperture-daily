@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, Fragment } from 'react';
 import Modal from './ui/Modal';
 import { HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -82,10 +82,10 @@ export default function HelpPanel() {
                                         <p className="text-[11px] text-stone-500 mb-1 leading-tight">{s.desc}</p>
                                         <p className="text-[11px] font-serif italic text-stone-700">
                                             例子：{s.example.split(s.target).map((part, i, arr) => (
-                                                <React.Fragment key={i}>
+                                                <Fragment key={i}>
                                                     {part}
                                                     {i < arr.length - 1 && <span className="underline decoration-stone-300 decoration-wavy underline-offset-2 font-bold">{s.target}</span>}
-                                                </React.Fragment>
+                                                </Fragment>
                                             ))}
                                         </p>
                                     </div>

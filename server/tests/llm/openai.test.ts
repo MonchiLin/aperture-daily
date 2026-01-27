@@ -71,10 +71,8 @@ describe('OpenAI Provider - Full Pipeline Test', () => {
         if (complexArticles.length > 0) {
             const sample = complexArticles[0]!;
             if (sample.summary) expect(sample.summary.length).toBeGreaterThan(10);
-            if (sample.pull_quote) expect(sample.pull_quote.length).toBeGreaterThan(5);
             console.log(`[OpenAI] Checked L${sample.level} article extras:`, {
                 hasSummary: !!sample.summary,
-                hasQuote: !!sample.pull_quote
             });
         }
 

@@ -110,6 +110,8 @@ export interface Stage1Output {
     selectedWords: string[];
     newsSummary: string;
     sourceUrls: string[];
+    // [NEW] Original Style Summary (for style preservation)
+    originalStyleSummary?: string;
     // RSS 选择追踪
     selectedRssId?: number;   // LLM 选中的 RSS 池 item id (1-indexed)
     selectedRssItem?: NewsItem; // Pipeline 根据 id 填充的完整 RSS 信息
@@ -117,11 +119,57 @@ export interface Stage1Output {
 }
 
 /**
- * Stage 2: 草稿生成
- *
- * 输入：Stage 1 的输出 + 上下文
- * 输出：纯文本草稿（3 个难度级别）
- * 特点：不要求 JSON 格式，让 LLM 专注内容创作
+ * Stage 2a: 蓝图规划 (The Architect)
+ * 
+ * 任务：全局规划与风格解构。只思考，不写作。
+ * 输入：Stage 1 输出 + 上下文
+ * 输出：Blueprint XML (包含 Narrative Key Beats, Word Placement, Style DNA)
+ */
+export interface Stage2aInput {
+    selectedWords: string[];
+    newsSummary: string;
+    sourceUrls: string[];
+    originalStyleSummary?: string;
+    currentDate: string;
+    topicPreference: string;
+    config?: any;
+    // 策略模式
+    systemPrompt: string;
+    userPrompt: string;
+}
+
+export interface Stage2aOutput {
+    blueprintXml: string;
+    usage?: TokenUsage;
+}
+
+/**
+ * Stage 2b: 风格化微缩 (The Writer)
+ * 
+ * 任务：风格化重写。只执行，不决策。
+ * 输入：Blueprint + 原文
+ * 输出：纯文本草稿
+ */
+export interface Stage2bInput {
+    blueprintXml: string;
+    selectedWords: string[];
+    // 需要原文作为参考来模仿风格
+    newsSummary: string;
+    sourceUrls: string[]; // [Fixed] Added for context building
+    currentDate: string;
+    config?: any;
+    // 策略模式
+    systemPrompt: string;
+    userPrompt: string;
+}
+
+export interface Stage2bOutput {
+    draftText: string;
+    usage?: TokenUsage;
+}
+
+/**
+ * @deprecated Legacy Stage 2 (Draft Generation) - Use Stage 2a/2b instead
  */
 export interface Stage2Input {
     selectedWords: string[];
@@ -130,11 +178,13 @@ export interface Stage2Input {
     currentDate: string;
     topicPreference: string;
     config?: any;
-    // 策略模式：Pipeline 层必须传入，Provider 层直接使用
     systemPrompt: string;
     userPrompt: string;
 }
 
+/**
+ * @deprecated Legacy Stage 2 Output
+ */
 export interface Stage2Output {
     draftText: string;
     usage?: TokenUsage;
@@ -191,7 +241,7 @@ export interface Stage4Output {
  *
  * 为什么继承 LLMProvider？
  * - 向后兼容：现有代码可能只依赖 generate 方法
- * - 渐进增强：可以先实现 generate，再逐步实现 4 个阶段方法
+ * - 渐进增强：可以先实现 generate，再逐步实现 5 个阶段方法
  *
  * 新增 Provider 时的步骤：
  * 1. 创建 providers/xxx.ts
@@ -200,7 +250,14 @@ export interface Stage4Output {
  */
 export interface DailyNewsProvider extends LLMProvider {
     runStage1_SearchAndSelection(input: Stage1Input): Promise<Stage1Output>;
+
+    // [NEW] 5-Stage Pipeline
+    runStage2a_Blueprint(input: Stage2aInput): Promise<Stage2aOutput>;
+    runStage2b_Draft(input: Stage2bInput): Promise<Stage2bOutput>;
+
+    // [DEPRECATED] Old separate Draft generation
     runStage2_DraftGeneration(input: Stage2Input): Promise<Stage2Output>;
+
     runStage3_JsonConversion(input: Stage3Input): Promise<Stage3Output>;
     runStage4_SentenceAnalysis(input: Stage4Input): Promise<Stage4Output>;
 }

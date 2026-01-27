@@ -8,8 +8,7 @@ export const dailyNewsArticleSchema = z.object({
     // 采用 "Standoff" 模式存储：结构信息仅记录 start/end 偏移量，而不修改 content 字符串本身。
     // 这种设计允许前端自由应用高亮，而不破坏原文的完整性。
     structure: z.any().optional(),
-    // [NEW] 视觉增强字段
-    pull_quote: z.string().optional().describe("A short, impactful quote extracted from the text (max 25 words)."),
+
     summary: z.string().optional().describe("A brief 50-word intro/lead paragraph.")
 });
 
